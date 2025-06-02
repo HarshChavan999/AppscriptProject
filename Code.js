@@ -779,131 +779,6 @@ function getDueFeesData(userRole) {
   };
 }
 
-/*********************************************
-                ADMISSION FORM                
-**********************************************/
-
-function submitForm(data) {
-  if (!data || typeof data !== 'object') {
-    return 'Invalid data received!';
-  }
-
-  const spreadsheet = SpreadsheetApp.openById('1yuXuZP9ItyPPqd-WCFHpROUfWML9NX1jzQafkVZVbXY');
-  const sheet = spreadsheet.getSheetByName('AdmissionData');
-  const sheetName = 'AdmissionData'; // Name of the sheet where data will be stored
-  const ss = SpreadsheetApp.openById("1yuXuZP9ItyPPqd-WCFHpROUfWML9NX1jzQafkVZVbXY");
-  console.log(JSON.stringify(data, null, 1));
-
-  // Define the headers if the sheet is empty
-  if (sheet.getLastRow() === 0) {
-const headers = [
-  'Receipt Number',
-  'Student Name',
-  'Course Name',
-  'Branch',
-  'Course Duration',
-  'Admission Fees',
-  'Monthly Fees',
-  'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25', 'aug_25', 'sep_25', 'oct_25', 'nov_25', 'dec_25',
-  'jan_26', 'feb_26', 'mar_26','apr_26', 'may_26', 'jun_26', 'jul_26', 'aug_26', 'sep_26', 'oct_26', 'nov_26', 'dec_26',
-  'jan_27', 'feb_27', 'mar_27','apr_27', 'may_27', 'jun_27', 'jul_27', 'aug_27', 'sep_27', 'oct_27', 'nov_27', 'dec_27',
-  'jan_28', 'feb_28', 'mar_28','apr_28', 'may_28', 'jun_28', 'jul_28', 'aug_28', 'sep_28', 'oct_28', 'nov_28', 'dec_28',
-  'I Am Mr./Ms.',
-  'Mother/Father/Husband/Sister/Brother of',
-  'Agree to Terms'
-];
-
-    sheet.appendRow(headers);
-  }
-  // Prepare the row data with proper fallbacks
- const rowData = [
-  data?.recipt_number?.[0] || '',
-  data?.student_name?.[0] || '',
-  data?.course_name?.[0] || '',
-  data?.branch?.[0] || '',
-  data?.course_duration?.[0] || '',
-  data?.admission_fees?.[0] ? Number(data.admission_fees[0]) : 0,
-  data?.monthly_fees?.[0] || '',
-  data?.jan_25?.[0] || '',
-  data?.feb_25?.[0] || '',
-  data?.mar_25?.[0] || '',
-  data?.apr_25?.[0] || '',
-  data?.may_25?.[0] || '',
-  data?.jun_25?.[0] || '',
-  data?.jul_25?.[0] || '',
-  data?.aug_25?.[0] || '',
-  data?.sep_25?.[0] || '',
-  data?.oct_25?.[0] || '',
-  data?.nov_25?.[0] || '',
-  data?.dec_25?.[0] || '',
-  data?.jan_26?.[0] || '',
-  data?.feb_26?.[0] || '',
-  data?.mar_26?.[0] || '',
-  data?.apr_26?.[0] || '',
-  data?.may_26?.[0] || '',
-  data?.jun_26?.[0] || '',
-  data?.jul_26?.[0] || '',
-  data?.aug_26?.[0] || '',
-  data?.sep_26?.[0] || '',
-  data?.oct_26?.[0] || '',
-  data?.nov_26?.[0] || '',
-  data?.dec_26?.[0] || '',
-  data?.jan_27?.[0] || '',
-  data?.feb_27?.[0] || '',
-  data?.mar_27?.[0] || '',
-  data?.apr_27?.[0] || '',
-  data?.may_27?.[0] || '',
-  data?.jun_27?.[0] || '',
-  data?.jul_27?.[0] || '',
-  data?.aug_27?.[0] || '',
-  data?.sep_27?.[0] || '',
-  data?.oct_27?.[0] || '',
-  data?.nov_27?.[0] || '',
-  data?.dec_27?.[0] || '',
-  data?.jan_28?.[0] || '',
-  data?.feb_28?.[0] || '',
-  data?.mar_28?.[0] || '',
-  data?.apr_28?.[0] || '',
-  data?.may_28?.[0] || '',
-  data?.jun_28?.[0] || '',
-  data?.jul_28?.[0] || '',
-  data?.aug_28?.[0] || '',
-  data?.sep_28?.[0] || '',
-  data?.oct_28?.[0] || '',
-  data?.nov_28?.[0] || '',
-  data?.dec_28?.[0] || '',
-  data?.['I Am Mr./Ms.']?.[0] || '',
-  data?.['Mother / Father / Husband / Sister / Brother of']?.[0] || '',
-  data?.agree ? 'Yes' : 'No'
-];
-  // Append the row data to the sheet
-  
-  try {
-  sheet.appendRow(rowData);
-  console.log('Row appended successfully');
-  generatePDF();
-  return 'Data saved successfully!';
-} catch (error) {
-  console.error('Error saving data:', error);
-  return 'Error saving data: ' + error.message;
-}
-}
-function saveAdmissionData(data) {
-    try {
-        const ss = SpreadsheetApp.getActiveSpreadsheet();
-        const sheet = ss.getSheetByName('Admissions') || ss.insertSheet('Admissions');
-        
-        if(sheet.getLastRow() === 0) {
-            sheet.appendRow(Object.keys(data));
-        }
-        
-        sheet.appendRow(Object.values(data));
-        return "Data saved successfully!";
-    } catch(error) {
-        throw new Error("Failed to save: " + error.message);
-    }
-}
-
 function processForm(formData) {
 
   console.log("workingg....")
@@ -1104,3 +979,99 @@ function processForm(formData) {
 //   `;
 // }
 
+
+
+//-----------------------------ADMISSION FORM-----------------------------//
+
+function submitForm(formObject) {
+  try {
+    const spreadsheetId = '1LY9jRUmIblUk_3e62GL_5jzyQwsA-TysboHRwbtnvho'; // Replace with your actual Spreadsheet ID
+    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const sheetName = 'Admissions';
+    let sheet = spreadsheet.getSheetByName(sheetName);
+
+    // Create sheet if it doesn't exist
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet(sheetName);
+    }
+
+    // Define headers
+    const headers = [
+      'Timestamp',
+      'Receipt Number',
+      'Student Name',
+      'Course Name',
+      'Course Duration', // Added course duration
+      'Course Fees (per year)', // Renamed for clarity
+      'Payment Type',
+      'Payment Method',
+      'Course Years',
+      'Year 1 Total',
+      'Year 1 Paid',
+      'Year 1 Due',
+      'Year 1 Installments', // For EMI
+      'Year 2 Total',
+      'Year 2 Paid',
+      'Year 2 Due',
+      'Year 2 Installments', // For EMI
+      'Year 3 Total',
+      'Year 3 Paid',
+      'Year 3 Due',
+      'Year 3 Installments', // For EMI
+      'Guardian Relation',
+      'Guardian Name',
+      'Agreement'
+    ];
+
+    // Set headers if the sheet is empty
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(headers);
+    }
+
+    // Prepare the data row
+    const timestamp = new Date();
+    const rowData = [
+      timestamp,
+      formObject.receipt_number || '',
+      formObject.student_name || '',
+      formObject.courseSelect || '',
+      formObject.courseDuration || '',
+      formObject.courseFees || '',
+      formObject.payment_type || '',
+      formObject.payment_method || '',
+      formObject.courseYears || '',
+      // Year 1 data
+      formObject.year1_total || '',
+      formObject.year1_paid || '',
+      formObject.year1_due || '',
+      formObject.year1_installments || '',
+      // Year 2 data
+      formObject.year2_total || '',
+      formObject.year2_paid || '',
+      formObject.year2_due || '',
+      formObject.year2_installments || '',
+      // Year 3 data
+      formObject.year3_total || '',
+      formObject.year3_paid || '',
+      formObject.year3_due || '',
+      formObject.year3_installments || '',
+      formObject.guardian_relation || '',
+      formObject.guardian_name || '',
+      formObject.agree ? 'Yes' : 'No'
+    ];
+
+    // Append the data to the sheet
+    sheet.appendRow(rowData);
+
+    // Return success message
+    return { status: 'success', message: 'Data saved successfully!' };
+
+  } catch (error) {
+    // Log the error and return error message
+    console.error('Error submitting form:', error);
+    return { status: 'error', message: 'Failed to save data: ' + error.message };
+  }
+}
+
+
+//-----------------------------ADMISSION FORM-----------------------------//
