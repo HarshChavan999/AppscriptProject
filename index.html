@@ -1,128 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Fee Management Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- html2pdf -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enhanced Fee Management Dashboard</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- html2pdf -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://apis.google.com/js/api.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .modal-content {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      width: 90%;
-      max-width: 500px;
-    }
-
-    .printable {
-      background: white;
-      min-height: 100vh;
-    }
-
-    @media print {
-      @page {
-        size: A4 portrait;
-        margin: 0;
+    <style>
+         body {
+         font-family: 'Inter', sans-serif;
+         }
+         .modal {
+         position: fixed;
+         top: 0;
+         left: 0;
+         right: 0;
+         bottom: 0;
+         background: rgba(0, 0, 0, 0.5);
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         z-index: 999;
+         }
+         .modal-content {
+         background: #fff;
+         padding: 1.5rem;
+         border-radius: 0.5rem;
+         width: 90%;
+         max-width: 500px;
+         }
+         .printable {
+         background: white;
+         min-height: 100vh;
+         }
+         @media print {
+         @page {
+         size: A4 portrait;
+         margin: 0;
+         }
+         body {
+         margin: 0;
+         padding: 0;
+         font-size: 12px;
+         background: white;
+         }
+         /* Hide everything except printable receipt */
+         body * {
+         visibility: hidden;
+         }
+         #separateReceipt,
+         #separateReceipt * {
+         visibility: visible;
+         }
+         #separateReceipt {
+         position: absolute;
+         left: 0;
+         top: 0;
+         width: 100%;
+         margin: 0;
+         padding: 10mm;
+         box-shadow: none;
+         }
+         .no-print {
+         display: none !important;
+         }
+         #ifId {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         min-height: 100vh;
+         background-color: #f3f4f6;
+         /* Tailwind's gray-100 */
+         padding: 1rem;
+         }
+         /* Course Payment Styles */
+      .payment-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
-
-      body {
-        margin: 0;
-        padding: 0;
-        font-size: 12px;
-        background: white;
+      .payment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
       }
-
-      /* Hide everything except printable receipt */
-      body * {
-        visibility: hidden;
+      .payment-card.selected {
+        border-color: #1e40af;
+        background-color: #eff6ff;
       }
-
-      #separateReceipt,
-      #separateReceipt * {
-        visibility: visible;
+      .installment-plan {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
       }
+         }
+      </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- LOGIN SECTION -->
+    <div id="loginSection"
+      class="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 space-y-6">
+        <div class="text-center">
+          <img
+            src="https://i.postimg.cc/DZFDcqP8/IMG-20250320-WA0023-1-modified-3.png"
+            class="w-24 mx-auto mb-4 rounded-lg" alt="Institute Logo" />
+          <h2 class="text-3xl font-bold text-gray-800">Shelar Training
+            Institute</h2>
+          <p class="text-gray-500 mt-2">Sign in to continue</p>
+        </div>
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <div class="relative">
+              <input type="text" id="loginUsername"
+                class="w-full px-4 py-3 rounded-lg border border-gray-300 
+                        focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter username" required />
+              <i class="fas fa-user absolute right-3 top-3.5 text-gray-400"></i>
+            </div>
 
-      #separateReceipt {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 10mm;
-        box-shadow: none;
-      }
-
-      .no-print {
-        display: none !important;
-      }
-
-      #ifId {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        background-color: #f3f4f6;
-        /* Tailwind's gray-100 */
-        padding: 1rem;
-      }
-    }
-  </style>
-</head>
-
-<body class="bg-gray-100">
-  <!-- LOGIN SECTION -->
-  <div id="loginSection"
-    class="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 space-y-6">
-      <div class="text-center">
-        <img src="https://i.postimg.cc/DZFDcqP8/IMG-20250320-WA0023-1-modified-3.png"
-          class="w-24 mx-auto mb-4 rounded-lg" alt="Institute Logo" />
-        <h2 class="text-3xl font-bold text-gray-800">Shelar Training
-          Institute</h2>
-        <p class="text-gray-500 mt-2">Sign in to continue</p>
-      </div>
-      <form id="loginForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <div class="relative">
-            <input type="text" id="loginUsername" class="w-full px-4 py-3 rounded-lg border border-gray-300 
-                        focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter username"
-              required />
-            <i class="fas fa-user absolute right-3 top-3.5 text-gray-400"></i>
           </div>
         </div>
         <div>
@@ -139,26 +155,96 @@
         </button>
       </form>
     </div>
-  </div>
-  <!-- MAIN APP SECTION -->
-  <div id="appSection" class="hidden min-h-screen">
-    <div class="flex min-h-screen">
-      <!-- SIDEBAR -->
-      <aside class="bg-blue-800 text-white w-64 hidden md:flex flex-col">
-        <div class="py-6 px-4 bg-blue-900 flex flex-col items-center justify-center">
-          <img src="https://i.postimg.cc/DZFDcqP8/IMG-20250320-WA0023-1-modified-3.png"
-            class="w-24 mx-auto mb-4 rounded-lg" alt="Institute Logo" />
-          <h2 class="text-lg font-bold">STI</h2>
-          <p class="text-xs text-blue-200">Role: <span id="userRoleDisplay"></span></p>
-        </div>
-        <!-- SIDEBAR SEARCH -->
-        <div class="p-4">
-          <label class="block text-xs text-blue-200">Search Student ID</label>
-          <div class="mt-1 relative">
-            <input type="text" id="sideBarSearchId" class="w-full pl-4 pr-10 py-2 rounded-md text-black 
-                  focus:ring-2 focus:ring-blue-300 focus:outline-none" placeholder="e.g. ST001" />
-            <button onclick="searchBySideBar()" class="absolute right-2 top-1.5 text-gray-500 hover:text-blue-600">
-              <i class="fas fa-search"></i>
+    <!-- MAIN APP SECTION -->
+    <div id="appSection" class="hidden min-h-screen">
+      <div class="flex min-h-screen">
+        <!-- SIDEBAR -->
+        <aside class="bg-blue-800 text-white w-64 hidden md:flex flex-col">
+          <div
+            class="py-6 px-4 bg-blue-900 flex flex-col items-center justify-center">
+            <img
+              src="https://i.postimg.cc/DZFDcqP8/IMG-20250320-WA0023-1-modified-3.png"
+              class="w-24 mx-auto mb-4 rounded-lg" alt="Institute Logo" />
+            <h2 class="text-lg font-bold">STI</h2>
+            <p class="text-xs text-blue-200">Role: <span
+                id="userRoleDisplay"></span></p>
+          </div>
+          <!-- SIDEBAR SEARCH -->
+          <div class="p-4">
+            <label class="block text-xs text-blue-200">Search Student ID</label>
+            <div class="mt-1 relative">
+              <input type="text" id="sideBarSearchId"
+                class="w-full pl-4 pr-10 py-2 rounded-md text-black 
+                  focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                placeholder="e.g. ST001" />
+              <button onclick="searchBySideBar()"
+                class="absolute right-2 top-1.5 text-gray-500 hover:text-blue-600">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+          <nav class="flex-1 px-4 py-4 space-y-2">
+            <button onclick="openSlip()"
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-file-alt"></i>
+              <span>Slip</span>
+            </button>
+            <button onclick="openInquiryForm()"
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-plane-plus"></i>
+              <span>Inquiry Form</span>
+            </button>
+                  <button onclick="openCoursePayment()"
+  class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+  <i class="fas fa-money-bill-wave"></i>
+  <span>Course Payment</span>
+</button>
+            <button onclick="openAdmissionForm()"
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-user-plus"></i>
+              <span>Admission Form</span>
+            </button>
+            <button onclick="searchOldFees()"
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-history"></i>
+              <span>Old Records</span>
+            </button>
+            <button id="manageStudentsBtn" onclick="toggleManageStudents()"
+              class="hidden w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-users"></i>
+              <span>Manage Students</span>
+            </button>
+            <button id="analyticsBtn" onclick="toggleAnalytics()"
+              class="hidden w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-chart-pie"></i>
+              <span>Analytics</span>
+            </button>
+            <button id="classMonthDashboardBtn"
+              onclick="toggleClassMonthDashboard()"
+              class="hidden w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-school"></i>
+              <span>Class Dashboard</span>
+            </button>
+            <button id="dueFeesBtn" onclick="toggleDueFees()"
+              class="hidden w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-hand-holding-usd"></i>
+              <span>Due Fees</span>
+            </button>
+            <button onclick="downloadPDF()"
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-file-pdf"></i>
+              <span>Download PDF</span>
+            </button>
+            <button onclick="showLatestReceipt()"
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white hover:bg-blue-700">
+              <i class="fas fa-receipt"></i>
+              <span>View Receipt</span>
+            </button>
+            <button onclick="logout()"
+              class="mt-6 w-full flex items-center gap-2 px-3 py-2 rounded-md text-white bg-red-600 hover:bg-red-700">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Logout</span>
+
             </button>
           </div>
         </div>
@@ -618,6 +704,178 @@
                 <option value="unpaid">Unpaid Only</option>
               </select>
             </div>
+          </div>
+
+          <!-- COURSE PAYMENT SECTION -->
+          <div id="coursePaymentSection" class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div class="bg-gradient-to-r from-blue-200 to-blue-800 p-6 text-white">
+              <h1 class="text-2xl font-bold">Course Enrollment</h1>
+              <p class="opacity-90">Select your course and payment option</p>
+            </div>
+
+            <div class="p-6 space-y-8">
+              <!-- Course Selection -->
+              <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Course Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
+                    <select id="courseSelect" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                      <option value="" disabled selected>Select a course</option>
+                      <option value="anm_nursing">ANM Nursing Diploma</option>
+                      <option value="gnm_nursing">GNM Nursing Diploma</option>
+                      <option value="dmlt">DMLT Diploma</option>
+                      <option value="ot_technician">OT Technician</option>
+                      <option value="general_nursing">General Nursing Assistant</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Course Duration</label>
+                    <div id="courseDuration" class="w-full p-2 rounded-lg bg-gray-50 border border-gray-200">-</div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Annual Fees</label>
+                    <div id="courseFees" class="w-full p-2 rounded-lg bg-gray-50 border border-gray-200 font-medium">-</div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Course Fees</label>
+                    <div id="totalFees" class="w-full p-2 rounded-lg bg-gray-50 border border-gray-200 font-medium">-</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Options -->
+              <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Payment Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Full Payment -->
+                  <div class="payment-card border-2 rounded-lg p-4 cursor-pointer" 
+                       onclick="selectPayment('full')" id="fullPaymentCard">
+                    <div class="flex items-center mb-2">
+                      <input type="radio" name="payment_type" value="full" class="h-5 w-5 text-blue-500" checked>
+                      <h3 class="ml-2 font-semibold">Full Payment</h3>
+                    </div>
+                    <p class="text-sm text-gray-600">Pay the entire amount upfront and get 5% discount</p>
+                    <div id="fullPaymentDetails" class="mt-3 text-sm">
+                      <div class="flex justify-between py-1">
+                        <span>Course Fees:</span>
+                        <span id="fullCourseFees">-</span>
+                      </div>
+                      <div class="flex justify-between py-1 font-semibold">
+                        <span>Discount (5%):</span>
+                        <span id="fullDiscount">-</span>
+                      </div>
+                      <div class="flex justify-between py-1 border-t border-gray-200 mt-1">
+                        <span class="font-bold">Total Payable:</span>
+                        <span id="fullTotal" class="font-bold text-blue-600">-</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Partial Payment -->
+                  <div class="payment-card border-2 rounded-lg p-4 cursor-pointer" 
+                       onclick="selectPayment('partial')" id="partialPaymentCard">
+                    <div class="flex items-center mb-2">
+                      <input type="radio" name="payment_type" value="partial" class="h-5 w-5 text-blue-500">
+                      <h3 class="ml-2 font-semibold">Partial Payment</h3>
+                    </div>
+                    <p class="text-sm text-gray-600">Pay 50% now and the rest in EMIs</p>
+                    <div id="partialPaymentDetails" class="mt-3 text-sm">
+                      <div class="flex justify-between py-1">
+                        <span>Initial Payment:</span>
+                        <span id="partialInitial">-</span>
+                      </div>
+                      <div class="flex justify-between py-1">
+                        <span>Remaining Amount:</span>
+                        <span id="partialRemaining">-</span>
+                      </div>
+                      <div class="flex justify-between py-1">
+                        <span>EMI Tenure:</span>
+                        <span>6 months</span>
+                      </div>
+                      <div class="flex justify-between py-1 border-t border-gray-200 mt-1">
+                        <span class="font-bold">EMI Amount:</span>
+                        <span id="partialEMI" class="font-bold text-blue-600">-</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- EMI Payment -->
+                  <div class="payment-card border-2 rounded-lg p-4 cursor-pointer" 
+                       onclick="selectPayment('emi')" id="emiPaymentCard">
+                    <div class="flex items-center mb-2">
+                      <input type="radio" name="payment_type" value="emi" class="h-5 w-5 text-blue-500">
+                      <h3 class="ml-2 font-semibold">EMI Plan</h3>
+                    </div>
+                    <p class="text-sm text-gray-600">Pay in easy monthly installments</p>
+                    <div id="emiPaymentDetails" class="mt-3 text-sm">
+                      <div class="flex justify-between py-1">
+                        <span>Down Payment:</span>
+                        <span id="emiDownPayment">-</span>
+                      </div>
+                      <div class="flex justify-between py-1">
+                        <span>EMI Tenure:</span>
+                        <select id="emiTenure" class="border rounded px-1" onchange="calculateEMI()">
+                          <option value="6">6 months</option>
+                          <option value="12">12 months</option>
+                        </select>
+                      </div>
+                      <div class="flex justify-between py-1">
+                        <span>EMI Amount:</span>
+                        <span id="emiAmount" class="font-bold text-blue-600">-</span>
+                      </div>
+                      <div class="flex justify-between py-1 border-t border-gray-200 mt-1">
+                        <span>Total Payable:</span>
+                        <span id="emiTotal" class="font-semibold">-</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Installment Plan (shown for EMI/Partial) -->
+              <div id="installmentPlan" class="hidden bg-white rounded-lg border border-gray-200 p-4 installment-plan">
+                <h3 class="font-semibold text-lg mb-3">Installment Schedule</h3>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Installment</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="installmentTable" class="bg-white divide-y divide-gray-200">
+                      <!-- Installment rows will be added here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="pt-4">
+                <button onclick="openAdmissionForm()" class="w-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-300 transform hover:scale-105">
+                  Proceed to Admission Form
+                </button>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- DUE FEES SECTION -->
+          <div id="dueFeesSection"
+            class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">Due Fees</h2>
+              <button onclick="closeDueFees()"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i><span>Back</span>
+              </button>
+            </div>
+          </div>
+
             <!-- Student Search Input -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Search
@@ -629,6 +887,7 @@
               <button onclick="loadClassMonthDashboard()"
                 class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg">
                 Filter
+
               </button>
             </div>
           </div>
@@ -1133,336 +1392,603 @@
         </div>
       </div>
 
-
       <script>
-        /******************************************
-        * 0) INITIAL SETUP & GLOBALS
-        ******************************************/
-        let dropdownData = {
-          sessions: [],
-          trades: [],
-          feesTypes: [],
-          paymentModes: []
-        };
+         /******************************************
+         * 0) INITIAL SETUP & GLOBALS
+         ******************************************/
+         let dropdownData = {
+         sessions: [], 
+         trades: [], 
+         feesTypes: [], 
+         paymentModes: []
+         };
+         
+         // We'll store the data used in Class Dashboard
+         let classMonthLineChartRef = null; 
+         let classMonthPieChartRef = null; 
+         let classMonthData = [];
+         
+         // For Analytics
+         let dateWiseChartRef = null;
+         let lineChartRef = null;
+         let pieChartRef = null;
+         
+         // For Due Fees
+         let dueFeesData = [];
+         /******************************************
+         * 0.0) COURSE PAYMENT  
+         ******************************************/
+               const courseData = {
+        anm_nursing: { duration: "1 year", fees: 60000 },
+        gnm_nursing: { duration: "3 years", fees: 95000 },
+        dmlt: { duration: "1 years", fees: 30000 },
+        ot_technician: { duration: "1 year", fees: 30000 },
+        general_nursing: { duration: "1 years", fees: 30000 },
+      };
 
-        // We'll store the data used in Class Dashboard
-        let classMonthLineChartRef = null;
-        let classMonthPieChartRef = null;
-        let classMonthData = [];
+      let selectedCourse = null;
+      let selectedPaymentType = "full";
 
-        // For Analytics
-        let dateWiseChartRef = null;
-        let lineChartRef = null;
-        let pieChartRef = null;
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .getElementById("courseSelect")
+          .addEventListener("change", updateCourseDetails);
+        selectPayment("full");
+      });
 
-        // For Due Fees
-        let dueFeesData = [];
+      // Update course details when selection changes
+      function updateCourseDetails() {
+        const select = document.getElementById("courseSelect");
+        selectedCourse = select.value;
 
-        /******************************************
-        * 1) HELPER FUNCTIONS
-        ******************************************/
-        function hideAllSections() {
-          document.getElementById('slipFormSection').classList.add('hidden');
-          document.getElementById('oldFeesSection').classList.add('hidden');
-          document.getElementById('analyticsSection').classList.add('hidden');
-          document.getElementById('manageStudentSection').classList.add('hidden');
-          document.getElementById('classMonthDashboard').classList.add('hidden');
-          document.getElementById('dueFeesSection').classList.add('hidden');
-          document.getElementById('separateReceipt').classList.add('hidden');
-          document.getElementById('ifId').classList.add('hidden');
-          document.getElementById('admissionFormSection').classList.add('hidden');
+        if (selectedCourse && courseData[selectedCourse]) {
+          const course = courseData[selectedCourse];
+
+          // Update displayed information
+          document.getElementById("courseDuration").textContent =
+            course.duration;
+          document.getElementById("courseFees").textContent = formatCurrency(
+            course.fees
+          );
+
+          // Calculate total fees based on duration
+          const years = course.duration.includes("year")
+            ? parseInt(course.duration.split(" ")[0])
+            : 1;
+          const totalFees = years * course.fees;
+          document.getElementById("totalFees").textContent =
+            formatCurrency(totalFees);
+
+          // Update all payment options
+          updatePaymentOptions(totalFees);
         }
-        function updateGeneratedTime() {
-          const now = new Date();
-          document.getElementById('generatedTime').innerText = now.toLocaleString();
+      }
+
+      // Update all payment options with the current total fees
+      function updatePaymentOptions(totalFees) {
+        // Full Payment
+        const discount = totalFees * 0.05;
+        const fullTotal = totalFees - discount;
+
+        document.getElementById("fullCourseFees").textContent =
+          formatCurrency(totalFees);
+        document.getElementById("fullDiscount").textContent =
+          formatCurrency(discount);
+        document.getElementById("fullTotal").textContent =
+          formatCurrency(fullTotal);
+
+        // Partial Payment
+        const partialInitial = Math.ceil(totalFees * 0.5);
+        const partialRemaining = totalFees - partialInitial;
+        const partialEMI = Math.ceil(partialRemaining / 6);
+
+        document.getElementById("partialInitial").textContent =
+          formatCurrency(partialInitial);
+        document.getElementById("partialRemaining").textContent =
+          formatCurrency(partialRemaining);
+        document.getElementById("partialEMI").textContent =
+          formatCurrency(partialEMI);
+
+        // EMI Payment
+        calculateEMI();
+      }
+
+      // Calculate EMI based on selected tenure
+      function calculateEMI() {
+        if (!selectedCourse) return;
+
+        const totalFees = getTotalFees();
+        const tenure = parseInt(document.getElementById("emiTenure").value);
+        const downPayment = Math.ceil(totalFees * 0.1); // 10% down payment
+        const emiAmount = Math.ceil((totalFees - downPayment) / tenure);
+
+        document.getElementById("emiDownPayment").textContent =
+          formatCurrency(downPayment);
+        document.getElementById("emiAmount").textContent =
+          formatCurrency(emiAmount);
+        document.getElementById("emiTotal").textContent =
+          formatCurrency(totalFees);
+
+        if (selectedPaymentType === "emi") {
+          generateInstallmentSchedule(
+            totalFees,
+            downPayment,
+            emiAmount,
+            tenure
+          );
         }
+      }
 
+      // Get total fees for selected course
+      function getTotalFees() {
+        if (!selectedCourse) return 0;
 
+        const course = courseData[selectedCourse];
+        const years = course.duration.includes("year")
+          ? parseInt(course.duration.split(" ")[0])
+          : 1;
 
-        // Convert any table to CSV / Copy / PDF
-        function copyTable(containerId) {
-          const container = document.getElementById(containerId);
-          const table = container.querySelector('table');
-          if (!table) return;
-          let range = document.createRange();
-          range.selectNode(table);
-          window.getSelection().removeAllRanges();
-          window.getSelection().addRange(range);
-          try {
-            document.execCommand('copy');
-            Swal.fire({ icon: 'success', title: 'Copied', text: 'Table copied to clipboard.', timer: 1500, showConfirmButton: false });
-          } catch (err) {
-            console.log(err);
-          }
-          window.getSelection().removeAllRanges();
-        }
+        return years * course.fees;
+      }
 
-        function exportCSV(containerId, filename) {
-          const container = document.getElementById(containerId);
-          const table = container.querySelector('table');
-          if (!table) return;
-          let csv = [];
-          const rows = table.querySelectorAll('tr');
-          rows.forEach(row => {
-            const cols = row.querySelectorAll('td, th');
-            let rowData = [];
-            cols.forEach(col => {
-              // Escape quotes
-              rowData.push('"' + (col.innerText.replace(/"/g, '""')) + '"');
-            });
-            csv.push(rowData.join(","));
-          });
-          const csvString = csv.join("\n");
-          const blob = new Blob([csvString], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.setAttribute('hidden', '');
-          a.setAttribute('href', url);
-          a.setAttribute('download', filename);
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }
+      // Select payment type
+      function selectPayment(type) {
+        selectedPaymentType = type;
 
-        function exportTablePDF(containerId, title) {
-          const container = document.getElementById(containerId);
-          const table = container.querySelector('table');
-          if (!table) return;
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = `<h2 style="text-align:center;font-size:20px;margin-bottom:10px;">${title}</h2>` + table.outerHTML;
-          const opt = {
-            margin: 0.5,
-            filename: title + '.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-          };
-          html2pdf().set(opt).from(tempDiv).save();
-        }
+        // Update UI
+        document.getElementById("fullPaymentCard").classList.remove("selected");
+        document
+          .getElementById("partialPaymentCard")
+          .classList.remove("selected");
+        document.getElementById("emiPaymentCard").classList.remove("selected");
 
-        /******************************************
-        * 2) LOGIN / LOGOUT
-        ******************************************/
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
-          e.preventDefault();
-          const loginData = {
-            username: document.getElementById('loginUsername').value.trim(),
-            password: document.getElementById('loginPassword').value.trim()
-          };
-          google.script.run.withSuccessHandler(function (resp) {
-            if (resp.success) {
-              Swal.fire({ icon: 'success', title: 'Login Successful', text: 'Welcome, ' + resp.userName, timer: 1500, showConfirmButton: false });
-              document.getElementById('loginSection').classList.add('hidden');
-              document.getElementById('appSection').classList.remove('hidden');
-              document.getElementById('userName').value = resp.userName;
-              document.getElementById('userRole').value = resp.role;
-              document.getElementById('userRoleDisplay').textContent = resp.role;
+        document.getElementById(`${type}PaymentCard`).classList.add("selected");
+        document.querySelector(`input[value="${type}"]`).checked = true;
 
-              // Admin UI if role=admin
-              if (resp.role === 'admin') {
-                document.getElementById('manageStudentsBtn').classList.remove('hidden');
-                document.getElementById('analyticsBtn').classList.remove('hidden');
-                document.getElementById('classMonthDashboardBtn').classList.remove('hidden');
-                document.getElementById('dueFeesBtn').classList.remove('hidden');
-              }
+        // Show/hide installment plan
+        const installmentPlan = document.getElementById("installmentPlan");
+        if (type === "emi" || type === "partial") {
+          installmentPlan.classList.remove("hidden");
 
-              // load dropdown data
-              google.script.run.withSuccessHandler(function (dd) {
-                if (dd.error) {
-                  console.log("Dropdown error", dd.error);
-                  return;
-                }
-                dropdownData = dd;
-                fillDropdowns();
-              }).getDropdownData();
-
-            } else {
-              Swal.fire({ icon: 'error', title: 'Login Failed', text: resp.error });
-            }
-          }).loginUser(loginData);
-        });
-
-        function logout() {
-          document.getElementById('appSection').classList.add('hidden');
-          document.getElementById('loginSection').classList.remove('hidden');
-          document.getElementById('loginUsername').value = "";
-          document.getElementById('loginPassword').value = "";
-          Swal.fire({ icon: 'info', title: 'Logged Out', text: 'You have been logged out.', timer: 1500, showConfirmButton: false });
-        }
-
-        /******************************************
-        * 3) SLIP FORM: SUBMIT / UPDATE
-        ******************************************/
-        document.getElementById('receiptForm').addEventListener('submit', function (e) {
-          e.preventDefault();
-          submitFeeData();
-        });
-
-        function submitFeeData() {
-          const formData = collectFormData();
-          google.script.run.withSuccessHandler(function (resp) {
-            if (resp.includes("Error")) {
-              Swal.fire({ icon: 'error', title: 'Error', text: resp });
-            } else {
-              Swal.fire({ icon: 'success', title: 'Saved', text: resp, timer: 1500, showConfirmButton: false });
-              document.getElementById('receiptForm').reset();
-              document.getElementById('monthField').value = "";
-              document.getElementById('recordRowNumber').value = "";
-              document.getElementById('btnUpdateData').classList.add('hidden');
-              document.getElementById('btnSubmitNew').classList.remove('hidden');
-              updateGeneratedTime();
-              showReceipt(formData); // Show receipt after successful submission
-            }
-          }).submitData(formData);
-        }
-
-        function updateFeeData() {
-          const userRole = document.getElementById('userRole').value;
-          const formData = collectFormData();
-          google.script.run.withSuccessHandler(function (resp) {
-            if (resp.includes("Error")) {
-              Swal.fire({ icon: 'error', title: 'Update Error', text: resp });
-            } else {
-              Swal.fire({ icon: 'success', title: 'Updated', text: resp, timer: 1500, showConfirmButton: false });
-              document.getElementById('receiptForm').reset();
-              document.getElementById('monthField').value = "";
-              document.getElementById('recordRowNumber').value = "";
-              document.getElementById('btnUpdateData').classList.add('hidden');
-              document.getElementById('btnSubmitNew').classList.remove('hidden');
-              updateGeneratedTime();
-              showReceipt(formData); // Show receipt after successful update
-            }
-          }).updateData(formData, userRole);
-        }
-
-
-
-
-
-        function collectFormData() {
-          return {
-            studentId: document.getElementById('studentId').value.trim(),
-            date: document.getElementById('date').value.trim(),
-            month: document.getElementById('monthField').value.trim(),
-            session: document.getElementById('session').value.trim(),
-            transactionId: document.getElementById('transactionId').value.trim(),
-            trade: document.getElementById('trade').value.trim(),
-            studentName: document.getElementById('studentName').value.trim(),
-            fatherName: document.getElementById('fatherName').value.trim(),
-            paidAmount: document.getElementById('paidAmount').value.trim(),
-            paidAmountInWord: document.getElementById('paidAmountInWord').value.trim(),
-            feesType: document.getElementById('feesType').value.trim(),
-            paymentMode: document.getElementById('paymentMode').value.trim(),
-            remark: document.getElementById('remark').value.trim(),
-            userName: document.getElementById('userName').value.trim(),
-            recordRowNumber: document.getElementById('recordRowNumber').value.trim()
-          };
-        }
-
-        // Convert amount => words
-        function numberToWords(num) {
-          if (num === 0) return "zero";
-          const a = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
-            "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
-          const b = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-          const g = ["", "thousand", "million", "billion"];
-          function grp(n) {
-            let str = "";
-            if (n > 99) {
-              str += a[Math.floor(n / 100)] + " hundred ";
-              n = n % 100;
-            }
-            if (n > 0) {
-              if (n < 20) str += a[n] + " ";
-              else str += b[Math.floor(n / 10)] + " " + a[n % 10] + " ";
-            }
-            return str;
-          }
-          let result = "";
-          let j = 0;
-          while (num > 0) {
-            let n = num % 1000;
-            if (n !== 0) result = grp(n) + g[j] + " " + result;
-            num = Math.floor(num / 1000);
-            j++;
-          }
-          return result.trim();
-        }
-        function convertAmountToWords() {
-          const val = document.getElementById('paidAmount').value.trim();
-          if (!val) {
-            document.getElementById('paidAmountInWord').value = "";
-            return;
-          }
-          const num = parseFloat(val);
-          if (isNaN(num)) {
-            document.getElementById('paidAmountInWord').value = "Invalid amount";
-            return;
-          }
-          document.getElementById('paidAmountInWord').value = numberToWords(Math.floor(num));
-        }
-        function updateMonthField() {
-          const dVal = document.getElementById('date').value;
-          if (dVal) {
-            const dObj = new Date(dVal);
-            const shortM = dObj.toLocaleString("en-US", { month: "short" });
-            document.getElementById('monthField').value = shortM;
+          const totalFees = getTotalFees();
+          if (type === "emi") {
+            calculateEMI();
           } else {
-            document.getElementById('monthField').value = "";
+            // Partial payment installment schedule
+            const initial = Math.ceil(totalFees * 0.5);
+            const emiAmount = Math.ceil((totalFees - initial) / 6);
+            generateInstallmentSchedule(totalFees, initial, emiAmount, 6);
           }
+        } else {
+          installmentPlan.classList.add("hidden");
+        }
+      }
+
+      // Generate installment schedule
+      function generateInstallmentSchedule(
+        total,
+        initialPayment,
+        emiAmount,
+        months
+      ) {
+        const table = document.getElementById("installmentTable");
+        table.innerHTML = "";
+
+        // Add initial payment row
+        if (initialPayment > 0) {
+          addInstallmentRow(
+            table,
+            0,
+            "Today",
+            initialPayment,
+            "Initial Payment"
+          );
         }
 
-        /******************************************
-        * 4) SEARCHING STUDENT & OLD FEES
-        ******************************************/
-        function searchBySideBar() {
-          const sid = document.getElementById('sideBarSearchId').value.trim();
-          if (!sid) {
-            Swal.fire({ icon: 'info', title: 'Enter Student ID', text: 'Please type a Student ID' });
-            return;
-          }
-          fetchStudentSession(sid);
-        }
-        function fetchStudentSession(studentId) {
-          google.script.run.withSuccessHandler(function (resp) {
-            if (resp.error) {
-              Swal.fire({ icon: 'error', title: 'Error', text: resp.error });
-            } else {
-              document.getElementById('studentId').value = studentId;
-              document.getElementById('session').value = resp.session;
-              document.getElementById('studentName').value = resp.studentName;
-              document.getElementById('fatherName').value = resp.fatherName;
-              document.getElementById('trade').value = resp.trade;
+        // Add EMI rows
+        const today = new Date();
+        let remaining = total - initialPayment;
 
-              // auto date => today
-              const today = new Date();
-              const yyyy = today.getFullYear();
-              const mm = String(today.getMonth() + 1).padStart(2, '0');
-              const dd = String(today.getDate()).padStart(2, '0');
-              document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
-              updateMonthField();
+        for (let i = 1; i <= months; i++) {
+          const dueDate = new Date();
+          dueDate.setMonth(today.getMonth() + i);
 
-              document.getElementById('recordRowNumber').value = "";
-              document.getElementById('btnUpdateData').classList.add('hidden');
-              document.getElementById('btnSubmitNew').classList.remove('hidden');
-              updateGeneratedTime();
-              Swal.fire({ icon: 'success', title: 'Student Loaded', timer: 1000, showConfirmButton: false });
-            }
-          }).getStudentSession(studentId);
+          const amount = i === months ? remaining : emiAmount;
+          remaining -= amount;
+
+          addInstallmentRow(table, i, formatDate(dueDate), amount, "EMI");
         }
-        function searchOldFees() {
-          const sid = prompt("Enter Student ID for Old Fees:");
-          if (!sid) return;
-          google.script.run.withSuccessHandler(function (resp) {
-            if (resp.error) {
-              Swal.fire({ icon: 'error', title: 'Error', text: resp.error });
-            } else {
-              let tbl = "";
-              if (!resp.length) {
-                tbl = `<tr><td colspan='5' class='px-4 py-2 text-center'>No old fee records found.</td></tr>`;
-              } else {
-                resp.forEach(r => {
-                  tbl += `<tr>
+      }
+
+      // Add row to installment table
+      function addInstallmentRow(table, number, date, amount, type) {
+        const row = document.createElement("tr");
+        row.className = number % 2 === 0 ? "bg-gray-50" : "bg-white";
+
+        row.innerHTML = `
+          <td class="px-4 py-2 whitespace-nowrap">${
+            number === 0 ? type : `Installment ${number}`
+          }</td>
+          <td class="px-4 py-2 whitespace-nowrap">${date}</td>
+          <td class="px-4 py-2 whitespace-nowrap">${formatCurrency(amount)}</td>
+          <td class="px-4 py-2 whitespace-nowrap">
+            <span class="px-2 py-1 text-xs rounded-full ${
+              number === 0
+                ? "bg-blue-100 text-blue-800"
+                : "bg-blue-50 text-blue-800"
+            }">
+              ${number === 0 ? "Due Now" : "Pending"}
+            </span>
+          </td>
+        `;
+
+        table.appendChild(row);
+      }
+
+      // Process payment (mock function)
+      // function processPayment() {
+      //   if (!selectedCourse) {
+      //     alert("Please select a course first");
+      //     return;
+      //   }
+
+      //   const paymentMethod = document.querySelector(
+      //     'input[name="payment_method"]:checked'
+      //   ).value;
+      //   const amount = getPaymentAmount();
+
+      //   alert(
+      //     `Processing ${paymentMethod} payment of ${formatCurrency(
+      //       amount
+      //     )} for ${
+      //       document.getElementById("courseSelect").selectedOptions[0].text
+      //     }`
+      //   );
+      //   // In a real app, you would integrate with a payment gateway here
+      // }
+
+      // Get payment amount based on selected option
+      function getPaymentAmount() {
+        switch (selectedPaymentType) {
+          case "full":
+            return getTotalFees() * 0.95; // with 5% discount
+          case "partial":
+            return Math.ceil(getTotalFees() * 0.5); // 50% initial
+          case "emi":
+            return Math.ceil(getTotalFees() * 0.1); // 10% down payment
+          default:
+            return 0;
+        }
+      }
+
+      // Helper function to format currency
+      function formatCurrency(amount) {
+        return "₹" + amount.toLocaleString("en-IN");
+      }
+
+      // Helper function to format date
+      function formatDate(date) {
+        return date.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+
+      // Open course payment section
+      function openCoursePayment() {
+        hideAllSections();
+        document
+          .getElementById("coursePaymentSection")
+          .classList.remove("hidden");
+      }
+         /******************************************
+         * 1) HELPER FUNCTIONS
+         ******************************************/
+         function hideAllSections() {
+         document.getElementById('slipFormSection').classList.add('hidden');
+         document.getElementById('oldFeesSection').classList.add('hidden');
+         document.getElementById('analyticsSection').classList.add('hidden');
+         document.getElementById('manageStudentSection').classList.add('hidden');
+         document.getElementById('classMonthDashboard').classList.add('hidden');
+         document.getElementById('dueFeesSection').classList.add('hidden');
+         document.getElementById('separateReceipt').classList.add('hidden');
+         document.getElementById('ifId').classList.add('hidden');
+         document.getElementById('admissionFormSection').classList.add('hidden');
+         document.getElementById('coursePaymentSection').classList.add('hidden');
+         }
+         function updateGeneratedTime() {
+         const now = new Date();
+         document.getElementById('generatedTime').innerText = now.toLocaleString();
+         }
+
+         
+         
+         // Convert any table to CSV / Copy / PDF
+         function copyTable(containerId) {
+         const container = document.getElementById(containerId);
+         const table = container.querySelector('table');
+         if (!table) return;
+         let range = document.createRange();
+         range.selectNode(table);
+         window.getSelection().removeAllRanges();
+         window.getSelection().addRange(range);
+         try {
+         document.execCommand('copy');
+         Swal.fire({ icon: 'success', title: 'Copied', text: 'Table copied to clipboard.', timer: 1500, showConfirmButton: false });
+         } catch (err) {
+         console.log(err);
+         }
+         window.getSelection().removeAllRanges();
+         }
+         
+         function exportCSV(containerId, filename) {
+         const container = document.getElementById(containerId);
+         const table = container.querySelector('table');
+         if (!table) return;
+         let csv = [];
+         const rows = table.querySelectorAll('tr');
+         rows.forEach(row => {
+         const cols = row.querySelectorAll('td, th');
+         let rowData = [];
+         cols.forEach(col => {
+           // Escape quotes
+           rowData.push('"'+(col.innerText.replace(/"/g, '""'))+'"');
+         });
+         csv.push(rowData.join(","));
+         });
+         const csvString = csv.join("\n");
+         const blob = new Blob([csvString], { type: 'text/csv' });
+         const url = URL.createObjectURL(blob);
+         const a = document.createElement('a');
+         a.setAttribute('hidden', '');
+         a.setAttribute('href', url);
+         a.setAttribute('download', filename);
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         }
+         
+         function exportTablePDF(containerId, title) {
+         const container = document.getElementById(containerId);
+         const table = container.querySelector('table');
+         if (!table) return;
+         const tempDiv = document.createElement('div');
+         tempDiv.innerHTML = `<h2 style="text-align:center;font-size:20px;margin-bottom:10px;">${title}</h2>` + table.outerHTML;
+         const opt = {
+         margin: 0.5,
+         filename: title + '.pdf',
+         image: { type: 'jpeg', quality: 0.98 },
+         html2canvas: { scale: 2 },
+         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+         };
+         html2pdf().set(opt).from(tempDiv).save();
+         }
+         
+         /******************************************
+         * 2) LOGIN / LOGOUT
+         ******************************************/
+         document.getElementById('loginForm').addEventListener('submit', function(e) {
+         e.preventDefault();
+         const loginData = {
+         username: document.getElementById('loginUsername').value.trim(),
+         password: document.getElementById('loginPassword').value.trim()
+         };
+         google.script.run.withSuccessHandler(function(resp) {
+         if (resp.success) {
+           Swal.fire({ icon: 'success', title: 'Login Successful', text: 'Welcome, ' + resp.userName, timer: 1500, showConfirmButton: false });
+           document.getElementById('loginSection').classList.add('hidden');
+           document.getElementById('appSection').classList.remove('hidden');
+           document.getElementById('userName').value = resp.userName;
+           document.getElementById('userRole').value = resp.role;
+           document.getElementById('userRoleDisplay').textContent = resp.role;
+         
+           // Admin UI if role=admin
+           if (resp.role === 'admin') {
+             document.getElementById('manageStudentsBtn').classList.remove('hidden');
+             document.getElementById('analyticsBtn').classList.remove('hidden');
+             document.getElementById('classMonthDashboardBtn').classList.remove('hidden');
+             document.getElementById('dueFeesBtn').classList.remove('hidden');
+           }
+         
+           // load dropdown data
+           google.script.run.withSuccessHandler(function(dd) {
+             if (dd.error) {
+               console.log("Dropdown error", dd.error);
+               return;
+             }
+             dropdownData = dd;
+             fillDropdowns();
+           }).getDropdownData();
+         
+         } else {
+           Swal.fire({ icon: 'error', title: 'Login Failed', text: resp.error });
+         }
+         }).loginUser(loginData);
+         });
+         
+         function logout() {
+         document.getElementById('appSection').classList.add('hidden');
+         document.getElementById('loginSection').classList.remove('hidden');
+         document.getElementById('loginUsername').value = "";
+         document.getElementById('loginPassword').value = "";
+         Swal.fire({ icon: 'info', title: 'Logged Out', text: 'You have been logged out.', timer: 1500, showConfirmButton: false });
+         }
+         
+         /******************************************
+         * 3) SLIP FORM: SUBMIT / UPDATE
+         ******************************************/
+         document.getElementById('receiptForm').addEventListener('submit', function(e) {
+         e.preventDefault();
+         submitFeeData();
+         });
+         
+         function submitFeeData() {
+         const formData = collectFormData();
+         google.script.run.withSuccessHandler(function(resp) {
+         if (resp.includes("Error")) {
+           Swal.fire({ icon: 'error', title: 'Error', text: resp });
+         } else {
+           Swal.fire({ icon: 'success', title: 'Saved', text: resp, timer: 1500, showConfirmButton: false });
+           document.getElementById('receiptForm').reset();
+           document.getElementById('monthField').value = "";
+           document.getElementById('recordRowNumber').value = "";
+           document.getElementById('btnUpdateData').classList.add('hidden');
+           document.getElementById('btnSubmitNew').classList.remove('hidden');
+           updateGeneratedTime();
+           showReceipt(formData); // Show receipt after successful submission
+         }
+         }).submitData(formData);
+         }
+         
+         function updateFeeData() {
+         const userRole = document.getElementById('userRole').value;
+         const formData = collectFormData();
+         google.script.run.withSuccessHandler(function(resp) {
+         if (resp.includes("Error")) {
+           Swal.fire({ icon: 'error', title: 'Update Error', text: resp });
+         } else {
+           Swal.fire({ icon: 'success', title: 'Updated', text: resp, timer: 1500, showConfirmButton: false });
+           document.getElementById('receiptForm').reset();
+           document.getElementById('monthField').value = "";
+           document.getElementById('recordRowNumber').value = "";
+           document.getElementById('btnUpdateData').classList.add('hidden');
+           document.getElementById('btnSubmitNew').classList.remove('hidden');
+           updateGeneratedTime();
+           showReceipt(formData); // Show receipt after successful update
+         }
+         }).updateData(formData, userRole);
+         }
+         
+          
+
+ 
+          
+         function collectFormData() {
+         return {
+         studentId: document.getElementById('studentId').value.trim(),
+         date: document.getElementById('date').value.trim(),
+         month: document.getElementById('monthField').value.trim(),
+         session: document.getElementById('session').value.trim(),
+         transactionId: document.getElementById('transactionId').value.trim(),
+         trade: document.getElementById('trade').value.trim(),
+         studentName: document.getElementById('studentName').value.trim(),
+         fatherName: document.getElementById('fatherName').value.trim(),
+         paidAmount: document.getElementById('paidAmount').value.trim(),
+         paidAmountInWord: document.getElementById('paidAmountInWord').value.trim(),
+         feesType: document.getElementById('feesType').value.trim(),
+         paymentMode: document.getElementById('paymentMode').value.trim(),
+         remark: document.getElementById('remark').value.trim(),
+         userName: document.getElementById('userName').value.trim(),
+         recordRowNumber: document.getElementById('recordRowNumber').value.trim()
+         };
+         }
+         
+         // Convert amount => words
+         function numberToWords(num) {
+         if (num === 0) return "zero";
+         const a = ["","one","two","three","four","five","six","seven","eight","nine","ten","eleven",
+                  "twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+         const b = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+         const g = ["","thousand","million","billion"];
+         function grp(n) {
+         let str = "";
+         if (n > 99) {
+           str += a[Math.floor(n / 100)] + " hundred ";
+           n = n % 100;
+         }
+         if (n > 0) {
+           if (n < 20) str += a[n]+" ";
+           else str += b[Math.floor(n / 10)]+" "+a[n % 10]+" ";
+         }
+         return str;
+         }
+         let result = "";
+         let j = 0;
+         while (num > 0) {
+         let n = num % 1000;
+         if (n !== 0) result = grp(n)+g[j]+" "+result;
+         num = Math.floor(num/1000);
+         j++;
+         }
+         return result.trim();
+         }
+         function convertAmountToWords() {
+         const val = document.getElementById('paidAmount').value.trim();
+         if (!val) {
+         document.getElementById('paidAmountInWord').value = "";
+         return;
+         }
+         const num = parseFloat(val);
+         if (isNaN(num)) {
+         document.getElementById('paidAmountInWord').value = "Invalid amount";
+         return;
+         }
+         document.getElementById('paidAmountInWord').value = numberToWords(Math.floor(num));
+         }
+         function updateMonthField() {
+         const dVal = document.getElementById('date').value;
+         if (dVal) {
+         const dObj = new Date(dVal);
+         const shortM = dObj.toLocaleString("en-US", { month: "short" });
+         document.getElementById('monthField').value = shortM;
+         } else {
+         document.getElementById('monthField').value = "";
+         }
+         }
+         
+         /******************************************
+         * 4) SEARCHING STUDENT & OLD FEES
+         ******************************************/
+         function searchBySideBar() {
+         const sid = document.getElementById('sideBarSearchId').value.trim();
+         if (!sid) {
+         Swal.fire({ icon: 'info', title: 'Enter Student ID', text: 'Please type a Student ID' });
+         return;
+         }
+         fetchStudentSession(sid);
+         }
+         function fetchStudentSession(studentId) {
+         google.script.run.withSuccessHandler(function(resp) {
+         if (resp.error) {
+           Swal.fire({ icon: 'error', title: 'Error', text: resp.error });
+         } else {
+           document.getElementById('studentId').value = studentId;
+           document.getElementById('session').value = resp.session;
+           document.getElementById('studentName').value = resp.studentName;
+           document.getElementById('fatherName').value = resp.fatherName;
+           document.getElementById('trade').value = resp.trade;
+         
+           // auto date => today
+           const today = new Date();
+           const yyyy = today.getFullYear();
+           const mm = String(today.getMonth()+1).padStart(2,'0');
+           const dd = String(today.getDate()).padStart(2,'0');
+           document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+           updateMonthField();
+         
+           document.getElementById('recordRowNumber').value = "";
+           document.getElementById('btnUpdateData').classList.add('hidden');
+           document.getElementById('btnSubmitNew').classList.remove('hidden');
+           updateGeneratedTime();
+           Swal.fire({ icon: 'success', title: 'Student Loaded', timer: 1000, showConfirmButton: false });
+         }
+         }).getStudentSession(studentId);
+         }
+         function searchOldFees() {
+         const sid = prompt("Enter Student ID for Old Fees:");
+         if (!sid) return;
+         google.script.run.withSuccessHandler(function(resp) {
+         if (resp.error) {
+           Swal.fire({ icon: 'error', title: 'Error', text: resp.error });
+         } else {
+           let tbl = "";
+           if (!resp.length) {
+             tbl = `<tr><td colspan='5' class='px-4 py-2 text-center'>No old fee records found.</td></tr>`;
+           } else {
+             resp.forEach(r => {
+               tbl += `<tr>
                  <td class='px-4 py-2'>${r.date}</td>
                  <td class='px-4 py-2'>${r.month}</td>
                  <td class='px-4 py-2'>${r.paidAmount}</td>
