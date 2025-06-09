@@ -1675,7 +1675,278 @@
          
          // For Due Fees
          let dueFeesData = [];
+<<<<<<< Updated upstream
          
+=======
+         /******************************************
+         * 0.0) COURSE PAYMENT  
+         ******************************************/
+        const courseData = {
+        anm_nursing: { duration: "1 year", fees: 60000 },
+        gnm_nursing: { duration: "3 years", fees: 95000 },
+        dmlt: { duration: "1 years", fees: 30000 },
+        ot_technician: { duration: "1 year", fees: 30000 },
+        general_nursing: { duration: "1 years", fees: 30000 },
+      };
+
+      let selectedCourse = null;
+      let selectedPaymentType = "full";
+
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .getElementById("courseSelect")
+          .addEventListener("change", updateCourseDetails);
+        selectPayment("full");
+      });
+
+      // Update course details when selection changes
+      function updateCourseDetails() {
+        const select = document.getElementById("courseSelect");
+        selectedCourse = select.value;
+
+        if (selectedCourse && courseData[selectedCourse]) {
+          const course = courseData[selectedCourse];
+
+          // Update displayed information
+          document.getElementById("courseDuration").textContent =
+            course.duration;
+          document.getElementById("courseFees").textContent = formatCurrency(
+            course.fees
+          );
+
+          // Calculate total fees based on duration
+          const years = course.duration.includes("year")
+            ? parseInt(course.duration.split(" ")[0])
+            : 1;
+          const totalFees = years * course.fees;
+          document.getElementById("totalFees").textContent =
+            formatCurrency(totalFees);
+
+          // Update all payment options
+          updatePaymentOptions(totalFees);
+        }
+      }
+
+      // Update all payment options with the current total fees
+      function updatePaymentOptions(totalFees) {
+        // Full Payment
+        const discount = totalFees * 0.05;
+        const fullTotal = totalFees - discount;
+
+        document.getElementById("fullCourseFees").textContent =
+          formatCurrency(totalFees);
+        document.getElementById("fullDiscount").textContent =
+          formatCurrency(discount);
+        document.getElementById("fullTotal").textContent =
+          formatCurrency(fullTotal);
+
+        // Partial Payment
+        const partialInitial = Math.ceil(totalFees * 0.5);
+        const partialRemaining = totalFees - partialInitial;
+        const partialEMI = Math.ceil(partialRemaining / 6);
+
+        document.getElementById("partialInitial").textContent =
+          formatCurrency(partialInitial);
+        document.getElementById("partialRemaining").textContent =
+          formatCurrency(partialRemaining);
+        document.getElementById("partialEMI").textContent =
+          formatCurrency(partialEMI);
+
+        // EMI Payment
+        calculateEMI();
+      }
+
+      // Calculate EMI based on selected tenure
+      function calculateEMI() {
+        if (!selectedCourse) return;
+
+        const totalFees = getTotalFees();
+        const tenure = parseInt(document.getElementById("emiTenure").value);
+        const downPayment = Math.ceil(totalFees * 0.1); // 10% down payment
+        const emiAmount = Math.ceil((totalFees - downPayment) / tenure);
+
+        document.getElementById("emiDownPayment").textContent =
+          formatCurrency(downPayment);
+        document.getElementById("emiAmount").textContent =
+          formatCurrency(emiAmount);
+        document.getElementById("emiTotal").textContent =
+          formatCurrency(totalFees);
+
+        if (selectedPaymentType === "emi") {
+          generateInstallmentSchedule(
+            totalFees,
+            downPayment,
+            emiAmount,
+            tenure
+          );
+        }
+      }
+
+      // Get total fees for selected course
+      function getTotalFees() {
+        if (!selectedCourse) return 0;
+
+        const course = courseData[selectedCourse];
+        const years = course.duration.includes("year")
+          ? parseInt(course.duration.split(" ")[0])
+          : 1;
+
+        return years * course.fees;
+      }
+
+      // Select payment type
+      function selectPayment(type) {
+        selectedPaymentType = type;
+
+        // Update UI
+        document.getElementById("fullPaymentCard").classList.remove("selected");
+        document
+          .getElementById("partialPaymentCard")
+          .classList.remove("selected");
+        document.getElementById("emiPaymentCard").classList.remove("selected");
+
+        document.getElementById(`${type}PaymentCard`).classList.add("selected");
+        document.querySelector(`input[value="${type}"]`).checked = true;
+
+        // Show/hide installment plan
+        const installmentPlan = document.getElementById("installmentPlan");
+        if (type === "emi" || type === "partial") {
+          installmentPlan.classList.remove("hidden");
+
+          const totalFees = getTotalFees();
+          if (type === "emi") {
+            calculateEMI();
+          } else {
+            // Partial payment installment schedule
+            const initial = Math.ceil(totalFees * 0.5);
+            const emiAmount = Math.ceil((totalFees - initial) / 6);
+            generateInstallmentSchedule(totalFees, initial, emiAmount, 6);
+          }
+        } else {
+          installmentPlan.classList.add("hidden");
+        }
+      }
+
+      // Generate installment schedule
+      function generateInstallmentSchedule(
+        total,
+        initialPayment,
+        emiAmount,
+        months
+      ) {
+        const table = document.getElementById("installmentTable");
+        table.innerHTML = "";
+
+        // Add initial payment row
+        if (initialPayment > 0) {
+          addInstallmentRow(
+            table,
+            0,
+            "Today",
+            initialPayment,
+            "Initial Payment"
+          );
+        }
+
+        // Add EMI rows
+        const today = new Date();
+        let remaining = total - initialPayment;
+
+        for (let i = 1; i <= months; i++) {
+          const dueDate = new Date();
+          dueDate.setMonth(today.getMonth() + i);
+
+          const amount = i === months ? remaining : emiAmount;
+          remaining -= amount;
+
+          addInstallmentRow(table, i, formatDate(dueDate), amount, "EMI");
+        }
+      }
+
+      // Add row to installment table
+      function addInstallmentRow(table, number, date, amount, type) {
+        const row = document.createElement("tr");
+        row.className = number % 2 === 0 ? "bg-gray-50" : "bg-white";
+
+        row.innerHTML = `
+          <td class="px-4 py-2 whitespace-nowrap">${
+            number === 0 ? type : `Installment ${number}`
+          }</td>
+          <td class="px-4 py-2 whitespace-nowrap">${date}</td>
+          <td class="px-4 py-2 whitespace-nowrap">${formatCurrency(amount)}</td>
+          <td class="px-4 py-2 whitespace-nowrap">
+            <span class="px-2 py-1 text-xs rounded-full ${
+              number === 0
+                ? "bg-blue-100 text-blue-800"
+                : "bg-blue-50 text-blue-800"
+            }">
+              ${number === 0 ? "Due Now" : "Pending"}
+            </span>
+          </td>
+        `;
+
+        table.appendChild(row);
+      }
+
+      // Process payment (mock function)
+      // function processPayment() {
+      //   if (!selectedCourse) {
+      //     alert("Please select a course first");
+      //     return;
+      //   }
+
+      //   const paymentMethod = document.querySelector(
+      //     'input[name="payment_method"]:checked'
+      //   ).value;
+      //   const amount = getPaymentAmount();
+
+      //   alert(
+      //     `Processing ${paymentMethod} payment of ${formatCurrency(
+      //       amount
+      //     )} for ${
+      //       document.getElementById("courseSelect").selectedOptions[0].text
+      //     }`
+      //   );
+      //   // In a real app, you would integrate with a payment gateway here
+      // }
+
+      // Get payment amount based on selected option
+      function getPaymentAmount() {
+        switch (selectedPaymentType) {
+          case "full":
+            return getTotalFees() * 0.95; // with 5% discount
+          case "partial":
+            return Math.ceil(getTotalFees() * 0.5); // 50% initial
+          case "emi":
+            return Math.ceil(getTotalFees() * 0.1); // 10% down payment
+          default:
+            return 0;
+        }
+      }
+
+      // Helper function to format currency
+      function formatCurrency(amount) {
+        return "₹" + amount.toLocaleString("en-IN");
+      }
+
+      // Helper function to format date
+      function formatDate(date) {
+        return date.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+
+      // Open course payment section
+      function openCoursePayment() {
+        hideAllSections();
+        document
+          .getElementById("coursePaymentSection")
+          .classList.remove("hidden");
+      }
+>>>>>>> Stashed changes
          /******************************************
          * 1) HELPER FUNCTIONS
          ******************************************/
@@ -3112,5 +3383,326 @@ const formValues = {
 }
 
       </script>
+<<<<<<< Updated upstream
+=======
+
+<!---------------------------Admission Form --------------------------->
+
+ <script>
+    // Ensure jsPDF is available globally
+    
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize payment type change handler
+      document.querySelectorAll('input[name="payment_type"]').forEach(radio => {
+        radio.addEventListener('change', updatePaymentFields);
+      });
+
+      // Initialize course year change handler
+      document.getElementById('courseYears').addEventListener('change', updateYearPaymentOptions);
+
+      // Initialize year payment input handlers (delegated for dynamic elements)
+      document.getElementById('yearPayments').addEventListener('input', function(event) {
+        if (event.target.matches('[id^="year"][id$="_paid"]') || event.target.matches('[id^="year"][id$="_installments"]')) {
+          calculateDueFees();
+        }
+      });
+
+      updatePaymentFields(); // Initialize payment fields
+      updateCourseDetails(); // Initialize course details
+    });
+
+    // const courseData = {
+    // anm_nursing: { duration: "2 years", fees: "₹50,000" },
+     // gnm_nursing: { duration: "3 years", fees: "₹60,000" },
+    //  dmlt: { duration: "2 years", fees: "₹45,000" },
+    //  ot_technician: { duration: "1 year", fees: "₹40,000" },
+    //  general_nursing: { duration: "2 years", fees: "₹55,000" },
+    //  beautician: { duration: "6 months", fees: "₹25,000" },
+    //  electrician: { duration: "1 year", fees: "₹30,000" },
+    //  mobile_repairing: { duration: "3 months", fees: "₹15,000" },
+    //  ac_refrigerator: { duration: "6 months", fees: "₹20,000" },
+    //  automobile: { duration: "1 year", fees: "₹35,000" }
+    //}; 
+
+    function updateCourseDetails() {
+      const select = document.getElementById('courseSelect');
+      const value = select.value;
+      const durationDiv = document.getElementById('courseDuration');
+      const feesDiv = document.getElementById('courseFees');
+      const yearsSelect = document.getElementById('courseYears');
+
+      if (courseData[value]) {
+        durationDiv.textContent = courseData[value].duration;
+        feesDiv.textContent = courseData[value].fees;
+
+        // Set course years based on duration
+        if (courseData[value].duration.includes('2')) {
+          yearsSelect.value = '2';
+        } else if (courseData[value].duration.includes('3')) {
+          yearsSelect.value = '3';
+        } else {
+          yearsSelect.value = '1';
+        }
+      } else {
+        durationDiv.textContent = '';
+        feesDiv.textContent = '';
+        yearsSelect.value = '1'; // Default to 1 year if no course is selected
+      }
+      updateYearPaymentOptions(); // Recalculate options based on new years
+    }
+
+    function updatePaymentFields() {
+      const paymentType = document.querySelector('input[name="payment_type"]:checked').value;
+      // No need to hide/show `paymentFields` or `emiFields` as they are now combined
+      // `yearPayments` will be updated by `updateYearPaymentOptions`
+      updateYearPaymentOptions();
+    }
+
+    function updateYearPaymentOptions() {
+      const courseYears = parseInt(document.getElementById('courseYears').value) || 0;
+      const paymentType = document.querySelector('input[name="payment_type"]:checked').value;
+      const yearPaymentsDiv = document.getElementById('yearPayments');
+      const courseFeesText = document.getElementById('courseFees').textContent;
+      const courseFees = parseInt(courseFeesText.replace(/[^0-9]/g, '')) || 0;
+
+      yearPaymentsDiv.innerHTML = ''; // Clear previous year inputs
+
+      if (courseYears > 0) {
+        for (let i = 1; i <= courseYears; i++) {
+          const yearDiv = document.createElement('div');
+          yearDiv.className = 'flex items-center mb-2';
+
+          if (paymentType === 'emi') {
+            yearDiv.innerHTML = `
+              <label class="w-1/4">Year ${i} EMI:</label>
+              <select class="border border-gray-300 rounded px-2 py-1 ml-2" id="year${i}_installments" onchange="calculateInstallment(${i})">
+                <option value="0">Select Installment</option>
+                <option value="6">6 Installments</option>
+                <option value="12">12 Installments</option>
+              </select>
+              <input class="border border-gray-300 rounded px-2 py-1 ml-2 w-1/4" id="year${i}_paid" type="number" placeholder="Paid Amount" oninput="calculateDueFees()" value="0">
+              <span class="ml-2" id="year${i}_due">Due: ₹${courseFees.toFixed(2)}</span>
+            `;
+          } else {
+            yearDiv.innerHTML = `
+              <label class="w-1/4">Year ${i} Fees:</label>
+              <input class="border border-gray-300 rounded px-2 py-1 ml-2 w-1/4" id="year${i}_total" type="number" placeholder="Total Fees" value="${courseFees}" readonly>
+              <input class="border border-gray-300 rounded px-2 py-1 ml-2 w-1/4" id="year${i}_paid" type="number" placeholder="Paid Amount" oninput="calculateDueFees()" ${i > 1 ? 'disabled' : ''} value="0">
+              <span class="ml-2" id="year${i}_due">Due: ₹${courseFees.toFixed(2)}</span>
+            `;
+          }
+          yearPaymentsDiv.appendChild(yearDiv);
+        }
+      }
+      calculateDueFees();
+    }
+
+    function calculateInstallment(year) {
+      const installments = parseInt(document.getElementById(`year${year}_installments`).value);
+      const courseFeesText = document.getElementById('courseFees').textContent;
+      const totalFees = parseInt(courseFeesText.replace(/[^0-9]/g, '')) || 0;
+      let installmentAmount = 0;
+
+      if (installments > 0) {
+        installmentAmount = Math.ceil(totalFees / installments);
+      }
+      document.getElementById(`year${year}_paid`).value = installmentAmount.toFixed(2);
+      calculateDueFees();
+    }
+
+    function calculateDueFees() {
+      const courseYears = parseInt(document.getElementById('courseYears').value) || 0;
+      const paymentType = document.querySelector('input[name="payment_type"]:checked').value;
+      const courseFeesText = document.getElementById('courseFees').textContent;
+      const courseFees = parseInt(courseFeesText.replace(/[^0-9]/g, '')) || 0;
+
+      for (let i = 1; i <= courseYears; i++) {
+        const paidElement = document.getElementById(`year${i}_paid`);
+        const dueElement = document.getElementById(`year${i}_due`);
+        let total = courseFees; // Default to courseFees for EMI and partial
+
+        if (paymentType !== 'emi') { // For full/partial, total is from the readonly input
+          const totalElement = document.getElementById(`year${i}_total`);
+          if (totalElement) {
+            total = parseFloat(totalElement.value) || 0;
+          }
+        }
+
+        if (paidElement && dueElement) {
+          const paid = parseFloat(paidElement.value) || 0;
+          let due = total - paid;
+
+          if (paymentType === 'emi') {
+            const installmentsSelect = document.getElementById(`year${i}_installments`);
+            const selectedInstallments = parseInt(installmentsSelect.value);
+            if (selectedInstallments > 0) {
+              const totalForYear = courseFees; // Total for EMI is always full course fees for that year
+              const installmentPerMonth = (totalForYear / selectedInstallments).toFixed(2);
+              const paidAmount = parseFloat(paidElement.value) || 0;
+              due = totalForYear - paidAmount;
+              dueElement.textContent = `Due: ₹${due.toFixed(2)} (EMI: ${selectedInstallments} x ₹${installmentPerMonth})`;
+            } else {
+               dueElement.textContent = `Due: ₹${due.toFixed(2)}`;
+            }
+          } else if (paymentType === 'partial' && due > 0) {
+            const emiAmount = (due / 11).toFixed(2);
+            dueElement.textContent = `Due: ₹${due.toFixed(2)} (EMI: 11 x ₹${emiAmount})`;
+          } else {
+            dueElement.textContent = `Due: ₹${due.toFixed(2)}`;
+          }
+
+          // Enable next year only if current year is fully paid (for full/partial)
+          if (i < courseYears && paymentType !== 'emi') {
+            const nextPaidElement = document.getElementById(`year${i + 1}_paid`);
+            if (nextPaidElement) {
+              nextPaidElement.disabled = due > 0;
+              if (due > 0) {
+                nextPaidElement.value = '';
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function handleSubmit(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const formObject = {};
+
+      formData.forEach((value, key) => {
+        if (key === 'agree') {
+          formObject[key] = document.getElementById('agree').checked;
+        } else {
+          formObject[key] = value;
+        }
+      });
+
+      // Add course details
+      formObject.courseYears = parseInt(document.getElementById('courseYears').value) || 0;
+      formObject.courseFees = document.getElementById('courseFees').textContent.trim();
+      formObject.courseDuration = document.getElementById('courseDuration').textContent.trim();
+
+      // Add year-specific payment data
+      const courseYears = formObject.courseYears;
+      const paymentType = document.querySelector('input[name="payment_type"]:checked').value;
+
+      for (let i = 1; i <= courseYears; i++) {
+        if (paymentType === 'emi') {
+          formObject[`year${i}_installments`] = getValue(`year${i}_installments`);
+          formObject[`year${i}_paid`] = getValue(`year${i}_paid`);
+          formObject[`year${i}_due`] = getDueValue(`year${i}_due`);
+        } else {
+          formObject[`year${i}_total`] = getValue(`year${i}_total`);
+          formObject[`year${i}_paid`] = getValue(`year${i}_paid`);
+          formObject[`year${i}_due`] = getDueValue(`year${i}_due`);
+        }
+      }
+
+      // Submit to Google Apps Script
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .submitForm(formObject);
+    }
+
+    // Helper functions
+    function getValue(id) {
+      const element = document.getElementById(id);
+      return element ? element.value : '';
+    }
+
+    function getDueValue(id) {
+      const element = document.getElementById(id);
+      return element ? element.textContent.replace(/[^\d.]/g, '') : '';
+    }
+
+    function onSuccess(result) {
+      Swal.fire({
+        title: 'Success!',
+        text: result.message,
+        icon: 'success',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        generatePDF();
+      });
+    }
+
+    function onFailure(error) {
+      Swal.fire({
+        title: 'Error!',
+        text: error.message,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+
+    function generatePDF() {
+      const element = document.getElementById('slipForm');
+      const options = {
+        scale: 3,
+        useCORS: true,
+        letterRendering: true,
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll('input, select').forEach(element => {
+            // Apply minimal padding to elements for better PDF rendering
+            element.style.paddingTop = '2px';
+            element.style.paddingBottom = '2px';
+            element.style.paddingLeft = '2px';
+            element.style.paddingRight = '2px';
+          });
+          // Hide buttons and other non-essential elements for the PDF
+          clonedDoc.getElementById('submitButton').style.display = 'none';
+          // Hide radio buttons and checkboxes by setting their container to display: none
+          clonedDoc.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => {
+            el.closest('label').style.display = 'none';
+          });
+          // Ensure border-bottom is visible for inputs that use it
+          clonedDoc.querySelectorAll('.border-b').forEach(el => {
+            el.style.borderBottomWidth = '1px';
+            el.style.borderColor = 'black';
+          });
+        }
+      };
+
+      html2canvas(element, options).then(canvas => {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let position = 0;
+
+        // Calculate the number of pages needed
+        const numPages = Math.ceil(imgHeight / pageHeight);
+
+        for (let i = 0; i < numPages; i++) {
+          const sX = 0; // start X
+          const sY = i * pageHeight * (canvas.width / imgWidth); // start Y based on page
+          const sWidth = canvas.width; // slice width
+          const sHeight = Math.min(pageHeight * (canvas.width / imgWidth), canvas.height - sY); // slice height, cap at remaining canvas height
+
+          // Create a temporary canvas to hold the sliced portion
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = sWidth;
+          sliceCanvas.height = sHeight;
+          const sliceContext = sliceCanvas.getContext('2d');
+          sliceContext.drawImage(canvas, sX, sY, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
+          if (i > 0) {
+            pdf.addPage();
+          }
+          pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, (sliceCanvas.height * imgWidth) / sliceCanvas.width);
+        }
+
+        const studentName = document.querySelector('input[name="student_name"]').value || 'Student';
+        pdf.save(`${studentName}_AdmissionForm.pdf`);
+      });
+    }
+  </script>
+<!---------------------------Admission Form End--------------------------->
+>>>>>>> Stashed changes
     </body>
   </html>
