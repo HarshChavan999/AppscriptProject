@@ -69,7 +69,8 @@ const CONFIG = {
     ADMISSION_STATUS: 15,   // Corresponds to Col Q in sheet
     ADMISSION_DATE: 16,     // Corresponds to Col R in sheet
     BATCH_ASSIGNED: 17,     // Corresponds to Col S in sheet
-    LOGGED_IN_USER_ID: 18   // Corresponds to Col T in sheet
+    LOGGED_IN_USER_ID: 18,   // Corresponds to Col T in sheet
+    GENDER: 19
   },
 
   // --- Column Mappings for Aadhar Lookup (within INQUIRY_SHEET_NAME 'DF') ---

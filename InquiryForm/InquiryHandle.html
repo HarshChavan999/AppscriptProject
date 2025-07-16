@@ -1,7 +1,7 @@
 <script>
     // Define the form fields that need to be populated/cleared
     const formFieldsToPopulate = [
-        'fullName', 'qualification', 'phoneNo', 'whatsappNo', 'parentsNo',
+        'firstName', 'middleName', 'lastName', 'qualification', 'phoneNo', 'whatsappNo', 'parentsNo',
         'email', 'age', 'addressLine1', 'addressLine2', 'addressLine3', 'pincode',
         'interestedCourse', 'inquiryTakenBy', 'branch22', 'gender'
     ];
@@ -9,7 +9,7 @@
     let currentFoundRecord = null; // To store the record found from Aadhar lookup
     let currentLoggedInUser = sessionStorage.getItem('loggedInUser') || ''; // Assuming this is set elsewhere
 
-    // Get references to DOM elements (ensure these IDs exist in your HTML)
+    // Get references to DOM elements
     const loginForm = document.getElementById('loginForm'); // Assuming a login form exists
     const inquiryFormSection = document.getElementById('inquiryFormSection'); // Assuming a section for the inquiry form
 
@@ -34,16 +34,15 @@
                 // Call Apps Script function to check Aadhar
                 google.script.run
                     .withSuccessHandler(handleAadharCheckResponse)
-                    .withFailureHandler(handleError)
+                    .withFailureHandler(handleError) // Ensure handleError hides spinner
                     .checkAadharNumberInquiry(aadharNumber);
             } else if (aadharNumber.length === 0) {
                 // If Aadhar field is cleared, also clear other fields and hide spinner
                 clearInquiryFormFields(true); // Keep Aadhar field itself clear
-                loadingSpinner.style.display = 'none';
+                loadingSpinner.style.display = 'none'; // Hide spinner
             } else {
                 // If not 12 digits, don't show spinner, don't call server
-                // You might want an inline message here for invalid format
-                loadingSpinner.style.display = 'none';
+                loadingSpinner.style.display = 'none'; // Ensure spinner is hidden if input is invalid
                 clearInquiryFormFields(true); // Clear if not valid
             }
         }, 500); // Wait for 500ms after typing stops
@@ -75,17 +74,27 @@
     }
 
     function handleAadharCheckResponse(record) {
-        document.getElementById('loadingSpinner').style.display = 'none'; // Hide spinner
+        document.getElementById('loadingSpinner').style.display = 'none'; // *** Always hide spinner on success ***
         if (record) {
             currentFoundRecord = record; // Store the found record
             showPopup(record);
         } else {
             currentFoundRecord = null;
             // If Aadhar is new, clear other form fields to allow fresh entry
-            // No alert here, as the popup is the primary interaction point for existing.
-            // If the Aadhar is not found, the fields remain clear for new input.
             clearInquiryFormFields(true); // Clear all fields except Aadhar
         }
+    }
+
+    function handleError(error) {
+        document.getElementById('loadingSpinner').style.display = 'none'; // *** Hide spinner on error too ***
+        console.error("Apps Script Error:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "An unexpected error occurred during Aadhar lookup.",
+            confirmButtonColor: "#1e3a8a",
+        });
+        clearInquiryFormFields(true); // Clear fields on error to avoid confusion
     }
 
     function showPopup(record) {
@@ -123,12 +132,22 @@
             // Populate Aadhar first, it's already in the input field, but good to be explicit
             document.getElementById('aadharNumber').value = currentFoundRecord.aadhaar || '';
 
+            // Split and populate name fields
+            const fullNameParts = currentFoundRecord.fullName ? currentFoundRecord.fullName.split(' ') : [];
+            document.getElementById('firstName').value = fullNameParts[0] || '';
+            document.getElementById('middleName').value = fullNameParts.length > 2 ? fullNameParts.slice(1, -1).join(' ') : '';
+            document.getElementById('lastName').value = fullNameParts.length > 1 ? fullNameParts[fullNameParts.length - 1] : '';
+
+
             // Populate other fields using the stored record
             formFieldsToPopulate.forEach(field => {
                 const inputElement = document.getElementById(field);
                 if (inputElement) {
-                    if (field === 'fullName') {
-                        inputElement.value = currentFoundRecord.fullName || '';
+                    if (field === 'addressLine1' || field === 'addressLine2' || field === 'addressLine3' || field === 'pincode') {
+                        // These are handled separately by the parsing logic in checkAadharNumberInquiry's return
+                        // If record contains separate addressLine1, etc., assign them directly.
+                        // Otherwise, rely on the split logic from checkAadharNumberInquiry.
+                        inputElement.value = currentFoundRecord[field] || '';
                     } else if (inputElement.type === 'date') {
                         if (currentFoundRecord[field]) {
                             const date = new Date(currentFoundRecord[field]);
@@ -148,7 +167,7 @@
                         if (!foundOption) {
                             inputElement.value = '';
                         }
-                    } else {
+                    } else if (field !== 'firstName' && field !== 'middleName' && field !== 'lastName') { // Avoid re-assigning name fields
                         inputElement.value = currentFoundRecord[field] || '';
                     }
                 }
@@ -203,13 +222,15 @@
             '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
         submitBtn.disabled = true;
 
-        // Collect form data
+        // Collect form data with individual name and address fields
         const formValues = {
             date:
                 document.getElementById("date")?.value ||
                 new Date().toISOString().split("T")[0],
             aadharNumber: document.getElementById("aadharNumber")?.value.trim() || "",
-            fullName: document.getElementById("fullName")?.value.trim() || "",
+            firstName: document.getElementById("firstName")?.value.trim() || "",
+            middleName: document.getElementById("middleName")?.value.trim() || "",
+            lastName: document.getElementById("lastName")?.value.trim() || "",
             gender: document.getElementById("gender")?.value.trim() || "",
             qualification: document.getElementById("qualification")?.value.trim() || "",
             phoneNo: document.getElementById("phoneNo")?.value.trim() || "",
@@ -229,7 +250,7 @@
 
             loggedInUserId: currentLoggedInUser || "Anonymous"
         };
-        
+
         console.log("Form Values:", formValues);
 
         // Send to Apps Script
@@ -273,8 +294,6 @@
     }
 
     // Function to show custom alert modal (retained from original)
-    // Ensure you have the 'Swal.fire' library (SweetAlert2) included in your HTML
-    // if you plan to use this for alerts. Otherwise, replace with standard 'alert()'.
     function showCustomAlert(title, message, isSuccess) {
          if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -310,10 +329,13 @@
     }
 
 
+
     function copyInquiry() {
         console.log('Copying inquiry data...');
         const inquiryData = {
-            fullName: document.getElementById('fullName').value,
+            firstName: document.getElementById('firstName').value,
+            middleName: document.getElementById('middleName').value,
+            lastName: document.getElementById('lastName').value,
             aadharNumber: document.getElementById('aadharNumber').value,
             qualification: document.getElementById('qualification').value,
             phoneNo: document.getElementById('phoneNo').value,

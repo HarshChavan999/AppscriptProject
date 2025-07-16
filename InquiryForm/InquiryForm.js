@@ -50,6 +50,7 @@ function InquiryProcessForm(formData) {
   }
 
   // Combine names for fullName display in PDF and sheet
+  // This correctly aggregates firstName, middleName, lastName from the client.
   formData.fullName = [
     formData.firstName,
     formData.middleName,
@@ -57,7 +58,7 @@ function InquiryProcessForm(formData) {
   ].filter(Boolean).join(" ");
 
   // Combine address for display in PDF and sheet
-  // Note: The sheet will store this combined string in one column based on CONFIG.INQUIRY_COLUMN_INDEX.ADDRESS
+  // This correctly aggregates addressLine1, addressLine2, addressLine3, pincode from the client.
   formData.address = [
     formData.addressLine1,
     formData.addressLine2,
@@ -69,20 +70,14 @@ function InquiryProcessForm(formData) {
   // 3. HTML Template Processing for PDF
   let htmlContent;
   try {
-    // Get the HTML template content
-    htmlContent = HtmlService.createTemplateFromFile("ifrom").getContent();
-
-    // Replace placeholders in the HTML content with form data
-    // This assumes your 'ifrom.html' has elements with IDs matching your formData keys
-    // For example, <span id="fullName"></span> will be replaced by formData.fullName
+    const template = HtmlService.createTemplateFromFile("ifrom");
+    
+    // Pass all formData properties to the template
     Object.keys(formData).forEach(key => {
-      // Create a regex to find elements with specific IDs and replace their content
-      // This is a more robust way to replace content within specific HTML tags
-      const regex = new RegExp(`(<[^>]*id="${key}"[^>]*>)(.*?)(<\\/[^>]*>)`, 's');
-      if (regex.test(htmlContent)) {
-        htmlContent = htmlContent.replace(regex, `$1${formData[key]}$3`);
-      }
+      template[key] = formData[key] || ''; // Pass data to the template, ensuring no undefined values
     });
+
+    htmlContent = template.evaluate().getContent();
 
   } catch (e) {
     console.error("InquiryProcessForm: HTML template error:", e);
@@ -104,7 +99,7 @@ function InquiryProcessForm(formData) {
   try {
     pdfBlob = Utilities.newBlob(htmlContent, 'text/html')
       .getAs('application/pdf')
-      .setName(`Inquiry_Form_${formData.fullName.replace(/ /g, '_')}_${new Date().getTime()}.pdf`); // Add timestamp for uniqueness
+      .setName(`Inquiry_Form_${formData.fullName.replace(/ /g, '_')}_${new Date().getTime()}.pdf`);
     pdfFolder.createFile(pdfBlob);
     console.log("InquiryProcessForm: PDF generated and saved.");
   } catch (e) {
@@ -126,7 +121,7 @@ function InquiryProcessForm(formData) {
   try {
     const requiredFields = [
       "aadharNumber", "fullName", "qualification", "phoneNo", "whatsappNo",
-      "parentsNo", "age", "addressLine1", "pincode", "gender",
+      "parentsNo", "age", "addressLine1", "pincode", "gender", // pincode and gender are included here, good.
       "interestedCourse", "inquiryTakenBy", "branch"
     ];
 
@@ -147,29 +142,28 @@ function InquiryProcessForm(formData) {
     }
 
     // Prepare row data array based on CONFIG.INQUIRY_COLUMN_INDEX
-    // This array will be used for both appendRow and setValues
     const rowData = [];
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.DATE_FORM] = formData.date;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.AADHAAR] = formData.aadharNumber;
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.FULL_NAME] = formData.fullName;
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.FULL_NAME] = formData.fullName; // Storing combined full name
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.QUALIFICATION] = formData.qualification;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.PHONE_NUMBER] = formData.phoneNo;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.WHATSAPP_NUMBER] = formData.whatsappNo;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.PARENTS_NUMBER] = formData.parentsNo;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.EMAIL_ADDRESS] = formData.email;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.AGE] = formData.age;
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.ADDRESS] = formData.address; // Combined address string
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.ADDRESS] = formData.address; // Storing combined address string
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.INTERESTED_COURSE] = formData.interestedCourse;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.INQUIRY_TAKEN_BY] = formData.inquiryTakenBy;
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.BRANCH] = formData.branch;
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.FOLLOW_UP_DATE] = ""; // Not from form
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.NOTES] = ""; // Not from form
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.ADMISSION_STATUS] = ""; // Not from form
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.ADMISSION_DATE] = ""; // Not from form
-    rowData[CONFIG.INQUIRY_COLUMN_INDEX.BATCH_ASSIGNED] = ""; // Not from form
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.FOLLOW_UP_DATE] = "";
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.NOTES] = "";
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.ADMISSION_STATUS] = "";
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.ADMISSION_DATE] = "";
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.BATCH_ASSIGNED] = "";
     rowData[CONFIG.INQUIRY_COLUMN_INDEX.LOGGED_IN_USER_ID] = userIdForAudit;
+    rowData[CONFIG.INQUIRY_COLUMN_INDEX.GENDER] = formData.gender; // Correctly added gender to rowData
 
-    // Fill any potential gaps with empty strings if not explicitly set (up to the last defined column)
     const maxColumnIndex = Math.max(...Object.values(CONFIG.INQUIRY_COLUMN_INDEX));
     for (let i = 0; i <= maxColumnIndex; i++) {
       if (rowData[i] === undefined) {
@@ -177,14 +171,23 @@ function InquiryProcessForm(formData) {
       }
     }
 
-    // Check if Aadhar number already exists
-    const existingRecordInfo = findAadharRecord(formData.aadharNumber, dfSheet); // Use the helper function
+    const existingRecordInfo = findAadharRecord(formData.aadharNumber, dfSheet);
     let message = "";
 
     if (existingRecordInfo) {
-      // Aadhar exists, update the row
-      const rowToUpdate = existingRecordInfo.rowIndex + 1; // +1 because sheet rows are 1-indexed
-      dfSheet.getRange(rowToUpdate, 1, 1, rowData.length + 1).setValues([[new Date(), ...rowData]]); // Include timestamp
+      const rowToUpdate = existingRecordInfo.rowIndex + 1;
+      const existingRowData = dfSheet.getRange(rowToUpdate, 1, 1, dfSheet.getLastColumn()).getValues()[0];
+
+      // This logic correctly updates only the fields provided by the form,
+      // preserving other sheet columns like follow-up dates, etc.
+      rowData.forEach((value, index) => {
+        if (index !== 0 && existingRowData[index] !== undefined) { // Skip timestamp (col 0)
+          existingRowData[index] = value;
+        }
+      });
+      existingRowData[0] = new Date(); // Update timestamp for modification
+
+      dfSheet.getRange(rowToUpdate, 1, 1, existingRowData.length).setValues([existingRowData]);
       message = "Aadhar record updated successfully!";
       createAuditLogEntry("Inquiry Form Update", userIdForAudit, {
         aadharNumber: formData.aadharNumber,
@@ -192,8 +195,7 @@ function InquiryProcessForm(formData) {
         row: rowToUpdate
       });
     } else {
-      // Aadhar is new, append a new row
-      dfSheet.appendRow([new Date(), ...rowData]); // Prepend timestamp for new row
+      dfSheet.appendRow([new Date(), ...rowData]);
       message = "New Aadhar record added successfully!";
       createAuditLogEntry("Inquiry Form Submission", userIdForAudit, {
         aadharNumber: formData.aadharNumber,
@@ -242,44 +244,70 @@ function checkAadharNumberInquiry(aadharNumber) {
   }
 
   const data = dfSheet.getDataRange().getValues();
-  // Ensure there's at least one row beyond headers if headers exist
-  if (data.length <= 1 && data[0][CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] !== "Aadhar") { // Basic check for empty or header-only sheet
+  if (data.length <= 1 && data[0][CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] !== "Aadhar") {
       console.log("checkAadharNumberInquiry: Sheet is empty or only has headers.");
       return null;
   }
 
-  // Iterate from the second row (index 1) assuming first row is headers
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    // Use the AADHAAR_LOOKUP.AADHAAR_COL for the correct column index in getValues() array
-    if (row[CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] == aadharNumber) {
+    if (String(row[CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] || '').trim() === aadharNumber) {
       console.log(`checkAadharNumberInquiry: Aadhar found at row index: ${i}`);
-      // Construct the record object using the lookup column indices
+
+      // Crucial: Ensure address is a string before splitting. This was the source of the TypeError.
+      const fullAddressFromSheet = String(row[CONFIG.AADHAAR_LOOKUP.ADDRESS_COL] || '').trim();
+      let addressLine1 = '';
+      let addressLine2 = '';
+      let addressLine3 = '';
+      let pincode = '';
+
+      if (fullAddressFromSheet) {
+          const parts = fullAddressFromSheet.split(',').map(p => p.trim());
+
+          addressLine1 = parts[0] || '';
+          if (parts.length > 1) {
+              addressLine2 = parts[1] || '';
+          }
+          if (parts.length > 2) { // Only assign addressLine3 if there are at least 3 parts
+              addressLine3 = parts[2] || '';
+          }
+
+          const pincodeMatch = fullAddressFromSheet.match(/Pincode:\s*(\d{6})\b/);
+          if (pincodeMatch && pincodeMatch[1]) {
+              pincode = pincodeMatch[1];
+          } else {
+              const lastPart = parts[parts.length - 1] || '';
+              const simplePincodeMatch = lastPart.match(/\b(\d{6})\b/);
+              if (simplePincodeMatch && simplePincodeMatch[1]) {
+                  pincode = simplePincodeMatch[1];
+              }
+          }
+      }
+
+      // Return individual address lines and pincode for client-side population.
       return {
-        rowIndex: i, // Return the 0-based index of the row
-        aadhaar: row[CONFIG.AADHAAR_LOOKUP.AADHAAR_COL],
-        fullName: row[CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL],
-        qualification: row[CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL],
-        phoneNumber: row[CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL],
-        whatsappNumber: row[CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL],
-        parentsNumber: row[CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL],
-        emailAddress: row[CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL],
-        age: row[CONFIG.AADHAAR_LOOKUP.AGE_COL],
-        // Split the combined address from the sheet back into individual lines for the form
-        // This is a heuristic and might need refinement based on how addresses are stored.
-        addressLine1: row[CONFIG.AADHAAR_LOOKUP.ADDRESS_COL].split(', ')[0] || '',
-        addressLine2: row[CONFIG.AADHAAR_LOOKUP.ADDRESS_COL].split(', ')[1] || '',
-        addressLine3: row[CONFIG.AADHAAR_LOOKUP.ADDRESS_COL].split(', ')[2] || '',
-        pincode: row[CONFIG.AADHAAR_LOOKUP.ADDRESS_COL].includes('Pincode: ') ? row[CONFIG.AADHAAR_LOOKUP.ADDRESS_COL].split('Pincode: ')[1] : '',
-        interestedCourse: row[CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL],
-        inquiryTakenBy: row[CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL],
-        branch: row[CONFIG.AADHAAR_LOOKUP.BRANCH_COL],
-        gender: row[CONFIG.AADHAAR_LOOKUP.GENDER_COL] // Assuming you add GENDER_COL to AADHAAR_LOOKUP in CONFIG
+        rowIndex: i,
+        aadhaar: String(row[CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] || '').trim(),
+        fullName: String(row[CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL] || '').trim(),
+        qualification: String(row[CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL] || '').trim(),
+        phoneNumber: String(row[CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL] || '').trim(),
+        whatsappNumber: String(row[CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL] || '').trim(),
+        parentsNumber: String(row[CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL] || '').trim(),
+        emailAddress: String(row[CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL] || '').trim(),
+        age: String(row[CONFIG.AADHAAR_LOOKUP.AGE_COL] || '').trim(),
+        addressLine1: addressLine1,
+        addressLine2: addressLine2,
+        addressLine3: addressLine3,
+        pincode: pincode,
+        interestedCourse: String(row[CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL] || '').trim(),
+        inquiryTakenBy: String(row[CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL] || '').trim(),
+        branch: String(row[CONFIG.AADHAAR_LOOKUP.BRANCH_COL] || '').trim(),
+        gender: String(row[CONFIG.AADHAAR_LOOKUP.GENDER_COL] || '').trim()
       };
     }
   }
   console.log(`checkAadharNumberInquiry: Aadhar ${aadharNumber} not found.`);
-  return null; // Aadhar not found
+  return null;
 }
 
 /**
@@ -292,25 +320,26 @@ function checkAadharNumberInquiry(aadharNumber) {
  */
 function findAadharRecord(aadharNumber, sheet) {
   const data = sheet.getDataRange().getValues();
-  const aadharColIndex = CONFIG.AADHAAR_LOOKUP.AADHAAR_COL; // Use lookup index for getValues() array
+  const aadharColIndex = CONFIG.AADHAAR_LOOKUP.AADHAAR_COL;
 
-  for (let i = 1; i < data.length; i++) { // Start from 1 to skip headers
-    if (data[i][aadharColIndex] == aadharNumber) {
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][aadharColIndex] || '').trim() === aadharNumber) {
       const record = {};
-      // Map data from sheet row to a structured object using AADHAAR_LOOKUP indices
-      record.aadhaar = data[i][CONFIG.AADHAAR_LOOKUP.AADHAAR_COL];
-      record.fullName = data[i][CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL];
-      record.qualification = data[i][CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL];
-      record.phoneNumber = data[i][CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL];
-      record.whatsappNumber = data[i][CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL];
-      record.parentsNumber = data[i][CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL];
-      record.emailAddress = data[i][CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL];
-      record.age = data[i][CONFIG.AADHAAR_LOOKUP.AGE_COL];
-      record.address = data[i][CONFIG.AADHAAR_LOOKUP.ADDRESS_COL]; // Combined address
-      record.interestedCourse = data[i][CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL];
-      record.inquiryTakenBy = data[i][CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL];
-      record.branch = data[i][CONFIG.AADHAAR_LOOKUP.BRANCH_COL];
-      record.gender = data[i][CONFIG.AADHAAR_LOOKUP.GENDER_COL]; // Assuming this is defined
+      // These are mapped directly as stored in the sheet.
+      // The `checkAadharNumberInquiry` handles the parsing for the frontend.
+      record.aadhaar = String(data[i][CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] || '').trim();
+      record.fullName = String(data[i][CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL] || '').trim();
+      record.qualification = String(data[i][CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL] || '').trim();
+      record.phoneNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL] || '').trim();
+      record.whatsappNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL] || '').trim();
+      record.parentsNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL] || '').trim();
+      record.emailAddress = String(data[i][CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL] || '').trim();
+      record.age = String(data[i][CONFIG.AADHAAR_LOOKUP.AGE_COL] || '').trim();
+      record.address = String(data[i][CONFIG.AADHAAR_LOOKUP.ADDRESS_COL] || '').trim();
+      record.interestedCourse = String(data[i][CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL] || '').trim();
+      record.inquiryTakenBy = String(data[i][CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL] || '').trim();
+      record.branch = String(data[i][CONFIG.AADHAAR_LOOKUP.BRANCH_COL] || '').trim();
+      record.gender = String(data[i][CONFIG.AADHAAR_LOOKUP.GENDER_COL] || '').trim();
 
       return { record: record, rowIndex: i };
     }
@@ -319,7 +348,7 @@ function findAadharRecord(aadharNumber, sheet) {
 }
 
 // Helper function for audit logging (make sure this is defined)
-// This function needs to be accessible globally in your Apps Script project.
+
 function createAuditLogEntry(eventType, userId, details) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const auditSheet = ss.getSheetByName(CONFIG.AUDIT_LOG_SHEET_NAME);

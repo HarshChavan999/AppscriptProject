@@ -1,6 +1,8 @@
 <div class="flex items-center justify-center bg-gray-100 p-4">
 
-    <form id="ifId" class="inquiry-form-container" onsubmit="InquiryFormHandle(event)">
+
+
+<form id="ifId" class="inquiry-form-container" onsubmit="InquiryFormHandle(event)">
     <div class="form-wrapper">
         <div class="form-card">
             <div class="form-header">
@@ -38,20 +40,33 @@
                             <input type="date" id="date" name="date" required class="form-input">
                         </div>
                         <div>
-                            <label for="aadharNumber" class="form-label"><i class="fas fa-id-card"></i>Aadhar Number</label>
-                            <input type="text" id="aadharNumber" name="aadharNumber" required class="form-input"
-                                pattern="^\d{12}$" title="Aadhar number must be 12 digits">
-                            <span id="loadingSpinner" style="display: none;"></span>
+                            <label for="aadharNumber" class="form-label">
+                                <i class="fas fa-id-card"></i> Aadhar Number
+                            </label>
+                            <input type="text" id="aadharNumber" name="aadharNumber"
+                                class="form-input" pattern="\d{12}" title="Please enter a 12-digit Aadhar number" maxlength="12">
+                            <i id="loadingSpinner" class="fas fa-spinner fa-spin" style="display: none; margin-left: 5px;"></i>
                         </div>
                     </div>
                     <div class="form-row">
                         <div>
-                            <label for="fullName" class="form-label"><i class="fas fa-user"></i>Full Name</label>
-                            <input type="text" id="fullName" name="fullName" required class="form-input">
+                            <label for="firstName" class="form-label"><i class="fas fa-user"></i>First Name</label>
+                            <input type="text" id="firstName" name="firstName" required class="form-input">
                         </div>
                         <div>
-                            <label for="qualification" class="form-label"><i
-                                    class="fas fa-graduation-cap"></i>Qualification</label>
+                            <label for="middleName" class="form-label"><i class="fas fa-user"></i>Middle Name</label>
+                            <input type="text" id="middleName" name="middleName" class="form-input">
+                        </div>
+                        <div>
+                            <label for="lastName" class="form-label"><i class="fas fa-user"></i>Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label for="qualification" class="form-label">
+                                <i class="fas fa-graduation-cap"></i>Qualification
+                            </label>
                             <input type="text" id="qualification" name="qualification" required class="form-input">
                         </div>
                         <div>
@@ -121,7 +136,7 @@
                             </div>
                             <div>
                                 <label for="pincode" class="form-label">Pincode</label>
-                                <input type="text" id="pincode" name="pincode" required class="form-input" 
+                                <input type="text" id="pincode" name="pincode" required class="form-input"
                                     pattern="[0-9]{6}" title="6-digit pincode" maxlength="6">
                             </div>
                         </div>
@@ -142,7 +157,9 @@
                                 <option value="ot_technician">OT Technician</option>
                                 <option value="general_nursing">General Nursing and Midwifery Assistant</option>
 
+
                             </select>
+
                         </div>
                         <div>
                             <label for="inquiryTakenBy" class="form-label"><i class="fas fa-user-tie"></i>Inquiry
@@ -166,6 +183,7 @@
                                 <div id="agreeError1" class="error-message"></div>
                             </div>
 
+
                             <div class="flex justify-end space-x-4">
                                 <button type="submit" onclick="copyInquiry()" id="submitButton2"
                                     class="submit-btn text-blue-600 px-8 py-2 rounded-lg font-medium">
@@ -187,18 +205,21 @@
             </div>
         </div>
     </div>
-</form>
 
-<div id="dataPopup" class="popup" style="display: none;">
-    <div class="popup-header">
-        <h2>Existing Aadhar Record Found!</h2>
-        <span class="popup-close" onclick="closePopup()">&times;</span>
-    </div>
-    <div id="popupContent">
+    <div id="dataPopup" class="modal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center;">
+        <div class="modal-content" style="background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <span class="close-button" onclick="closePopup()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 style="color: #1e3a8a; margin-bottom: 15px;">Existing Aadhar Found!</h2>
+            <div id="popupContent" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                </div>
+            <button onclick="fillFormFromPopup()" style="background-color: #1e3a8a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                Fill Form with This Data
+            </button>
+            <button onclick="closePopup(); clearInquiryFormFields(true);" style="background-color: #ccc; color: #333; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-left: 10px;">
+                Continue with New Inquiry
+            </button>
         </div>
-    <div class="popup-buttons">
-        <button onclick="fillFormFromPopup()">Use this data</button>
-        <button onclick="closePopup()">Cancel</button>
+
     </div>
-</div>
-    </main>
+</form>
+</main>
