@@ -518,11 +518,18 @@ function DInsReceipt(number,amount){
 
   function copyAdmission(){
     // Name
-        sessionStorage.setItem(
-      "tempText3",
-      document.getElementById("student_name").value
+     sessionStorage.setItem(
+      "first_name",
+      document.getElementById("first_name").value
     );
-    document.getElementById("std_Coursepayname").value=sessionStorage.getItem("tempText3");
+    sessionStorage.setItem(
+      "last_name",
+      document.getElementById("last_name").value
+    );
+    let firstName = sessionStorage.getItem('first_name');
+    let lastName = sessionStorage.getItem('last_name');
+    let fullName = firstName + ' ' + lastName;
+    document.getElementById("std_Coursepayname").value= fullName;
 
     //ID
             sessionStorage.setItem(
