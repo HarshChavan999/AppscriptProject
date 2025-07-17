@@ -44,55 +44,70 @@ const CONFIG = {
   // Col T: Logged In User ID (if appended after form data)
 
   INQUIRY_COLUMN_INDEX: {
-    // Note: Column A (Timestamp) is typically handled by `new Date()` at the very start of the `rowData` array
-    // and doesn't need a specific CONFIG mapping unless you need to read it.
-    DATE_FORM: 1,              // Maps to Sheet Column B (index 0 for the data array passed to appendRow)
-    AADHAAR: 2,                // Maps to Sheet Column C (index 1 for the data array)
-    FULL_NAME: 3,              // Maps to Sheet Column D (index 2 for the data array)
-    QUALIFICATION: 4,          // Maps to Sheet Column E (index 3 for the data array)
-    PHONE_NUMBER: 5,           // Maps to Sheet Column F (index 4 for the data array)
-    WHATSAPP_NUMBER: 6,        // Maps to Sheet Column G (index 5 for the data array)
-    PARENTS_NUMBER: 7,         // Maps to Sheet Column H (index 6 for the data array)
-    EMAIL_ADDRESS: 8,          // Maps to Sheet Column I (index 7 for the data array)
-    AGE: 9,                    // Maps to Sheet Column J (index 8 for the data array)
-    ADDRESS: 10,                // Maps to Sheet Column K (index 9 for the data array)
-    INTERESTED_COURSE: 11,     // Maps to Sheet Column L (index 10 for the data array)
-    INQUIRY_TAKEN_BY: 12,      // Maps to Sheet Column M (index 11 for the data array)
-    BRANCH: 13,                // Maps to Sheet Column N (index 12 for the data array)
-    FOLLOW_UP_DATE: 14,        // Maps to Sheet Column O (index 13) - initially blank from form
-    NOTES: 15,                 // Maps to Sheet Column P (index 14) - initially blank from form
-    ADMISSION_STATUS: 16,      // Maps to Sheet Column Q (index 15) - initially blank from form
-    ADMISSION_DATE: 17,        // Maps to Sheet Column R (index 16) - initially blank from form
-    BATCH_ASSIGNED: 18,        // Maps to Sheet Column S (index 17) - initially blank from form
-    LOGGED_IN_USER_ID: 19      // Maps to Sheet Column T (index 18) - if stored after Batch Assigned
+    // These indices are 0-based relative to the *data array that will be appended*,
+    // where the Timestamp (Col A) is automatically added by Google Sheets and isn't
+    // part of the data you explicitly pass in `appendRow([Timestamp, ...rowData])`.
+    // So, if your `rowData` starts with 'Date (from form)' which goes into Col B,
+    // its index in `rowData` is 0.
+    // However, for lookup (getValues()), the Timestamp *is* included, so indices will shift.
+
+    DATE_FORM: 0,           // Corresponds to Col B in sheet
+    AADHAAR: 1,             // Corresponds to Col C in sheet
+    FULL_NAME: 2,           // Corresponds to Col D in sheet
+    QUALIFICATION: 3,       // Corresponds to Col E in sheet
+    PHONE_NUMBER: 4,        // Corresponds to Col F in sheet
+    WHATSAPP_NUMBER: 5,     // Corresponds to Col G in sheet
+    PARENTS_NUMBER: 6,      // Corresponds to Col H in sheet
+    EMAIL_ADDRESS: 7,       // Corresponds to Col I in sheet
+    AGE: 8,                 // Corresponds to Col J in sheet
+    ADDRESS: 9,             // Corresponds to Col K in sheet
+    INTERESTED_COURSE: 10,  // Corresponds to Col L in sheet
+    INQUIRY_TAKEN_BY: 11,   // Corresponds to Col M in sheet
+    BRANCH: 12,             // Corresponds to Col N in sheet
+    FOLLOW_UP_DATE: 13,     // Corresponds to Col O in sheet
+    NOTES: 14,              // Corresponds to Col P in sheet
+    ADMISSION_STATUS: 15,   // Corresponds to Col Q in sheet
+    ADMISSION_DATE: 16,     // Corresponds to Col R in sheet
+    BATCH_ASSIGNED: 17,     // Corresponds to Col S in sheet
+    LOGGED_IN_USER_ID: 18,   // Corresponds to Col T in sheet
+    GENDER: 19
   },
 
-  // --- Column Mappings for Aadhaar Lookup ---
-  // Assuming Aadhaar records for lookup are also in the 'DF' (INQUIRY_SHEET_NAME)
-  // These should match the actual columns in your 'DF' sheet where the data resides.
-  // The 'data' retrieved by `getValues()` from `getDataRange()` will include Column A (Timestamp),
-  // so the indices here will be one higher than the `INQUIRY_COLUMN_INDEX` for the same visual column.
+  // --- Column Mappings for Aadhar Lookup (within INQUIRY_SHEET_NAME 'DF') ---
+  // These indices (0-based) must match the column order in your 'DF' Google Sheet precisely,
+  // when you use `getDataRange().getValues()`. This method includes ALL columns,
+  // including the auto-generated Timestamp in Column A.
   //
-  // For lookup, if Col A is Timestamp, Col B is Date, Col C is Aadhaar:
-  AADHAAR_RECORDS_SHEET_NAME: 'DF', // Sheet name for lookup
-  DATE_LOOKUP_COLUMN: 1,            // Actual Column B (index 1 in `getValues()` array)
-  AADHAAR_LOOKUP_COLUMN: 2,         // Actual Column C (index 2 in `getValues()` array)
-  FULL_NAME_LOOKUP_COLUMN: 3,       // Actual Column D (index 3 in `getValues()` array)
-  QUALIFICATION_LOOKUP_COLUMN: 4,   // Actual Column E (index 4 in `getValues()` array)
-  PHONE_NO_LOOKUP_COLUMN: 5,        // Actual Column F (index 5 in `getValues()` array)
-  WHATSAPP_NO_LOOKUP_COLUMN: 6,     // Actual Column G (index 6 in `getValues()` array)
-  PARENTS_NO_LOOKUP_COLUMN: 7,      // Actual Column H (index 7 in `getValues()` array)
-  EMAIL_LOOKUP_COLUMN: 8,           // Actual Column I (index 8 in `getValues()` array)
-  AGE_LOOKUP_COLUMN: 9,             // Actual Column J (index 9 in `getValues()` array)
-  ADDRESS_LOOKUP_COLUMN: 10         // Actual Column K (index 10 in `getValues()` array)
-};
+  // Col A: Timestamp (index 0 in getValues() array)
+  // Col B: Date (index 1)
+  // Col C: Aadhar (index 2)
+  // ...and so on.
+  //
+  // Therefore, these indices will be one higher than their corresponding visual column
+  // if column A is Timestamp.
 
-// // Helper function for audit logging (make sure this is defined)
-// function createAuditLogEntry(eventType, userId, details) {
-//   const auditSheet = ss.getSheetByName(CONFIG.AUDIT_LOG_SHEET_NAME);
-//   if (auditSheet) {
-//     auditSheet.appendRow([new Date(), eventType, userId, JSON.stringify(details)]);
-//   } else {
-//     console.error(`Audit log sheet '${CONFIG.AUDIT_LOG_SHEET_NAME}' not found. Audit entry not logged.`);
-//   }
-// }
+  AADHAAR_LOOKUP: {
+    SHEET_NAME: 'DF', // The sheet where Aadhar records are stored for lookup
+    // These indices are 0-based from the `getValues()` array
+    TIMESTAMP_COL: 0,            // Column A
+    DATE_FORM_COL: 1,            // Column B
+    AADHAAR_COL: 2,              // Column C
+    FULL_NAME_COL: 3,            // Column D
+    QUALIFICATION_COL: 4,        // Column E
+    PHONE_NUMBER_COL: 5,         // Column F
+    WHATSAPP_NUMBER_COL: 6,      // Column G
+    PARENTS_NUMBER_COL: 7,       // Column H
+    EMAIL_ADDRESS_COL: 8,        // Column I
+    AGE_COL: 9,                  // Column J
+    ADDRESS_COL: 10,             // Column K
+    INTERESTED_COURSE_COL: 11,   // Column L
+    INQUIRY_TAKEN_BY_COL: 12,    // Column M
+    BRANCH_COL: 13,              // Column N
+    FOLLOW_UP_DATE_COL: 14,      // Column O
+    NOTES_COL: 15,               // Column P
+    ADMISSION_STATUS_COL: 16,    // Column Q
+    ADMISSION_DATE_COL: 17,      // Column R
+    BATCH_ASSIGNED_COL: 18,      // Column S
+    LOGGED_IN_USER_ID_COL: 19    // Column T
+  }
+};
