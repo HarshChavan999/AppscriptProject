@@ -403,6 +403,7 @@ function getCourseDataByLocation(branch) {
     // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
     // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
     document.getElementById("receiptFormSection").classList.add("hidden");
+    document.getElementById("feeReceiptForm").classList.add("hidden");
     
 
   }
@@ -1088,6 +1089,7 @@ function generateReceipt() {
                         box-sizing: border-box;
                         background: white;
                         margin-bottom: 10mm; /* Space between two receipts */
+                        page-break-inside: avoid;
                     }
 
                     .header {
@@ -1098,19 +1100,23 @@ function generateReceipt() {
                         padding-bottom: 10px;
                     }
 
-                    .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #333;
-                        border-radius: 50%;
-                        margin-right: 15px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: white;
-                        font-size: 24px;
-                        font-weight: bold;
-                    }
+.logo {
+    width: 60px;
+    height: 60px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.logo img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
 
                     .institute-name {
                         font-size: 28px;
@@ -1249,7 +1255,10 @@ function generateReceipt() {
                     <!-- First Receipt -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">S</div>
+                           <div class="logo">
+  <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
+</div>
+
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -1316,7 +1325,11 @@ function generateReceipt() {
                     <!-- Second Receipt (Copy) -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">S</div>
+                           <div class="logo">
+  <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
+</div>
+
+
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>

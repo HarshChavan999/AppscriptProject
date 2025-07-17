@@ -18,10 +18,10 @@
    <aside class="fixed top-0 left-0 bg-blue-800 text-white w-64 hidden md:flex flex-col h-screen z-40">
     <div class="px-6 py-6 bg-blue-900 flex flex-col items-center justify-center">
         <a href="#" onclick="openInquiryForm()">
-            <img id="logo-home-link" src="https://i.postimg.cc/DZFDcqP8/IMG-20250320-WA0023-1-modified-3.png" alt="Institute Logo" style="cursor: pointer;">
+            <img id="logo-home-link" src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="Institute Logo" style="cursor: pointer;">
         </a>
-        <h2 class="text-lg font-bold">STI</h2>
-        <p class="text-xs text-blue-200">Role: <span id="userRoleDisplay">admin</span></p>
+        <!-- <h2 class="text-lg font-bold">STI</h2> -->
+        <p class="text-xs text-blue-200 mt-2">Role: <span id="userRoleDisplay">admin</span></p>
     </div>
 <div class="p-4"> <label class="block text-xs text-blue-200">Search Student ID</label> <div class="mt-1 relative flex items-center"> <input type="text" id="sideBarSearchId"
                        class="w-full pl-4 pr-10 py-2 rounded-md text-black
@@ -57,6 +57,11 @@
   class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white transition duration-300 ease-in-out hover:bg-blue-700 active:scale-95 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
   <i class="fas fa-receipt"></i>
   <span>Admission Receipt</span>
+</button>
+ <button onclick="openexamfees()"
+  class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-white transition duration-300 ease-in-out hover:bg-blue-700 active:scale-95 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+  <i class="fas fa-receipt"></i>
+  <span> EXAM Receipt</span>
 </button>
         
         <!-- <button onclick="searchOldFees()"
