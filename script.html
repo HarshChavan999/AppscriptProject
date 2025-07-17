@@ -301,7 +301,7 @@ function getCourseDataByLocation(branch) {
       ${
         number === 0
           ? ""
-          : `<button id="${receiptBtnId}" class="text-sm px-3 py-1 bg-green-600 text-white rounded hidden" onclick="downloadReceipt(${number}, '${date}', ${amount})">
+          : `<button id="${receiptBtnId}" onclick="DInsReceipt(${number},${amount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded hidden">
                Receipt
              </button>`
       }
@@ -325,9 +325,11 @@ function getCourseDataByLocation(branch) {
     receiptButton.classList.add("hidden");
   }
 
-  if(receiptButton.onclick){
-    // generateInstallmentReceipt(number,amount);
-  }
+
+}
+function DInsReceipt(number,amount){
+  console.log("Installment Receipt buttojn clicked");
+  generateInstallmentReceipt(number,amount);
 }
 
 
