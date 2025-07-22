@@ -654,7 +654,6 @@ function generateAndSaveEnrollment() {
     loadReceipt("Not Available");
   }
 }
-
 function loadReceipt(enrollmentID, studentName, course) {
     try {
         // Generate receipt number and date
@@ -1080,7 +1079,6 @@ function loadReceipt(enrollmentID, studentName, course) {
 }
 
 function AdmissionHandle(event) {
-  generateAndSaveEnrollment();
   event.preventDefault();
   console.log("Form submission started");
 
