@@ -994,7 +994,7 @@ function saveCoursePayment(data) {
     data.ID,
     data.Coursepayname,
     data.coursePaySelect,
-    data.courseDuration,
+    data.courseDuration0,
     data.coursePayFees,
     data.totalFees,
     data.paySelect
