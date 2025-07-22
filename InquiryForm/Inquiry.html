@@ -37,10 +37,8 @@
                 <div id="InquiryForm" class="form-fields-grid">
                     <div class="form-row">
                         <div>
-                            <label for="date" class="form-label"><i class="fas fa-calendar-alt"></i>Date</label>
-                            <input type="date" id="date" name="date" required class="form-input">
-                        </div>
-                        <div>
+
+                            
                             <label for="aadharNumber" class="form-label">
                                 <i class="fas fa-id-card"></i> Aadhar Number
                             </label>
@@ -48,6 +46,12 @@
                                 class="form-input" pattern="\d{12}" title="Please enter a 12-digit Aadhar number" maxlength="12">
                             <i id="loadingSpinner" class="fas fa-spinner fa-spin" style="display: none; margin-left: 5px;"></i>
                         </div>
+                        <div>
+    <label for="date" class="form-label">
+        <i class="fas fa-calendar-alt"></i> Date
+    </label>
+    <input type="date" id="date" name="date" required class="form-input">
+</div>
                     </div>
                     <div class="form-row">
                         <div>
@@ -74,7 +78,7 @@
                             <label for="age" class="form-label"><i class="fas fa-birthday-cake"></i>Age</label>
                             <input type="number" id="age" name="age" required class="form-input">
                         </div>
-                        <div>
+                        <!-- <div>
                             <label for="gender" class="form-label"><i class="fas fa-venus-mars"></i>Gender</label>
                             <select id="gender" name="gender" required class="form-select">
                                 <option value="" disabled selected>Select Gender</option>
@@ -83,7 +87,19 @@
                                 <option value="Other">Other</option>
                                 <option value="Prefer not to say">Prefer not to say</option>
                             </select>
-                        </div>
+                        </div> -->
+                        <div class="w-full md:w-1/3 px-2">
+  <label for="gender" class="form-label">
+    <i class="fas fa-venus-mars"></i> Gender
+  </label>
+  <select id="gender" name="gender" required class="form-select w-full h-[42px] rounded border-gray-300">
+    <option value="" disabled selected>Select Gender</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+    <option value="Prefer not to say">Prefer not to say</option>
+  </select>
+</div>
                     </div>
 
                     <div class="contact-info-box">
@@ -187,23 +203,29 @@
 
                             <div class="flex justify-end space-x-4">
                                 <button type="submit" onclick="copyInquiry()" id="submitButton2"
-                                    class="submit-btn text-blue-600 px-8 py-2 rounded-lg font-medium">
+                                     class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
                                     <i class="fas fa-paper-plane mr-2"></i>Submit
                                 </button>
-                                <button onclick="openAdmissionForm()" onmouseover="copyInquiry()" class="small-blue-btn">Admission form</button>
-
+                                <!-- <button onclick="openAdmissionForm()" onmouseover="copyInquiry()" class="small-blue-btn">Next</button> -->
+                                  <button 
+  onclick="openAdmissionForm()" 
+  onmouseover="copyInquiry()" 
+  class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
+>
+  <i class="fas fa-file-alt"></i> NEXT
+</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="signature-section">
+            <!-- <div class="signature-section">
                 <div class="signature-line-container">
                     <div class="signature-line">______________________</div>
                     <div class="signature-title">AUTHORITY SIGNATURE</div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 
