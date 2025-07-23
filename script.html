@@ -77,19 +77,7 @@ function getCourseDataByLocation(branch) {
     selectPayment("full");
   });
 
-  // update receipt fees and duration
-  document.getElementById("courseName").addEventListener("change", function () {
-      const selectedCourse = this.value;
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
-      if (courseData[selectedCourse]) {
-        document.getElementById("courseDuration").value = courseData[selectedCourse].duration;
-        document.getElementById("totalFee").value = courseData[selectedCourse].total;
-        document.getElementById("Yearlyyfees").value = courseData[selectedCourse].fees; 
-        generateInstallmentTables(); // Optional: auto-call if needed
-        generateYearInstallmentTable();
-      }
-    });
+  
 
 
   // Update course details when selection changes
@@ -106,7 +94,7 @@ function getCourseDataByLocation(branch) {
       const course = courseData[selectedCourse];
 
       // Update displayed information
-      document.getElementById("courseDuration0").textContent = course.duration;
+      document.getElementById("courseDuration").textContent = course.duration;
       document.getElementById("coursePayFees").textContent = formatCurrency(
         course.fees
       );
@@ -560,38 +548,6 @@ function DInsReceipt(number,amount){
     updateCoursePayDetails();
     updatePaymentOptions();
 
-  }
-  function Copycoursepay(){
-
-    //Receipt
-        sessionStorage.setItem(
-      "STUD_Receipt",
-      document.getElementById("ID").value
-    );
-    document.getElementById("receiptNo").value=sessionStorage.getItem("STUD_Receipt");
-
-    //Coursename
-    sessionStorage.setItem(
-      "STUD_Course",
-      document.getElementById("coursePaySelect").value
-    );
-    document.getElementById("courseName").value=sessionStorage.getItem("STUD_Course");
-
-    // //Duration
-    //     sessionStorage.setItem(
-    //   "STUD_Year",
-    //   document.getElementById("courseDuration0").value
-    // );
-    // document.getElementById("courseDuration").value=sessionStorage.getItem("STUD_Year");
-
-        //Stdname
-        sessionStorage.setItem(
-      "STUD_Name",
-      document.getElementById("std_Coursepayname").value
-    );
-    document.getElementById("studentName").value=sessionStorage.getItem("STUD_Name");
-
-    generateInstallmentTables();
   }
 
 function formatCurrency(amount) {
@@ -1523,6 +1479,8 @@ function generateReceipt() {
         // Show Inquiry Form by default after login
         openInquiryForm();
         populateInquiryTakenBy();
+        openexamfees();
+        examfeeTakenBy();
 
         // Admin UI if role = admin
         if (resp.role === "admin") {
@@ -3400,59 +3358,10 @@ function populateInquiryTakenBy() {
   }
 
   // Populate datalist with phone suggestions
-  function loadPhoneSuggestions() {
-    google.script.run.withSuccessHandler(nums => {
-      const dl = document.getElementById("phoneSuggestions");
-      if (!dl) return;
-      dl.innerHTML = "";
-      nums.forEach(n => {
-        const opt = document.createElement("option");
-        opt.value = n;
-        dl.appendChild(opt);
-      });
-    }).getAllPhoneNumbers();
-  }
 
-  function onPhoneBlur() {
-    const rawPhone = document.getElementById("phoneNo").value || "";
-    const cleanedPhone = rawPhone.replace(/\D/g, "").trim();
 
-    console.log("📞 Phone entered:", rawPhone, "→ Cleaned:", cleanedPhone);
 
-    if (cleanedPhone.length === 10) {
-      google.script.run.withSuccessHandler(function(data) {
-        console.log("✅ Data received from Apps Script:", data);
-        if (data) {
-          // Data FOUND: Populate the form fields
-          for (const id in data) {
-            const field = document.getElementById(id);
-            if (field) {
-              field.value = data[id] || ""; // Use empty string as a fallback
-            }
-          }
-        } else {
-          // Data NOT FOUND: Alert the user and reset the form
-          alert("No record found for this phone number.");
-          console.warn("❌ No matching data returned from getStudentData. Clearing form.");
-          resetFormFields(); // Call the reset function
-        }
-      }).getStudentData(cleanedPhone);
-    } else {
-        // Also a good idea to reset if the input is invalid
-        if (rawPhone !== "") { // Only alert if user actually typed something invalid
-           alert("Please enter a valid 10-digit phone number.");
-           console.warn("❌ Invalid input:", rawPhone);
-        }
-        // We also reset here to clear the form on any invalid entry
-        resetFormFields();
-    }
-  }
 
-  // Run initial setup when the page is loaded
-  window.addEventListener("DOMContentLoaded", () => {
-      loadPhoneSuggestions();
-      
-  });
 
 
 
@@ -3486,6 +3395,15 @@ function populateInquiryTakenBy() {
         .loginUser({ username: username, password: password });
     });
 
+
+function copyadmissionreceipt(){
+  sessionStorage.setItem(
+      "tempText9",
+      document.getElementById("courseSelect").value
+    );
+    document.getElementById("courseName").value=sessionStorage.getItem("tempText9");
+
+}
 
 
 </script>

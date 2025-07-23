@@ -63,7 +63,7 @@ function getNextReceiptNumber() {
     const newNumericPart = latestNum + 1;
 
     // Format the new receipt number with four digits (e.g., R-0001, R-0024, R-0155).
-    const newReceiptNumber = "R-" + ("000" + newNumericPart).slice(-4);
+    const newReceiptNumber = "AR-" + ("000" + newNumericPart).slice(-4);
     
     return newReceiptNumber;
 

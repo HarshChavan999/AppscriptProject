@@ -100,7 +100,7 @@
             >Course Duration</label
           >
           <div
-            id="courseDuration0"
+            id="courseDuration"
             class="w-full p-2 rounded-lg bg-gray-50 border border-gray-200"
           >
             -
@@ -352,11 +352,11 @@
     </div> -->
  <div class="flex justify-end">
 <button onclick="generateReceipt() "
- class="text-align:right bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-2 rounded-lg font-medium transition duration-200 ease-in-out shadow-md"
+ class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
       >Save & Generate Receipt</button>
 &nbsp;&nbsp;
 <button onclick="submitCoursePayment() "
- class="text-align:right bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-lg font-medium transition duration-200 ease-in-out shadow-md"
+ class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
       >Submit to sheet</button>
  </div>
 <!-- Add this receipt container (if missing) -->
@@ -370,7 +370,7 @@
     ID: document.getElementById("ID").value,
     Coursepayname: document.getElementById("std_Coursepayname").value,
     coursePaySelect: document.getElementById("coursePaySelect").value,
-    courseDuration0: document.getElementById("courseDuration0").innerText,
+    courseDuration: document.getElementById("courseDuration").innerText,
     coursePayFees: document.getElementById("coursePayFees").innerText,
     totalFees: document.getElementById("totalFees").innerText,
     paySelect: document.getElementById("pay-select").value

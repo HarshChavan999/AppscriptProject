@@ -382,22 +382,10 @@
           </div>
 
           <div class="form-row">
-            <!-- <div class="form-group">
+            <div class="form-group">
               <label>Course Name</label>
               <input type="text" id="courseName" name="courseName" placeholder="Enter course name">
-            </div> -->
-            <select
-            id="courseName"
-            class="form-group"
-            onclick="generateInstallmentTables()"
-          >
-            <option value="" disabled selected>Select a course</option>
-            <option value="anm_nursing">ANM Nursing Diploma</option>
-            <option value="gnm_nursing">GNM Nursing Diploma</option>
-            <option value="dmlt">DMLT Diploma</option>
-            <option value="ot_technician">OT Technician</option>
-            <option value="general_nursing">General Nursing Assistant</option>
-          </select>
+            </div>
             <div class="form-group">
               <label>Course Year</label>
               <select id="courseYear" name="courseYear" onchange="generateInstallmentTables()">
@@ -418,7 +406,7 @@
             </div>
             
             <div class="installment-controls">
-              <!-- <div class="form-group">
+              <div class="form-group">
                 <label>Number of Installments (per year)</label>
                 <select id="installmentCount" name="installmentCount" onchange="generateInstallmentTables()">
                   <option value="1">1 Installment</option>
@@ -428,7 +416,7 @@
                   <option value="6">6 Installments</option>
                   <option value="12">12 Installments</option>
                 </select>
-              </div> -->
+              </div>
               <div class="form-group">
                 <label>Total Course Fee</label>
                 <input type="number" id="totalFee" name="totalFee" placeholder="Enter total fee" onchange="generateInstallmentTables()">
@@ -495,179 +483,54 @@
         }
     }
 
-    // function generateInstallmentTables() {
-    //     const installmentCount = parseInt(document.getElementById('installmentCount').value);
-    //     const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
-    //     const startDate = new Date(document.getElementById('startDate').value);
-    //     const courseYears = parseInt(document.getElementById('courseYear').value);
+    function generateInstallmentTables() {
+        const installmentCount = parseInt(document.getElementById('installmentCount').value);
+        const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
+        const startDate = new Date(document.getElementById('startDate').value);
+        const courseYears = parseInt(document.getElementById('courseYear').value);
         
-    //     if (!startDate || totalFee <= 0) return;
+        if (!startDate || totalFee <= 0) return;
 
-    //     const container = document.getElementById('installmentTablesContainer');
-    //     container.innerHTML = '';
+        const container = document.getElementById('installmentTablesContainer');
+        container.innerHTML = '';
 
-    //     // Calculate fee per year (equal distribution)
-    //     const feePerYear = Math.round(totalFee / courseYears);
-    //     let remainingFee = totalFee;
+        // Calculate fee per year (equal distribution)
+        const feePerYear = Math.round(totalFee / courseYears);
+        let remainingFee = totalFee;
         
-    //     for (let year = 1; year <= courseYears; year++) {
-    //         // Adjust last year's fee to account for rounding
-    //         const yearFee = (year === courseYears) ? remainingFee : feePerYear;
-    //         remainingFee -= yearFee;
+        for (let year = 1; year <= courseYears; year++) {
+            // Adjust last year's fee to account for rounding
+            const yearFee = (year === courseYears) ? remainingFee : feePerYear;
+            remainingFee -= yearFee;
             
-    //         // Create year section
-    //         const yearSection = document.createElement('div');
-    //         yearSection.className = 'year-section';
+            // Create year section
+            const yearSection = document.createElement('div');
+            yearSection.className = 'year-section';
             
-    //         // Year header
-    //         const yearHeader = document.createElement('div');
-    //         yearHeader.className = 'year-header';
-    //         yearHeader.textContent = getYearName(year) + ' Fee Installments';
-    //         yearSection.appendChild(yearHeader);
+            // Year header
+            const yearHeader = document.createElement('div');
+            yearHeader.className = 'year-header';
+            yearHeader.textContent = getYearName(year) + ' Fee Installments';
+            yearSection.appendChild(yearHeader);
             
-    //         // Year content
-    //         const yearContent = document.createElement('div');
-    //         yearContent.className = 'year-content';
+            // Year content
+            const yearContent = document.createElement('div');
+            yearContent.className = 'year-content';
             
-    //         // Generate installment table for this year
-    //         const tableHTML = generateYearInstallmentTable(year, installmentCount, yearFee, startDate, year);
-    //         yearContent.innerHTML = tableHTML;
+            // Generate installment table for this year
+            const tableHTML = generateYearInstallmentTable(year, installmentCount, yearFee, startDate, year);
+            yearContent.innerHTML = tableHTML;
             
-    //         yearSection.appendChild(yearContent);
-    //         container.appendChild(yearSection);
-    //     }
+            yearSection.appendChild(yearContent);
+            container.appendChild(yearSection);
+        }
         
-    //     // Add total section
-    //     const totalSection = document.createElement('div');
-    //     totalSection.className = 'total-section';
-    //     totalSection.textContent = `Total Course Fee: ₹${totalFee.toLocaleString()}`;
-    //     container.appendChild(totalSection);
-    // }
-//     function generateInstallmentTables() {
-//     const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
-//     const startDate = new Date(document.getElementById('startDate').value);
-//     const courseYears = parseInt(document.getElementById('courseYear').value);
-    
-//     if (!startDate || totalFee <= 0) return;
-
-//     const container = document.getElementById('installmentTablesContainer');
-//     container.innerHTML = '';
-
-//     const feePerYear = Math.round(totalFee / courseYears);
-//     let remainingFee = totalFee;
-
-//     for (let year = 1; year <= courseYears; year++) {
-//         const yearFee = (year === courseYears) ? remainingFee : feePerYear;
-//         remainingFee -= yearFee;
-
-//         const yearSection = document.createElement('div');
-//         yearSection.className = 'year-section';
-
-
-//         const yearHeader = document.createElement('div');
-//         yearHeader.className = 'year-header';
-//         yearHeader.textContent = getYearName(year) + ' Fee Installments';
-//         yearSection.appendChild(yearHeader);
-
-
-//         const installmentSelector = document.createElement('div');
-//         installmentSelector.className = 'form-group';
-//         installmentSelector.innerHTML = `
-//           <label>Number of Installments for ${getYearName(year)}</label>
-//           <select id="installmentCount_year_${year}">
-//             <option value="1">1 Installment</option>
-//             <option value="2">2 Installments</option>
-//             <option value="3">3 Installments</option>
-//             <option value="4">4 Installments</option>
-//             <option value="6">6 Installments</option>
-//             <option value="12">12 Installments</option>
-//           </select>
-//         `;
-//         yearSection.appendChild(installmentSelector);
-
-        
-//         const tableDiv = document.createElement('div');
-//         tableDiv.id = `installmentTable_year_${year}`;
-//         yearSection.appendChild(tableDiv);
-
-//         container.appendChild(yearSection);
-
-        
-//         setTimeout(() => {
-//           document
-//             .getElementById(`installmentCount_year_${year}`)
-//             .addEventListener("change", () => {
-//               const count = parseInt(document.getElementById(`installmentCount_year_${year}`).value);
-//               const tableHTML = generateYearInstallmentTable(year, count, yearFee, startDate, year);
-//               document.getElementById(`installmentTable_year_${year}`).innerHTML = tableHTML;
-//             });
-//         }, 10);
-//     }
-
-    
-//     const totalSection = document.createElement('div');
-//     totalSection.className = 'total-section';
-//     totalSection.textContent = `Total Course Fee: ₹${totalFee.toLocaleString()}`;
-//     container.appendChild(totalSection);
-
-//     generateYearInstallmentTable(year, installmentCount, yearFee, startDate, yearOffset);
-
-// }
-function generateInstallmentTables() {
-    const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
-    const startDate = new Date(document.getElementById('startDate').value);
-    const courseYears = parseInt(document.getElementById('courseYear').value);
-
-    // Ensure totalFee and startDate are valid before proceeding
-    if (!startDate || totalFee <= 0) return;
-
-    const container = document.getElementById('installmentTablesContainer');
-    container.innerHTML = ''; // Clear previous tables
-
-    const feePerYear = Math.round(totalFee / courseYears);
-    let remainingFee = totalFee;
-
-    for (let year = 1; year <= courseYears; year++) {
-        const yearFee = (year === courseYears) ? remainingFee : feePerYear;
-        remainingFee -= yearFee;
-
-        const yearSection = document.createElement('div');
-        yearSection.className = 'year-section';
-
-        // -- Year Header --
-        const yearHeader = document.createElement('div');
-        yearHeader.className = 'year-header';
-        yearHeader.textContent = getYearName(year) + ' Fee Installments';
-        yearSection.appendChild(yearHeader);
-
-        // --- IMPORTANT CHANGE HERE ---
-        // Instead of creating a select for installment count per year,
-        // we directly generate the table with 1 installment.
-        const defaultInstallmentCount = 1; // Always start with 1 installment
-        const tableHTML = generateYearInstallmentTable(year, defaultInstallmentCount, yearFee, startDate, year);
-
-        const tableDiv = document.createElement('div');
-        tableDiv.id = `installmentTable_year_${year}`; // Still good to have an ID for potential future changes
-        tableDiv.innerHTML = tableHTML;
-        yearSection.appendChild(tableDiv);
-        // --- END OF IMPORTANT CHANGE ---
-
-        container.appendChild(yearSection);
+        // Add total section
+        const totalSection = document.createElement('div');
+        totalSection.className = 'total-section';
+        totalSection.textContent = `Total Course Fee: ₹${totalFee.toLocaleString()}`;
+        container.appendChild(totalSection);
     }
-
-    // Total course fee section remains the same
-    const totalSection = document.createElement('div');
-    totalSection.className = 'total-section';
-    totalSection.textContent = `Total Course Fee: ₹${totalFee.toLocaleString()}`;
-    container.appendChild(totalSection);
-}
-
-// The generateYearInstallmentTable function remains the same as it correctly takes installmentCount
-// function generateYearInstallmentTable(...) { ... }
-
-// The getYearName function remains the same
-// function getYearName(...) { ... }
-
     
     function generateYearInstallmentTable(year, installmentCount, yearFee, startDate, yearOffset) {
         const installmentAmount = Math.round(yearFee / installmentCount);
@@ -749,7 +612,7 @@ function generateInstallmentTables() {
                 </tbody>
             </table>
             </div>
-            <div  id = "Yearlyyfees" class="total-section" >
+            <div class="total-section">
                 ${getYearName(year)} Total: ₹${yearFee.toLocaleString()}
             </div>
         `;
@@ -807,93 +670,16 @@ function generateInstallmentTables() {
     };
 }
 
-// function openreceiptFormSection() {
-//  hideAllSections();
-
-//     const section = document.getElementById("receiptFormSection");
-//     if (!section) {
-//       console.error("Admission form section not found!");
-//       return;
-//     }
-//     section.classList.remove("hidden");
-//     Copycoursepay();
-//     generateInstallmentTables();
-//     generateYearInstallmentTable();
-
-    
-// }
-// function openreceiptFormSection() {
-//   hideAllSections();
-
-//   const section = document.getElementById("receiptFormSection");
-//   if (!section) {
-//     console.error("Admission form section not found!");
-//     return;
-//   }
-//   section.classList.remove("hidden");
-
-//   // Dynamically update courseName, totalFee, and courseDuration
-//   const courseSelect = document.getElementById("courseName");
-//   const feeInput = document.getElementById("totalFee");
-//   const durationInput = document.getElementById("courseDuration");
-
-//  const branch24 = document.getElementById("branch22").value;
-//   const courseData = getCourseDataByLocation(branch24);
-
-//   const storedCourse = sessionStorage.getItem("STUD_Course");
-//   if (storedCourse && courseData[storedCourse]) {
-//     courseSelect.value = storedCourse;
-//     durationInput.value = courseData[storedCourse].duration;
-//     feeInput.value = courseData[storedCourse].total;
-
-//     // Optional: trigger change logic if needed
-//     if (typeof generateInstallmentTables === "function") {
-//       generateInstallmentTables();
-//     }
-//   }
-
-//   Copycoursepay();
-//   generateInstallmentTables();
-//   generateYearInstallmentTable();
-// }
 function openreceiptFormSection() {
-  hideAllSections();
+ hideAllSections();
 
-  const section = document.getElementById("receiptFormSection");
-  if (!section) {
-    console.error("Admission form section not found!");
-    return;
-  }
-  section.classList.remove("hidden");
-
-  // Dynamically update courseName, totalFee, and courseDuration
-  const courseSelect = document.getElementById("courseName");
-  const feeInput = document.getElementById("totalFee");
-  const durationInput = document.getElementById("courseDuration");
-
-  const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
-
-  const storedCourse = sessionStorage.getItem("STUD_Course");
-  if (storedCourse && courseData[storedCourse]) {
-    courseSelect.value = storedCourse;
-    durationInput.value = courseData[storedCourse].duration;
-    feeInput.value = courseData[storedCourse].total;
-  }
-
-  Copycoursepay();
-
-  // ✅ Call generateInstallmentTables just once after setting values
-  if (typeof generateInstallmentTables === "function") {
-    generateInstallmentTables();
-  }
-
-  // ❌ REMOVE this:
-  // generateInstallmentTables();
-  // generateYearInstallmentTable();
+    const section = document.getElementById("receiptFormSection");
+    if (!section) {
+      console.error("Admission form section not found!");
+      return;
+    }
+    section.classList.remove("hidden");
 }
-
-
 
     function AdmissionHandle(event) {
         event.preventDefault();
