@@ -12,6 +12,9 @@ const CONFIG = {
   AUDIT_LOG_SHEET_NAME: 'AuditLog',
   RECEIPTS_SHEET_NAME: 'Receipts',
 
+
+ EXAMRECEIPT_SHEET_NAME: 'RECEIPT',
+
   DEFAULT_USER: 'Anonymous',
   ROLES: {
     ADMIN: 'admin'
