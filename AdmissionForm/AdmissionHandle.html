@@ -654,10 +654,11 @@ function generateAndSaveEnrollment() {
     loadReceipt("Not Available");
   }
 }
+
 function loadReceipt(enrollmentID, studentName, course) {
     try {
         // Generate receipt number and date
-        const receiptNo = document.getElementById('receipt_number').value || "R-" + Math.floor(1000 + Math.random() * 9000);
+        const receiptNo = document.getElementById('receipt_number').value || "AR-" + Math.floor(1000 + Math.random() * 9000);
         const date = new Date().toLocaleDateString('en-GB');
 
         // Get student name from form fields
@@ -1079,6 +1080,7 @@ function loadReceipt(enrollmentID, studentName, course) {
 }
 
 function AdmissionHandle(event) {
+  generateAndSaveEnrollment();
   event.preventDefault();
   console.log("Form submission started");
 

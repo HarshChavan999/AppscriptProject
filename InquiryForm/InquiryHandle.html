@@ -55,7 +55,7 @@
         document.getElementById('branch22').value = 'Mumbai'; // Set your default branch here
 
         // Initialize UI visibility based on whether user is already logged in
-        updateUI();
+        // updateUI();
     });
 
     /**
@@ -354,5 +354,9 @@
         };
         sessionStorage.setItem('inquiryDataForAdmission', JSON.stringify(inquiryData));
     }
+
+    const dateInput = document.getElementById('date');
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.value = today;
 
 </script>

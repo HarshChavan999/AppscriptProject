@@ -994,7 +994,7 @@ function saveCoursePayment(data) {
     data.ID,
     data.Coursepayname,
     data.coursePaySelect,
-    data.courseDuration0,
+    data.courseDuration,
     data.coursePayFees,
     data.totalFees,
     data.paySelect
@@ -1003,6 +1003,46 @@ function saveCoursePayment(data) {
 
 
 
+// function saveExamReceipt(data) {
+//   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("EXAMRECEIPT");
+
+//   if (!sheet) {
+//     throw new Error("Sheet 'EXAMRECEIPT' not found.");
+//   }
+
+//   sheet.appendRow([
+//     data.receiptDate1,
+//     data.receiptNumber1,
+//     data.studentName1,
+//     data.courseName1,
+//     parseFloat(data.totalAmount),
+//     data.paymentMode1,
+//     data.receivedBy,
+//     data.branch,
+//     data.agreeTerms ? "Agreed" : "Not Agreed"
+//   ]);
+// }
+
+function saveReceiptData(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("EXAMRECEIPT");
+
+  if (!sheet) {
+    throw new Error('Sheet "EXAMRECEIPT" not found!');
+  }
+
+  sheet.appendRow([
+    data.receiptDate,
+    data.receiptNumber,
+    data.studentName,
+    data.courseName,
+    parseFloat(data.totalAmount),
+    data.paymentMode,
+    // data.receivedBy,
+    // data.branch,
+    data.agreeTerms
+  ]);
+}
 
 
 
