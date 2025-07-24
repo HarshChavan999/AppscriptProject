@@ -1,7 +1,7 @@
 <!-- heth -->
 
 
-<div class="flex items-center justify-center bg-gray-100 p-4">
+<!-- <div class="flex items-center justify-center bg-gray-100 p-4">
   <form id="feeReceiptForm" class="receipt-form-container" onsubmit="FeeReceiptFormHandle(event)">
     <div class="form-wrapper">
       <div class="form-card">
@@ -33,8 +33,8 @@
                 <input type="date" id="receiptDate" name="receiptDate" required class="form-input">
               </div>
               <div>
-                <label for="receiptNumber" class="form-label"><i class="fas fa-hashtag"></i>Receipt No</label>
-                <input type="text" id="receiptNumber" name="receiptNumber" required class="form-input">
+                <label for="ExamReceiptNumber" class="form-label"><i class="fas fa-hashtag"></i>Receipt No</label>
+                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input">
               </div>
             </div>
 
@@ -59,14 +59,14 @@
                   <input type="number" id="totalAmount" name="totalAmount" value="500" required class="form-input" readonly>
                 </div>
 
-                <!-- <div>
+                <div>
                                     <label for="paidAmount" class="form-label">Amount Paid (₹)</label>
                                     <input type="number" id="paidAmount" name="paidAmount" required class="form-input">
                                 </div>
                                 <div>
                                     <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
                                     <input type="number" id="balanceAmount" name="balanceAmount" readonly class="form-input">
-                                </div> -->
+                                </div>
               </div>
             </div>
 
@@ -78,17 +78,17 @@
                                     <option value="Cash">Cash</option>
                                     <option value="Cheque">Cheque</option>
                                     <!-- <option value="Bank Transfer">Bank Transfer</option> -->
-                                    <option value="UPI">UPI</option>
+                                    <!-- <option value="UPI">UPI</option>
                                     <option value="Credit/Debit Card">Credit/Debit Card</option>
                                 </select>
               </div>
-              <!-- <div>
+              <div>
                                 <label for="transactionDetails" class="form-label"><i class="fas fa-info-circle"></i>Transaction Details</label>
                                 <input type="text" id="transactionDetails" name="transactionDetails" class="form-input" placeholder="Cheque/UTR/UPI ID">
-                            </div> -->
+                            </div>
             </div>
 
-            <!-- <div class="form-row">
+             <div class="form-row">
               <div>
                 <label for="receivedBy" class="form-label"><i class="fas fa-user-tie"></i>Received By</label>
                 <input type="text" id="receivedBy" name="receivedBy" required class="form-input">
@@ -97,7 +97,7 @@
                 <label for="branch" class="form-label"><i class="fas fa-building"></i>Branch</label>
                 <input type="text" id="branch" name="branch" required class="form-input">
               </div>
-            </div> -->
+            </div>
 
             <div class="terms-section">
               <h3 class="terms-title">
@@ -122,9 +122,9 @@
                 </div>
 
                 <div class="flex justify-end space-x-4">
-                  <!-- <button type="button" onclick="generatePDFReceipt()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium">
+                  <button type="button" onclick="generatePDFReceipt()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium">
                                         <i class="fas fa-file-pdf mr-2"></i>Download PDF
-                                    </button> -->
+                                    </button> 
                   <button onclick="generateexamReceipt()"
  class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
       >Save & Generate Receipt</button>
@@ -136,7 +136,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- <div class="signature-section">
           <div class="signature-line-container">
@@ -144,10 +144,154 @@
             <div class="signature-title">AUTHORIZED SIGNATURE</div>
           </div>
         </div> -->
-      </div>
+      <!-- </div>
     </div>
   </form>
+</div> --> 
+
+<div class="flex items-center justify-center bg-gray-100 p-4">
+    <form id="feeReceiptForm" class="receipt-form-container" onsubmit="FeeReceiptFormHandle(event)">
+        <div class="form-wrapper">
+            <div class="form-card">
+                <div class="form-header">
+                    <div class="header-main-content">
+                        <div class="header-logo-title">
+                            <div class="logo-container" style="width: 180px; height: auto; display: flex; justify-content: center; align-items: center;">
+                                <img 
+                                    src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" 
+                                    alt="Logo" 
+                                    style="width: 100%; max-width: 160px; height: auto; padding: 5px;"
+                                />
+                            </div>
+                        </div>
+                        <div class="header-contact-info">
+                            <p class="receipt-label">
+                                <i class="fas fa-file-invoice-dollar"></i> FEE RECEIPT
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-body">
+                    <div id="FeeReceiptForm" class="form-fields-grid">
+                        <div class="form-row">
+                            <div>
+                                <label for="receiptDate" class="form-label"><i class="fas fa-calendar-alt"></i>Date</label>
+                                <input type="date" id="receiptDate" name="receiptDate" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="ExamReceiptNumber" class="form-label"><i class="fas fa-hashtag"></i>Receipt No</label>
+                                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div>
+                                <label for="studentNameInput" class="form-label"><i class="fas fa-user-graduate"></i>Student Name</label>
+                                <input type="text" id="studentNameInput" name="studentName" required class="form-input">
+                            </div>
+                            <div>
+                                <label for="courseNameInput" class="form-label"><i class="fas fa-book"></i>Course Name</label>
+                                <input type="text" id="courseNameInput" name="courseName" required class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div class="payment-info-box">
+                            <h3 class="payment-info-title">
+                                <i class="fas fa-money-bill-wave"></i>Payment Information
+                            </h3>
+                            <div class="payment-info-grid">
+                                <div>
+                                    <label for="totalAmount" class="form-label">Total Amount (₹)</label>
+                                    <input type="number" id="totalAmount" name="totalAmount" value="500" class="form-input">
+                                </div>
+                                <!-- <div>
+                                    <label for="paidAmount" class="form-label">Amount Paid (₹)</label>
+                                    <input type="number" id="paidAmount" name="paidAmount" required class="form-input">
+                                </div> -->
+                                <!-- <div>
+                                    <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
+                                    <input type="number" id="balanceAmount" name="balanceAmount" readonly class="form-input">
+                                </div> -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div>
+                                <label for="paymentModeInput" class="form-label"><i class="fas fa-credit-card"></i>Payment Mode</label>
+                                <select id="paymentModeInput" name="paymentMode" required class="form-select">
+                                    <option value="" disabled selected>Select Payment Mode</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Credit/Debit Card">Credit/Debit Card</option>
+                                </select>
+                            </div>
+                            <!-- <div>
+                                <label for="transactionDetails" class="form-label"><i class="fas fa-info-circle"></i>Transaction Details</label>
+                                <input type="text" id="transactionDetails" name="transactionDetails" class="form-input" placeholder="Cheque/UTR/UPI ID">
+                            </div> -->
+                        </div>
+                        
+                        <div class="form-row">
+                            <!-- <div>
+                                <label for="receivedBy" class="form-label"><i class="fas fa-user-tie"></i>Received By</label>
+                                <input type="text" id="receivedBy" name="receivedBy" required class="form-input">
+                            </div> -->
+                            <!-- <div>
+                                <label for="branch" class="form-label"><i class="fas fa-building"></i>Branch</label>
+                                <input type="text" id="branch" name="branch" required class="form-input">
+                            </div> -->
+                        </div>
+                        
+                        <div class="terms-section">
+                            <h3 class="terms-title">
+                                <i class="fas fa-exclamation-circle"></i>Terms & Conditions
+                            </h3>
+                            <ul class="terms-list">
+                                <li>Fees once paid are non-refundable and non-transferable.</li>
+                                <li>Original receipt must be produced for any fee-related queries.</li>
+                                <li>Installments must be paid before the due date.</li>
+                                <li>Certificate will be issued only after full payment of fees.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="form-footer">
+                            <div class="footer-actions">
+                                <div class="terms-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                        <span>I acknowledge the above payment details</span>
+                                    </label>
+                                    <div id="agreeError" class="error-message"></div>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-4">
+                                   <button type="button" onclick="generateexamReceipt()" class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
+    <i class="fas fa-receipt mr-2"></i>Generate Receipt
+</button>
+
+                                    <button type="submit" id="submitReceipt" class="submit-btn text-blue-600 px-8 py-2 rounded-lg font-medium">
+                                        <i class="fas fa-save mr-2"></i>Save Receipt
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="signature-section">
+                    <div class="signature-line-container">
+                        <div class="signature-line">______________________</div>
+                        <div class="signature-title">AUTHORIZED SIGNATURE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+
 
 <script>
   // Calculate balance amount automatically
@@ -167,7 +311,7 @@
 
   const data = {
     receiptDate: formData.get('receiptDate'),
-    receiptNumber: formData.get('receiptNumber'),
+    receiptNumber: formData.get('ExamReceiptNumber'),
     studentName: formData.get('studentName'),
     courseName: formData.get('courseName'),
     totalAmount: formData.get('totalAmount'),
@@ -193,6 +337,8 @@
     hideAllSections();
     document.getElementById("feeReceiptForm").classList.remove("hidden");
     copyadmissionreceipt();
+    loadexamfee();
+   
   //   // 1. Get the stored branch from the hidden input
   //   const userBranch = document.getElementById("userBranch").value;
 
@@ -254,252 +400,83 @@
 
 function generateexamReceipt() {
     try {
-        const receiptNo = "ER" + Math.floor(1000 + Math.random() * 9000);
-        const date = new Date().toLocaleDateString('en-GB');
+        // Get values from the form
+        const receiptNo = document.getElementById('ExamReceiptNumber').value || "REC" + Math.floor(1000 + Math.random() * 9000);
+        const date = document.getElementById('receiptDate').value || new Date().toLocaleDateString('en-GB');
+        const studentName = document.getElementById('studentNameInput').value || "N/A";
+        const courseName = document.getElementById('courseNameInput').value || "N/A";
+        const totalAmount = parseFloat(document.getElementById('totalAmount').value) || 0;
+        // const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
+        // const balanceAmount = totalAmount - paidAmount;
+        // const receivedBy = document.getElementById('receivedBy').value || "Admin";
+        const paymentMode = document.getElementById('paymentModeInput').value || "Cash";
+        // const transactionDetails = document.getElementById('transactionDetails').value || "-";
 
-        const studentName = document.getElementById('studentName')?.value || "N/A";
-        const courseName = document.getElementById('courseName');
-        // const courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
-        // const totalAmountText = document.getElementById('totalAmount')?.textContent ;
-        // const totalAmount = parseFloat(totalAmountText.replace(/[^0-9.]/g, ''));
-
-        // const paymentTypeEl = document.querySelector('input[name="Coursepayment_type"]:checked');
-        // const paymentType = paymentTypeEl?.value || "full";
-
-        const totalAmount = document.getElementById('totalAmount');
-        const paymentMode = document.getElementById('paymentMode');
-       
-<!-- 
-        // let paidAmount = 0;
-        // let balanceAmount = 0; -->
-
-        // if (paymentType === 'full') {
-        //     const fullTotalText = document.getElementById('fullTotal')?.textContent || totalAmountText;
-        //     paidAmount = parseFloat(fullTotalText.replace(/[^0-9.]/g, ''));
-        // } else if (paymentType === 'partial') {
-        //     const partialInitialText = document.getElementById('partialInitial')?.textContent || (totalAmount * 0.5).toString();
-        //     paidAmount = parseFloat(partialInitialText.replace(/[^0-9.]/g, ''));
-        // } else if (paymentType === 'emi') {
-        //     const emiDownPaymentText = document.getElementById('emiDownPayment')?.textContent || (totalAmount * 0.1).toString();
-        //     paidAmount = parseFloat(emiDownPaymentText.replace(/[^0-9.]/g, ''));
-        // }
-
-        // balanceAmount = totalAmount - paidAmount;
-        // The paymentMethod field is not explicitly used in the new HTML structure, but kept for completeness if needed elsewhere.
-        // const paymentMethod = document.getElementById('pay-select')?.value || "Cash";
-
-        // Prepare data for the new HTML structure
-        const receiptData = {
-            receiptNo: receiptNo.replace('REC', ''), // Remove 'REC' prefix as per the target image
-            date: receiptDate,
-            fullName: studentName,
-            proposeToPay: courseName,
-            totalAmount: totalAmount,
-            paymentMode: paymentMode,
-            // paid: formatCurrency(paidAmount),
-            // balance: formatCurrency(balanceAmount),
-            // examFees: "-", // Hardcoded as per the provided HTML
-            // receivedBy: "Admin" // Hardcoded as per the provided HTML
+        // Format currency
+        const formatCurrency = (amount) => {
+            return '₹' + amount.toFixed(2);
         };
 
-        // The entire HTML structure for the receipt, including internal CSS
-        const receiptPageHTML = `
+        // Prepare receipt data
+        const receiptData = {
+            receiptNo: receiptNo,
+            date: date,
+            studentName: studentName,
+            courseName: courseName,
+            totalAmount: formatCurrency(totalAmount),
+            // paidAmount: formatCurrency(paidAmount),
+            // balanceAmount: formatCurrency(balanceAmount),
+            paymentMode: paymentMode,
+            // transactionDetails: transactionDetails,
+            // receivedBy: receivedBy
+        };
+
+        // Generate the receipt HTML
+        const receiptHTML = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Shelar Training Institute Receipt</title>
+                <title>Receipt</title>
                 <style>
-                    @page {
-                        size: A4;
-                        margin: 0.5in;
-                    }
-
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 0;
-                        padding: 0;
-                        background: white;
-                    }
-
-                    .page-container {
-                        width: 210mm; /* A4 width */
-                        height: 297mm; /* A4 height */
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: space-between;
-                        padding: 10mm;
-                        box-sizing: border-box;
-                    }
-
-                    .receipt {
-                        width: 100%;
-                        height: 45%; /* Approximately half the page height for two receipts */
-                        border: 3px solid #000;
-                        border-radius: 15px;
-                        padding: 15px;
-                        box-sizing: border-box;
-                        background: white;
-                        margin-bottom: 10mm; /* Space between two receipts */
-                        page-break-inside: avoid;
-                    }
-
-                    .header {
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 15px;
-                        border-bottom: 2px solid #000;
-                        padding-bottom: 10px;
-                    }
-
-.logo {
-    width: 60px;
-    height: 60px;
-    margin-right: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.logo img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    display: block;
-}
-
-
-                    .institute-name {
-                        font-size: 28px;
-                        font-weight: bold;
-                        color: #000;
-                        flex-grow: 1;
-                        letter-spacing: 1px;
-                    }
-
-                    .receipt-label {
-                        background: #333;
-                        color: white;
-                        padding: 5px 15px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                        font-weight: bold;
-                    }
-
-                    .receipt-content {
-                        display: flex;
-                        flex-direction: column;
-                        height: calc(100% - 100px); /* Adjust height based on header/footer */
-                    }
-
-                    .receipt-info {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-bottom: 20px;
-                    }
-
-                    .receipt-no {
-                        font-size: 16px;
-                        font-weight: bold;
-                    }
-
-                    .date {
-                        font-size: 16px;
-                        font-weight: bold;
-                    }
-
-                    .form-fields {
-                        flex-grow: 1;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-
-                    .field-row {
-                        display: flex;
-                        align-items: center;
-                        font-size: 14px;
-                        font-weight: bold;
-                    }
-
-                    .field-label {
-                        min-width: 140px;
-                        color: #000;
-                    }
-
-                    .field-value {
-                        flex-grow: 1;
-                        border-bottom: 1px solid #000;
-                        padding: 2px 5px;
-                        min-height: 20px;
-                        color: #0066cc; /* Color for dynamic values, adjust if needed */
-                        /* Added styles for value overflow fix */
-                        white-space: nowrap; /* Prevent text from wrapping by default */
-                        overflow: hidden; /* Hide overflow content */
-                        text-overflow: ellipsis; /* Add ellipsis for overflow */
-                        max-width: calc(100% - 140px); /* Ensure it doesn't push the label too much */
-                    }
-
-                    .amount-fields {
-                        display: flex;
-                        gap: 20px;
-                    }
-
-                    .amount-field {
-                        flex: 1;
-                        /* Added min-width to ensure fields don't shrink too much */
-                        min-width: 30%;
-                    }
-                    /* Adjust field-value specifically within amount-fields for better distribution */
-                    .amount-fields .field-value {
-                        max-width: none; /* Remove the general max-width constraint */
-                        white-space: normal; /* Allow wrapping within amount fields */
-                        word-break: break-all; /* Break long words if necessary */
-                        flex-grow: 1;
-                    }
-                    .amount-fields .field-label {
-                        min-width: 80px; /* Adjust label width for amount fields */
-                    }
-
-                    .footer {
-                        margin-top: 15px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-end;
-                    }
-
-                    .note {
-                        font-size: 12px;
-                        font-weight: bold;
-                        max-width: 60%;
-                    }
-
-                    .signature-area {
-                        text-align: center;
-                        min-width: 150px;
-                    }
-
-                    .signature-line {
-                        border-bottom: 1px solid #000;
-                        height: 40px;
-                        margin-bottom: 5px;
-                    }
-
-                    .signature-label {
-                        font-size: 12px;
-                        font-weight: bold;
-                    }
-                    /* Adjust for printing to ensure two receipts fit nicely */
-                    @media print {
-                        .page-container {
-                            height: 297mm; /* Full A4 height */
-                            padding: 0.5in; /* Match @page margin */
-                        }
-                        .receipt {
-                            margin-bottom: 5mm; /* Slightly less margin for print */
-                        }
+                    @page { size: A4; margin: 0.5in; }
+                    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
+                    .page-container { width: 210mm; height: 297mm; display: flex; flex-direction: column; 
+                                    justify-content: space-between; padding: 10mm; box-sizing: border-box; }
+                    .receipt { width: 100%; height: 45%; border: 3px solid #000; border-radius: 15px; 
+                             padding: 15px; box-sizing: border-box; background: white; margin-bottom: 10mm; 
+                             page-break-inside: avoid; }
+                    .header { display: flex; align-items: center; margin-bottom: 15px; 
+                             border-bottom: 2px solid #000; padding-bottom: 10px; }
+                    .logo { width: 60px; height: 60px; margin-right: 15px; display: flex; 
+                           align-items: center; justify-content: center; overflow: hidden; }
+                    .logo img { width: 100%; height: auto; object-fit: contain; display: block; }
+                    .institute-name { font-size: 28px; font-weight: bold; color: #000; 
+                                    flex-grow: 1; letter-spacing: 1px; }
+                    .receipt-label { background: #333; color: white; padding: 5px 15px; 
+                                    border-radius: 20px; font-size: 14px; font-weight: bold; }
+                    .receipt-content { display: flex; flex-direction: column; height: calc(100% - 100px); }
+                    .receipt-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                    .receipt-no, .date { font-size: 16px; font-weight: bold; }
+                    .form-fields { flex-grow: 1; display: flex; flex-direction: column; gap: 12px; }
+                    .field-row { display: flex; align-items: center; font-size: 14px; font-weight: bold; }
+                    .field-label { min-width: 140px; color: #000; }
+                    .field-value { flex-grow: 1; border-bottom: 1px solid #000; padding: 2px 5px; 
+                                 min-height: 20px; color: #0066cc; white-space: nowrap; 
+                                 overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 140px); }
+                    .amount-fields { display: flex; gap: 20px; }
+                    .amount-field { flex: 1; min-width: 30%; }
+                    .amount-fields .field-value { max-width: none; white-space: normal; word-break: break-all; flex-grow: 1; }
+                    .amount-fields .field-label { min-width: 80px; }
+                    .footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+                    .note { font-size: 12px; font-weight: bold; max-width: 60%; }
+                    .signature-area { text-align: center; min-width: 150px; }
+                    .signature-line { border-bottom: 1px solid #000; height: 40px; margin-bottom: 5px; }
+                    .signature-label { font-size: 12px; font-weight: bold; }
+                    @media print { 
+                        .page-container { height: 297mm; padding: 0.5in; } 
+                        .receipt { margin-bottom: 5mm; } 
                     }
                 </style>
             </head>
@@ -508,109 +485,94 @@ function generateexamReceipt() {
                     <!-- First Receipt -->
                     <div class="receipt">
                         <div class="header">
-                           <div class="logo">
-  <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
-</div>
-
+                            <div class="logo">
+                                <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
+                            </div>
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
-
                         <div class="receipt-content">
                             <div class="receipt-info">
-                                <div class="receipt-no">Receipt No. ${receiptData.receiptNumber}</div>
-                                <div class="date">Date: ${receiptData.receiptDate}</div>
+                                <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
+                                <div class="date">Date: ${receiptData.date}</div>
                             </div>
-
                             <div class="form-fields">
                                 <div class="field-row">
-                                    <div class="field-label">Full Name :</div>
+                                    <div class="field-label">Student Name:</div>
                                     <div class="field-value">${receiptData.studentName}</div>
                                 </div>
-
                                 <div class="field-row">
-                                    <div class="field-label">Propose to Pay :</div>
+                                    <div class="field-label">Course Name:</div>
                                     <div class="field-value">${receiptData.courseName}</div>
                                 </div>
-
                                 <div class="field-row amount-fields">
                                     <div class="amount-field">
                                         <div class="field-row">
-                                            <div class="field-label">Total Amount :</div>
+                                            <div class="field-label">Total Amount:</div>
                                             <div class="field-value">${receiptData.totalAmount}</div>
                                         </div>
                                     </div>
-                                 </div>
-
-                            <div class="field-row">
-                                     <div class="field-label">payment Mode :</div>
-                                   <div class="field-value">${receiptData.paymentMode}</div>
-                                 </div>
-
-                             </div>
-
-
-
+                                </div>
+                                <div class="field-row">
+                                    <div class="field-label">Payment Mode:</div>
+                                    <div class="field-value">${receiptData.paymentMode}</div>
+                                </div>
+                                
+                                
+                            </div>
                             <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
+                                <div class="note">• Fees once paid are non-refundable</div>
                                 <div class="signature-area">
                                     <div class="signature-line"></div>
-                                    <div class="signature-label">Authority Signature</div>
+                                    <div class="signature-label">Authorized Signature</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Second Receipt (Copy) -->
+                    
+                    <!-- Second Receipt (Duplicate) -->
                     <div class="receipt">
                         <div class="header">
-                           <div class="logo">
-  <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
-</div>
-
-
+                            <div class="logo">
+                                <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
+                            </div>
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
-
                         <div class="receipt-content">
                             <div class="receipt-info">
-                                <div class="receipt-no">Receipt No. ${receiptData.receiptNumber}</div>
-                                <div class="date">Date: ${receiptData.receiptDate}</div>
+                                <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
+                                <div class="date">Date: ${receiptData.date}</div>
                             </div>
-
                             <div class="form-fields">
                                 <div class="field-row">
-                                    <div class="field-label">Full Name :</div>
+                                    <div class="field-label">Student Name:</div>
                                     <div class="field-value">${receiptData.studentName}</div>
                                 </div>
-
                                 <div class="field-row">
-                                    <div class="field-label">Propose to Pay :</div>
+                                    <div class="field-label">Course Name:</div>
                                     <div class="field-value">${receiptData.courseName}</div>
                                 </div>
-
                                 <div class="field-row amount-fields">
                                     <div class="amount-field">
                                         <div class="field-row">
-                                            <div class="field-label">Total Amount :</div>
+                                            <div class="field-label">Total Amount:</div>
                                             <div class="field-value">${receiptData.totalAmount}</div>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="field-row">
-                                     <div class="field-label">payment Mode :</div>
-                                   <div class="field-value">${receiptData.paymentMode}</div>
-                                 </div>
-
+                                    <div class="field-label">Payment Mode:</div>
+                                    <div class="field-value">${receiptData.paymentMode}</div>
+                                </div>
+                                
+                                
                             </div>
-
                             <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
+                                <div class="note">• Fees once paid are non-refundable</div>
                                 <div class="signature-area">
                                     <div class="signature-line"></div>
-                                    <div class="signature-label">Authority Signature</div>
+                                    <div class="signature-label">Authorized Signature</div>
                                 </div>
                             </div>
                         </div>
@@ -627,36 +589,64 @@ function generateexamReceipt() {
 
         // Open a new tab and write the receipt
         const printWindow = window.open('', '_blank', 'width=800,height=1000');
-        printWindow.document.write(receiptPageHTML); // Write the entire HTML string
+        printWindow.document.write(receiptHTML);
         printWindow.document.close();
+        console.log("Student Name from form:", studentName);
+        console.log("Course Name from form:", courseName);
+
 
     } catch (error) {
         console.error("Error generating receipt:", error);
-        // Using a custom message box instead of alert() for better user experience in an iframe environment
-        const errorMessage = "Something went wrong. Please check the browser console for details.";
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #ffe0e0;
-            border: 1px solid #ff0000;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            color: #cc0000;
-            font-family: sans-serif;
-            text-align: center;
-        `;
-        errorDiv.innerHTML = `
-            <p>${errorMessage}</p>
-            <button onclick="this.parentNode.remove()" style="margin-top: 15px; padding: 8px 15px; background-color: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>
-        `;
-        document.body.appendChild(errorDiv);
+        alert("Error generating receipt. Please check the console for details.");
     }
 }
 
 
+function loadexamfee(){
+  const receiptInput = document.getElementById("ExamReceiptNumber");
+    if (!receiptInput) {
+      console.error("Receipt number input field not found!");
+      return;
+    }
+
+    // 1. Reset the input field's state each time the form is opened.
+    receiptInput.readOnly = false;
+    receiptInput.value = "Generating..."; // Show immediate feedback.
+
+    // 2. Clear any lingering timers from previous times the form was opened.
+    clearTimeout(receiptLockTimer);
+
+    // 3. Call the backend script to fetch the number.
+    google.script.run
+      .withSuccessHandler(function (newReceiptNumber) {
+        // 4. Populate the input field as soon as the number is received.
+        receiptInput.value = newReceiptNumber;
+        console.log(
+          `Populated receipt number: ${newReceiptNumber}. Field will lock in 5 seconds if not edited.`
+        );
+
+        // 5. Set a 5-second timer. If it completes, the field becomes read-only.
+        receiptLockTimer = setTimeout(() => {
+          receiptInput.readOnly = true;
+          console.log(`Receipt number ${newReceiptNumber} is now locked.`);
+        }, 5000); // 5000 milliseconds = 5 seconds
+
+        // 6. Listen for the *very first* input from the user.
+        // The { once: true } option automatically removes the listener after it runs once.
+        receiptInput.addEventListener(
+          "input",
+          () => {
+            console.log("User is typing. Cancelling the auto-lock timer.");
+            // If the user starts typing, cancel the timer that would have locked the field.
+            clearTimeout(receiptLockTimer);
+          },
+          { once: true }
+        );
+      })
+      .withFailureHandler(function (error) {
+        console.error("Error fetching receipt number: " + error.message);
+        receiptInput.value = "Error fetching number";
+      })
+      .getNextReceiptNumberEF();
+}
 </script>
