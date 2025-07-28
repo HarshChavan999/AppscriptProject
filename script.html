@@ -1941,7 +1941,7 @@ function logout() {
     function toggleAnalytics2() {
     hideAllSections();
     document.getElementById("analyticsSection2").classList.remove("hidden");
-    loadAnalytics();
+    loadAnalytics2();
   }
   function backToInquiryFromAnalytics() {
     hideAllSections();
@@ -1958,11 +1958,11 @@ function logout() {
 
     function clearAnalyticsFilter2() {
     document.getElementById("analyticsDateFrom2").value = "";
-    document.getElementById("analyticsDateTo").value = "";
-    document.getElementById("analyticsMonthFilter").value = "";
-    document.getElementById("analyticsFeesTypeFilter").value = "";
-    document.getElementById("analyticsPaymentModeFilter").value = "";
-    loadAnalytics();
+    document.getElementById("analyticsDateTo2").value = "";
+    document.getElementById("analyticsMonthFilter2").value = "";
+    document.getElementById("analyticsFeesTypeFilter2").value = "";
+    document.getElementById("analyticsPaymentModeFilter2").value = "";
+    loadAnalytics2();
   } 
 
   function loadAnalytics() {
@@ -2084,16 +2084,16 @@ function logout() {
   function loadAnalytics2() {
     const userRole = document.getElementById("userRole").value;
     const monthFilter = document
-      .getElementById("analyticsMonthFilter")
+      .getElementById("analyticsMonthFilter2")
       .value.trim();
     const feesTypeFilter = document
-      .getElementById("analyticsFeesTypeFilter")
+      .getElementById("analyticsFeesTypeFilter2")
       .value.trim();
     const paymentModeFilter = document
-      .getElementById("analyticsPaymentModeFilter")
+      .getElementById("analyticsPaymentModeFilter2")
       .value.trim();
     const dateFrom = document.getElementById("analyticsDateFrom2").value.trim();
-    const dateTo = document.getElementById("analyticsDateTo").value.trim();
+    const dateTo = document.getElementById("analyticsDateTo2").value.trim();
 
     google.script.run
       .withSuccessHandler(function (an) {
@@ -2106,16 +2106,16 @@ function logout() {
           return;
         }
 
-        document.getElementById("cardTotalPaid").textContent =
-          an.totalPaidFees.toFixed(2);
-        document.getElementById("cardTotalUnpaid").textContent =
-          an.totalUnpaidFees.toFixed(2);
-        document.getElementById("cardTotalStudents").textContent =
-          an.totalStudents;
-        document.getElementById("cardPaidStudents").textContent =
-          an.paidStudentsCount;
-        document.getElementById("cardUnpaidStudents").textContent =
-          an.unpaidStudentsCount;
+        document.getElementById("cardTotalPaid2").textContent =
+          an.totalPaidFees2.toFixed(2);
+        document.getElementById("cardTotalUnpaid2").textContent =
+          an.totalUnpaidFees2.toFixed(2);
+        document.getElementById("cardTotalStudents2").textContent =
+          an.totalStudents2;
+        document.getElementById("cardPaidStudents2").textContent =
+          an.totalAdmissions;
+        document.getElementById("cardUnpaidStudents2").textContent =
+          an.unpaidStudentsCount2;
 
         const dateLabels = Object.keys(an.dateWisePaid).sort();
         const dateVals = dateLabels.map((d) => an.dateWisePaid[d]);
@@ -2123,7 +2123,7 @@ function logout() {
         // Bar Chart
         if (dateWiseChartRef) dateWiseChartRef.destroy();
         const ctxBar = document
-          .getElementById("dateWiseChart")
+          .getElementById("dateWiseChart2")
           .getContext("2d");
         dateWiseChartRef = new Chart(ctxBar, {
           type: "bar",
@@ -2557,6 +2557,12 @@ function logout() {
     hideAllSections();
     document.getElementById("ifId").classList.remove("hidden");
   }
+
+  function closeDueFees2() {
+    hideAllSections();
+    document.getElementById("ifId").classList.remove("hidden");
+  }
+  
   function loadDueFees() {
     const userRole = document.getElementById("userRole").value;
     google.script.run

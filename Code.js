@@ -676,23 +676,34 @@ function getAnalyticsData2(
   }
 
   var analytics = {
-    totalPaidFees: 0,
-    totalUnpaidFees: 0,
-    totalStudents: 0,
-    paidStudentsCount: 0,
-    unpaidStudentsCount: 0,
-    dateWisePaid: {},
-    pieData: { paid: 0, unpaid: 0 },
-    lineData: {},
+    totalPaidFees2: 0,
+    totalUnpaidFees2: 0,
+    totalStudents2: 0,
+    paidStudentsCount2: 0,
+    unpaidStudentsCount2: 0,
+    dateWisePaid2: {},
+    pieData2: { paid: 0, unpaid: 0 },
+    lineData2: {},
+    totalAdmissions: 0,
   };
 
   
-  var sheetStudents = ss.getSheetByName("STUDENT DATA");
-  var sheetFees = ss.getSheetByName("FEES");
-  if (!sheetStudents || !sheetFees) {
-    return { error: "Sheets not found. Check STUDENT DATA or FEES." };
+  var sheetStudents = ss.getSheetByName("Admissions");
+  if (!sheetStudents) {
+    return { error: "Sheets not found. Check Admissions sheet." };
   }
   var dataStudents = sheetStudents.getDataRange().getValues();
+  
+  // Count total admissions (subtract 1 for header row)
+  analytics.totalAdmissions = dataStudents.length > 1 ? dataStudents.length - 1 : 0;
+  
+  // Process payment data if needed
+  var sheetFees = ss.getSheetByName("FEES");
+  if (!sheetFees) {
+    // If we only need admission count, we can return early
+    return analytics;
+  }
+  
   var dataFees = sheetFees.getDataRange().getValues();
 
   // Convert dateFrom/dateTo to actual Dates if provided
@@ -705,79 +716,42 @@ function getAnalyticsData2(
     toDate = new Date(dateTo + "T23:59:59");
   }
 
-  // Build a student map
+  // Build a student map - assuming column structure from headers
   var studentMap = {};
   for (var i = 1; i < dataStudents.length; i++) {
-    var sId = String(dataStudents[i][0]).trim();
-    var sTotal = parseFloat(dataStudents[i][7]) || 0;
-    studentMap[sId] = { totalFees: sTotal, sumPaid: 0, hasPaidRow: false };
-  }
-
-  for (var j = 1; j < dataFees.length; j++) {
-    var row = dataFees[j];
-    var feeStudentId = String(row[0] || "").trim();
-    var feeDateVal = row[1];
-    var feeMonth = String(row[2] || "").trim();
-    var feeType = String(row[10] || "").trim();
-    var feePayMode = String(row[11] || "").trim();
-    var paidAmount = parseFloat(row[8]) || 0;
-
-    // date range check
-    if (fromDate || toDate) {
-      var actualDate =
-        feeDateVal instanceof Date
-          ? feeDateVal
-          : new Date(feeDateVal + "T00:00:00");
-      if (fromDate && actualDate < fromDate) continue;
-      if (toDate && actualDate > toDate) continue;
-    }
-    // month filter
-    if (monthFilter && feeMonth !== monthFilter) continue;
-    // feesType filter
-    if (feesTypeFilter && feeType !== feesTypeFilter) continue;
-    // paymentMode filter
-    if (paymentModeFilter && feePayMode !== paymentModeFilter) continue;
-
-    if (!isNaN(paidAmount) && paidAmount > 0) {
-      analytics.totalPaidFees += paidAmount;
-
-      // accumulate dateWise
-      var dateStr =
-        feeDateVal instanceof Date
-          ? Utilities.formatDate(
-              feeDateVal,
-              Session.getScriptTimeZone(),
-              "yyyy-MM-dd"
-            )
-          : String(feeDateVal).trim();
-
-      if (!analytics.dateWisePaid[dateStr]) {
-        analytics.dateWisePaid[dateStr] = 0;
-      }
-      analytics.dateWisePaid[dateStr] += paidAmount;
-    }
-
-    if (studentMap[feeStudentId]) {
-      studentMap[feeStudentId].sumPaid += paidAmount;
-      studentMap[feeStudentId].hasPaidRow = true;
-    }
-  }
-
-  analytics.totalStudents = Object.keys(studentMap).length;
-  var sumUnpaid = 0;
-  for (var sid in studentMap) {
-    var st = studentMap[sid];
-    if (st.hasPaidRow) {
-      analytics.paidStudentsCount++;
+    var sId = String(dataStudents[i][1]).trim(); // Receipt Number as ID
+    var sTotal = 0;
+    
+    // Calculate total fees from year columns (index positions may vary based on actual sheet)
+    var year1Total = parseFloat(dataStudents[i][9]) || 0;
+    var year2Total = parseFloat(dataStudents[i][12]) || 0;
+    var year3Total = parseFloat(dataStudents[i][15]) || 0;
+    sTotal = year1Total + year2Total + year3Total;
+    
+    var year1Paid = parseFloat(dataStudents[i][10]) || 0;
+    var year2Paid = parseFloat(dataStudents[i][13]) || 0;
+    var year3Paid = parseFloat(dataStudents[i][16]) || 0;
+    var totalPaid = year1Paid + year2Paid + year3Paid;
+    
+    studentMap[sId] = { 
+      totalFees: sTotal, 
+      sumPaid: totalPaid, 
+      hasPaidRow: totalPaid > 0 
+    };
+    
+    // Add to analytics totals
+    analytics.totalPaidFees2 += totalPaid;
+    if (totalPaid > 0) {
+      analytics.paidStudentsCount2++;
     } else {
-      analytics.unpaidStudentsCount++;
-      sumUnpaid += st.totalFees;
+      analytics.unpaidStudentsCount2++;
+      analytics.totalUnpaidFees2 += sTotal;
     }
   }
-  analytics.totalUnpaidFees = sumUnpaid;
-  analytics.pieData.paid = analytics.totalPaidFees;
-  analytics.pieData.unpaid = analytics.totalUnpaidFees;
-  analytics.lineData = analytics.dateWisePaid;
+
+  analytics.totalStudents2 = Object.keys(studentMap).length;
+  analytics.pieData2.paid = analytics.totalPaidFees2;
+  analytics.pieData2.unpaid = analytics.totalUnpaidFees2;
 
   return analytics;
 }
