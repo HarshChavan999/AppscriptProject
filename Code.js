@@ -654,6 +654,139 @@ function getAnalyticsData(
   return analytics;
 }
 
+
+
+
+
+/************************************************
+ Getting Admission Data
+ ************************************************/
+
+
+function getAnalyticsData2(
+  monthFilter,
+  feesTypeFilter,
+  paymentModeFilter,
+  dateFrom,
+  dateTo,
+  userRole
+) {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
+    return { error: "You don't have permission to view analytics." };
+  }
+
+  var analytics = {
+    totalPaidFees: 0,
+    totalUnpaidFees: 0,
+    totalStudents: 0,
+    paidStudentsCount: 0,
+    unpaidStudentsCount: 0,
+    dateWisePaid: {},
+    pieData: { paid: 0, unpaid: 0 },
+    lineData: {},
+  };
+
+  
+  var sheetStudents = ss.getSheetByName("STUDENT DATA");
+  var sheetFees = ss.getSheetByName("FEES");
+  if (!sheetStudents || !sheetFees) {
+    return { error: "Sheets not found. Check STUDENT DATA or FEES." };
+  }
+  var dataStudents = sheetStudents.getDataRange().getValues();
+  var dataFees = sheetFees.getDataRange().getValues();
+
+  // Convert dateFrom/dateTo to actual Dates if provided
+  var fromDate = null,
+    toDate = null;
+  if (dateFrom) {
+    fromDate = new Date(dateFrom + "T00:00:00"); // parse
+  }
+  if (dateTo) {
+    toDate = new Date(dateTo + "T23:59:59");
+  }
+
+  // Build a student map
+  var studentMap = {};
+  for (var i = 1; i < dataStudents.length; i++) {
+    var sId = String(dataStudents[i][0]).trim();
+    var sTotal = parseFloat(dataStudents[i][7]) || 0;
+    studentMap[sId] = { totalFees: sTotal, sumPaid: 0, hasPaidRow: false };
+  }
+
+  for (var j = 1; j < dataFees.length; j++) {
+    var row = dataFees[j];
+    var feeStudentId = String(row[0] || "").trim();
+    var feeDateVal = row[1];
+    var feeMonth = String(row[2] || "").trim();
+    var feeType = String(row[10] || "").trim();
+    var feePayMode = String(row[11] || "").trim();
+    var paidAmount = parseFloat(row[8]) || 0;
+
+    // date range check
+    if (fromDate || toDate) {
+      var actualDate =
+        feeDateVal instanceof Date
+          ? feeDateVal
+          : new Date(feeDateVal + "T00:00:00");
+      if (fromDate && actualDate < fromDate) continue;
+      if (toDate && actualDate > toDate) continue;
+    }
+    // month filter
+    if (monthFilter && feeMonth !== monthFilter) continue;
+    // feesType filter
+    if (feesTypeFilter && feeType !== feesTypeFilter) continue;
+    // paymentMode filter
+    if (paymentModeFilter && feePayMode !== paymentModeFilter) continue;
+
+    if (!isNaN(paidAmount) && paidAmount > 0) {
+      analytics.totalPaidFees += paidAmount;
+
+      // accumulate dateWise
+      var dateStr =
+        feeDateVal instanceof Date
+          ? Utilities.formatDate(
+              feeDateVal,
+              Session.getScriptTimeZone(),
+              "yyyy-MM-dd"
+            )
+          : String(feeDateVal).trim();
+
+      if (!analytics.dateWisePaid[dateStr]) {
+        analytics.dateWisePaid[dateStr] = 0;
+      }
+      analytics.dateWisePaid[dateStr] += paidAmount;
+    }
+
+    if (studentMap[feeStudentId]) {
+      studentMap[feeStudentId].sumPaid += paidAmount;
+      studentMap[feeStudentId].hasPaidRow = true;
+    }
+  }
+
+  analytics.totalStudents = Object.keys(studentMap).length;
+  var sumUnpaid = 0;
+  for (var sid in studentMap) {
+    var st = studentMap[sid];
+    if (st.hasPaidRow) {
+      analytics.paidStudentsCount++;
+    } else {
+      analytics.unpaidStudentsCount++;
+      sumUnpaid += st.totalFees;
+    }
+  }
+  analytics.totalUnpaidFees = sumUnpaid;
+  analytics.pieData.paid = analytics.totalPaidFees;
+  analytics.pieData.unpaid = analytics.totalUnpaidFees;
+  analytics.lineData = analytics.dateWisePaid;
+
+  return analytics;
+}
+
+
+
+
+
+
 /************************************************
  * CLASS & MONTH DASHBOARD (ADMIN ONLY)
  ************************************************/

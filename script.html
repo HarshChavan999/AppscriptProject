@@ -395,6 +395,7 @@ function DInsReceipt(number,amount){
     document.getElementById("slipFormSection").classList.add("hidden");
     document.getElementById("oldFeesSection").classList.add("hidden");
     document.getElementById("analyticsSection").classList.add("hidden");
+    document.getElementById("analyticsSection2").classList.add("hidden");
     document.getElementById("manageStudentSection").classList.add("hidden");
     document.getElementById("classMonthDashboard").classList.add("hidden");
     document.getElementById("dueFeesSection").classList.add("hidden");
@@ -1936,6 +1937,12 @@ function logout() {
     document.getElementById("analyticsSection").classList.remove("hidden");
     loadAnalytics();
   }
+
+    function toggleAnalytics2() {
+    hideAllSections();
+    document.getElementById("analyticsSection2").classList.remove("hidden");
+    loadAnalytics();
+  }
   function backToInquiryFromAnalytics() {
     hideAllSections();
     document.getElementById("ifId").classList.remove("hidden");
@@ -1948,6 +1955,16 @@ function logout() {
     document.getElementById("analyticsPaymentModeFilter").value = "";
     loadAnalytics();
   }
+
+    function clearAnalyticsFilter2() {
+    document.getElementById("analyticsDateFrom2").value = "";
+    document.getElementById("analyticsDateTo").value = "";
+    document.getElementById("analyticsMonthFilter").value = "";
+    document.getElementById("analyticsFeesTypeFilter").value = "";
+    document.getElementById("analyticsPaymentModeFilter").value = "";
+    loadAnalytics();
+  } 
+
   function loadAnalytics() {
     const userRole = document.getElementById("userRole").value;
     const monthFilter = document
@@ -2049,6 +2066,122 @@ function logout() {
         });
       })
       .getAnalyticsData(
+        monthFilter,
+        feesTypeFilter,
+        paymentModeFilter,
+        dateFrom,
+        dateTo,
+        userRole
+      );
+  }
+
+
+  /******************************************
+   * 7) Admission Analityics
+   ******************************************/
+
+
+  function loadAnalytics2() {
+    const userRole = document.getElementById("userRole").value;
+    const monthFilter = document
+      .getElementById("analyticsMonthFilter")
+      .value.trim();
+    const feesTypeFilter = document
+      .getElementById("analyticsFeesTypeFilter")
+      .value.trim();
+    const paymentModeFilter = document
+      .getElementById("analyticsPaymentModeFilter")
+      .value.trim();
+    const dateFrom = document.getElementById("analyticsDateFrom2").value.trim();
+    const dateTo = document.getElementById("analyticsDateTo").value.trim();
+
+    google.script.run
+      .withSuccessHandler(function (an) {
+        if (an.error) {
+          Swal.fire({
+            icon: "error",
+            title: "Analytics Error",
+            text: an.error,
+          });
+          return;
+        }
+
+        document.getElementById("cardTotalPaid").textContent =
+          an.totalPaidFees.toFixed(2);
+        document.getElementById("cardTotalUnpaid").textContent =
+          an.totalUnpaidFees.toFixed(2);
+        document.getElementById("cardTotalStudents").textContent =
+          an.totalStudents;
+        document.getElementById("cardPaidStudents").textContent =
+          an.paidStudentsCount;
+        document.getElementById("cardUnpaidStudents").textContent =
+          an.unpaidStudentsCount;
+
+        const dateLabels = Object.keys(an.dateWisePaid).sort();
+        const dateVals = dateLabels.map((d) => an.dateWisePaid[d]);
+
+        // Bar Chart
+        if (dateWiseChartRef) dateWiseChartRef.destroy();
+        const ctxBar = document
+          .getElementById("dateWiseChart")
+          .getContext("2d");
+        dateWiseChartRef = new Chart(ctxBar, {
+          type: "bar",
+          data: {
+            labels: dateLabels,
+            datasets: [
+              {
+                label: "Fees Paid",
+                data: dateVals,
+                backgroundColor: "rgba(54, 162, 235, 0.6)",
+                borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: { responsive: true, scales: { y: { beginAtZero: true } } },
+        });
+
+        // Line Chart
+        const lineLabels = Object.keys(an.lineData).sort();
+        const lineVals = lineLabels.map((d) => an.lineData[d]);
+        if (lineChartRef) lineChartRef.destroy();
+        const ctxLine = document.getElementById("lineChart").getContext("2d");
+        lineChartRef = new Chart(ctxLine, {
+          type: "line",
+          data: {
+            labels: lineLabels,
+            datasets: [
+              {
+                label: "Fees Trend",
+                data: lineVals,
+                fill: false,
+                borderColor: "rgba(255,99,132,1)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: { responsive: true },
+        });
+
+        // Pie Chart
+        if (pieChartRef) pieChartRef.destroy();
+        const ctxPie = document.getElementById("pieChart").getContext("2d");
+        pieChartRef = new Chart(ctxPie, {
+          type: "pie",
+          data: {
+            labels: ["Paid", "Unpaid"],
+            datasets: [
+              {
+                data: [an.pieData.paid, an.pieData.unpaid],
+                backgroundColor: ["#4CAF50", "#FF9800"],
+              },
+            ],
+          },
+          options: { responsive: true },
+        });
+      })
+      .getAnalyticsData2(
         monthFilter,
         feesTypeFilter,
         paymentModeFilter,
