@@ -64,17 +64,17 @@
 
   #receiptFormSection .header-content {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     position: relative;
     z-index: 1;
-    text-align: center;
   }
 
   #receiptFormSection .logo-section {
     display: flex;
     align-items: center;
     gap: 15px;
+    text-align: left;
   }
 
   #receiptFormSection .logo-section img {
@@ -186,7 +186,7 @@
   #receiptFormSection .installment-table th,
   #receiptFormSection .installment-table td {
     border: 1px solid #eee;
-    padding: 8px;
+    padding: 4px;
     text-align: center;
   }
   
@@ -465,13 +465,7 @@
           <td>${i + 1}</td>
           <td>${formattedDate}</td>
           <td>₹${amount.toLocaleString()}</td>
-          <td>
-            <select name="installmentStatus_${year}_${i}" style="border: 1px solid #ccc; padding: 4px; font-size: 9pt;">
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </td>
+          <td></td>
         </tr>`;
     }
 
