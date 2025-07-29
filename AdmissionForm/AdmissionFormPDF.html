@@ -1,3 +1,46 @@
+<style>
+  .installment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+  
+  .installment-table th,
+  .installment-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .installment-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .installment-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .year-header {
+    font-weight: bold;
+    font-size: 16px;
+    margin: 15px 0 10px 0;
+    color: #333;
+  }
+  
+  .total-section {
+    font-weight: bold;
+    font-size: 14px;
+    margin: 10px 0;
+    text-align: right;
+    color: #2c3e50;
+  }
+  
+  .scrollable-table {
+    overflow-x: auto;
+  }
+</style>
+
 <div id="receiptFormSection">
   <main class="flex justify-center items-center bg-gray-100 py-10">
     <form class="max-w-4xl mx-auto px-4 w-full" onsubmit="AdmissionHandle(event)" enctype="multipart/form-data">
@@ -162,80 +205,65 @@
     const installmentCount = parseInt(document.getElementById('installmentCount').value);
     const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
     const startDate = new Date(document.getElementById('startDate').value);
-    const courseYears = parseInt(document.getElementById('courseYear').value);
+    const selectedYear = parseInt(document.getElementById('courseYear').value);
 
     if (!startDate || totalFee <= 0) return;
 
     const container = document.getElementById('installmentTablesContainer');
     container.innerHTML = '';
 
-    // Calculate fee per year (equal distribution)
-    const feePerYear = Math.round(totalFee / courseYears);
-    let remainingFee = totalFee;
+    // Use total fee for the selected year
+    const yearFee = totalFee;
 
-    for (let year = 1; year <= courseYears; year++) {
-      // Adjust last year's fee to account for rounding
-      const yearFee = (year === courseYears) ? remainingFee : feePerYear;
-      remainingFee -= yearFee;
+    // Create single year section
+    const yearSection = document.createElement('div');
+    yearSection.className = 'year-section';
 
-      // Create year section
-      const yearSection = document.createElement('div');
-      yearSection.className = 'year-section';
+    // Year header
+    const yearHeader = document.createElement('div');
+    yearHeader.className = 'year-header';
+    yearHeader.textContent = getYearName(selectedYear) + ' Fee Installments';
+    yearSection.appendChild(yearHeader);
 
-      // Year header
-      const yearHeader = document.createElement('div');
-      yearHeader.className = 'year-header';
-      yearHeader.textContent = getYearName(year) + ' Fee Installments';
-      yearSection.appendChild(yearHeader);
+    // Year content
+    const yearContent = document.createElement('div');
+    yearContent.className = 'year-content';
 
-      // Year content
-      const yearContent = document.createElement('div');
-      yearContent.className = 'year-content';
+    // Generate installment table for selected year only
+    const tableHTML = generateVerticalInstallmentTable(selectedYear, installmentCount, yearFee, startDate);
+    yearContent.innerHTML = tableHTML;
 
-      // Generate installment table for this year
-      const tableHTML = generateYearInstallmentTable(year, installmentCount, yearFee, startDate, year);
-      yearContent.innerHTML = tableHTML;
-
-      yearSection.appendChild(yearContent);
-      container.appendChild(yearSection);
-    }
+    yearSection.appendChild(yearContent);
+    container.appendChild(yearSection);
 
     // Add total section
     const totalSection = document.createElement('div');
     totalSection.className = 'total-section';
-    totalSection.textContent = `Total Course Fee: ₹${totalFee.toLocaleString()}`;
+    totalSection.textContent = `${getYearName(selectedYear)} Total Fee: ₹${totalFee.toLocaleString()}`;
     container.appendChild(totalSection);
   }
 
-  function generateYearInstallmentTable(year, installmentCount, yearFee, startDate, yearOffset) {
+  function generateVerticalInstallmentTable(year, installmentCount, yearFee, startDate) {
     const installmentAmount = Math.round(yearFee / installmentCount);
 
-    // Generate horizontal table structure
+    // Generate vertical table structure
     let tableHTML = `
             <div class="scrollable-table">
             <table class="installment-table">
                 <thead>
                     <tr>
-                        <th style="width: 120px;">Details</th>
-        `;
-
-    // Add columns for each installment
-    for (let i = 0; i < installmentCount; i++) {
-      tableHTML += `<th>Installment ${i + 1}</th>`;
-    }
-
-    tableHTML += `
+                        <th style="width: 120px;">Installment</th>
+                        <th style="width: 150px;">Due Date</th>
+                        <th style="width: 120px;">Amount (₹)</th>
+                        <th style="width: 120px;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="date-row">
-                        <td style="font-weight: bold; background: #ecf0f1;">Due Date</td>
         `;
 
-    // Add due dates (offset by year)
+    // Add rows for each installment
     for (let i = 0; i < installmentCount; i++) {
       const dueDate = new Date(startDate);
-      dueDate.setFullYear(startDate.getFullYear() + (yearOffset - 1));
       dueDate.setMonth(startDate.getMonth() + i);
 
       const formattedDate = dueDate.toLocaleDateString('en-GB', {
@@ -244,51 +272,30 @@
         year: 'numeric'
       });
 
-      tableHTML += `<td>${formattedDate}</td>`;
-    }
-
-    tableHTML += `
-                    </tr>
-                    <tr class="amount-row">
-                        <td style="font-weight: bold; background: #ecf0f1;">Amount (₹)</td>
-        `;
-
-    // Add amounts
-    for (let i = 0; i < installmentCount; i++) {
       // Adjust last installment to account for rounding
       const amount = (i === installmentCount - 1) ?
         yearFee - (installmentAmount * (installmentCount - 1)) :
         installmentAmount;
 
-      tableHTML += `<td>₹${amount.toLocaleString()}</td>`;
-    }
-
-    tableHTML += `
-                    </tr>
-                    <tr class="status-row">
-                        <td style="font-weight: bold; background: #ecf0f1;">Status</td>
-        `;
-
-    // Add status dropdowns
-    for (let i = 0; i < installmentCount; i++) {
       tableHTML += `
-                <td>
-                    <select name="installmentStatus_${year}_${i}">
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="overdue">Overdue</option>
-                    </select>
-                </td>
+                    <tr>
+                        <td style="font-weight: bold; text-align: center;">${i + 1}</td>
+                        <td style="text-align: center;">${formattedDate}</td>
+                        <td style="text-align: center;">₹${amount.toLocaleString()}</td>
+                        <td style="text-align: center;">
+                            <select name="installmentStatus_${year}_${i}" style="width: 100px;">
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="overdue">Overdue</option>
+                            </select>
+                        </td>
+                    </tr>
             `;
     }
 
     tableHTML += `
-                    </tr>
                 </tbody>
             </table>
-            </div>
-            <div class="total-section">
-                ${getYearName(year)} Total: ₹${yearFee.toLocaleString()}
             </div>
         `;
 
