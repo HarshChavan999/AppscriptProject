@@ -392,6 +392,7 @@ function DInsReceipt(number,amount){
    * 1) HELPER FUNCTIONS
    ******************************************/
   function hideAllSections() {
+     document.getElementById("feeReceiptForm").classList.add("hidden");
     document.getElementById("slipFormSection").classList.add("hidden");
     document.getElementById("oldFeesSection").classList.add("hidden");
     document.getElementById("analyticsSection").classList.add("hidden");
@@ -406,7 +407,7 @@ function DInsReceipt(number,amount){
     // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
     // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
     document.getElementById("receiptFormSection").classList.add("hidden");
-    document.getElementById("feeReceiptForm").classList.add("hidden");
+   
     
 
   }
@@ -2976,6 +2977,9 @@ html2pdf()
 
   
   function openInquiryForm() {
+        const dateInput23 = document.getElementById('date3334');
+        dateInput23.valueAsDate = new Date();
+        dateInput23.setAttribute('readonly', true);
     console.log("Inquiry Form button clicked");
     hideAllSections();
     document.getElementById("ifId").classList.remove("hidden"); // Assuming ifId is the inquiry form itself
