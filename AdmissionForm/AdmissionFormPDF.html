@@ -326,7 +326,18 @@
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Course Name</label>
-              <input type="text" id="courseName" name="courseName">
+              <select
+            id="courseName"
+            name="courseName"
+            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+          >
+            <option value="" disabled selected>Select a course</option>
+            <option value="anm_nursing">ANM Nursing Diploma</option>
+            <option value="gnm_nursing">GNM Nursing Diploma</option>
+            <option value="dmlt">DMLT Diploma</option>
+            <option value="ot_technician">OT Technician</option>
+            <option value="general_nursing">General Nursing Assistant</option>
+          </select>
             </div>
             <div class="form-group">
               <label>Course Year</label>
@@ -486,16 +497,67 @@
     html2pdf().from(element).set(opt).save();
   }
 
-  function openreceiptFormSection() {
-    hideAllSections();
+  // function openreceiptFormSection() {
+  //   hideAllSections();
 
-    const section = document.getElementById("receiptFormSection");
-    if (!section) {
-      console.error("Admission form section not found!");
-      return;
-    }
-    section.classList.remove("hidden");
+  //   const section = document.getElementById("receiptFormSection");
+  //   if (!section) {
+  //     console.error("Admission form section not found!");
+  //     return;
+  //   }
+  //   section.classList.remove("hidden");
+  // }
+  function openreceiptFormSection() {
+  hideAllSections();
+
+  const section = document.getElementById("receiptFormSection");
+  if (!section) {
+    console.error("Admission form section not found!");
+    return;
   }
+  section.classList.remove("hidden");
+
+  // DOM references
+  const courseSelect = document.getElementById("courseName");
+  const feeInput = document.getElementById("totalFee");
+  const durationInput = document.getElementById("courseDuration");
+
+  // Course mapping
+  // const courseData = {
+  //   anm_nursing: { duration: "1 year", fees: 55000 },
+  //   gnm_nursing: { duration: "3 years", fees: 270000 },
+  //   dmlt: { duration: "1 year", fees: 30000 },
+  //   ot_technician: { duration: "1 year", fees: 30000 },
+  //   general_nursing: { duration: "1 year", fees: 30000 },
+  // };
+        const branch24 = document.getElementById("branch22").value;
+  const courseData = getCourseDataByLocation(branch24);
+
+  // Pre-fill if coming from session
+  const storedCourse = sessionStorage.getItem("STUD_Course");
+  if (storedCourse && courseData[storedCourse]) {
+    courseSelect.value = storedCourse;
+    durationInput.value = courseData[storedCourse].duration;
+    feeInput.value = courseData[storedCourse].fees;
+  }
+
+  // Set dynamic update on change
+  courseSelect.addEventListener('change', function () {
+    const selected = courseSelect.value;
+    if (courseData[selected]) {
+      durationInput.value = courseData[selected].duration;
+      feeInput.value = courseData[selected].fees;
+      generateInstallmentTables(); // refresh table
+    }
+  });
+
+
+
+  Copycoursepay();
+  generateInstallmentTables();
+  generateYearInstallmentTable();
+}
+
 
   function AdmissionHandle(event) {
     event.preventDefault();
