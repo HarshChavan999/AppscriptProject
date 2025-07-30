@@ -127,60 +127,121 @@
         document.getElementById('dataPopup').style.display = 'none'; // Hide the popup
     }
 
+    // function fillFormFromPopup() {
+    //     if (currentFoundRecord) {
+    //         // Populate Aadhar first, it's already in the input field, but good to be explicit
+    //         document.getElementById('aadharNumber').value = currentFoundRecord.aadhaar || '';
+    //          const currentBranch = document.getElementById('branch22').value;
+
+    //         // Split and populate name fields
+    //         const fullNameParts = currentFoundRecord.fullName ? currentFoundRecord.fullName.split(' ') : [];
+    //         document.getElementById('firstName').value = fullNameParts[0] || '';
+    //         document.getElementById('middleName').value = fullNameParts.length > 2 ? fullNameParts.slice(1, -1).join(' ') : '';
+    //         document.getElementById('lastName').value = fullNameParts.length > 1 ? fullNameParts[fullNameParts.length - 1] : '';
+
+
+    //         // Populate other fields using the stored record
+    //         formFieldsToPopulate.forEach(field => {
+    //             const inputElement = document.getElementById(field);
+    //             if (inputElement) {
+    //                 if (field === 'addressLine1' || field === 'addressLine2' || field === 'addressLine3' || field === 'pincode') {
+    //                     // These are handled separately by the parsing logic in checkAadharNumberInquiry's return
+    //                     // If record contains separate addressLine1, etc., assign them directly.
+    //                     // Otherwise, rely on the split logic from checkAadharNumberInquiry.
+    //                     inputElement.value = currentFoundRecord[field] || '';
+    //                 } else if (inputElement.type === 'date') {
+    //                     if (currentFoundRecord[field]) {
+    //                         const date = new Date(currentFoundRecord[field]);
+    //                         inputElement.value = date.toISOString().split('T')[0];
+    //                     } else {
+    //                         inputElement.value = '';
+    //                     }
+    //                 } else if (inputElement.tagName === 'SELECT') {
+    //                      let foundOption = false;
+    //                     for (let i = 0; i < inputElement.options.length; i++) {
+    //                         if (inputElement.options[i].value === currentFoundRecord[field]) {
+    //                             inputElement.value = currentFoundRecord[field];
+    //                             foundOption = true;
+    //                             break;
+    //                         }
+    //                     }
+                        
+    //                     if (!foundOption) {
+    //                         inputElement.value = '';
+    //                     }
+    //                 } else if (field !== 'firstName' && field !== 'middleName' && field !== 'lastName') { // Avoid re-assigning name fields
+    //                     inputElement.value = currentFoundRecord[field] || '';
+    //                 }
+    //             }
+    //         });
+    //         closePopup();
+    //     }
+    // }
     function fillFormFromPopup() {
-        if (currentFoundRecord) {
-            // Populate Aadhar first, it's already in the input field, but good to be explicit
-            document.getElementById('aadharNumber').value = currentFoundRecord.aadhaar || '';
+    if (currentFoundRecord) {
+        // Populate Aadhar first, it's already in the input field, but good to be explicit
+        document.getElementById('aadharNumber').value = currentFoundRecord.aadhaar || '';
+        
+        // Save current branch value before populating other fields
+        const currentBranch = document.getElementById('branch22').value;
 
-            // Split and populate name fields
-            const fullNameParts = currentFoundRecord.fullName ? currentFoundRecord.fullName.split(' ') : [];
-            document.getElementById('firstName').value = fullNameParts[0] || '';
-            document.getElementById('middleName').value = fullNameParts.length > 2 ? fullNameParts.slice(1, -1).join(' ') : '';
-            document.getElementById('lastName').value = fullNameParts.length > 1 ? fullNameParts[fullNameParts.length - 1] : '';
+        // Split and populate name fields
+        const fullNameParts = currentFoundRecord.fullName ? currentFoundRecord.fullName.split(' ') : [];
+        document.getElementById('firstName').value = fullNameParts[0] || '';
+        document.getElementById('middleName').value = fullNameParts.length > 2 ? fullNameParts.slice(1, -1).join(' ') : '';
+        document.getElementById('lastName').value = fullNameParts.length > 1 ? fullNameParts[fullNameParts.length - 1] : '';
 
-
-            // Populate other fields using the stored record
-            formFieldsToPopulate.forEach(field => {
-                const inputElement = document.getElementById(field);
-                if (inputElement) {
-                    if (field === 'addressLine1' || field === 'addressLine2' || field === 'addressLine3' || field === 'pincode') {
-                        // These are handled separately by the parsing logic in checkAadharNumberInquiry's return
-                        // If record contains separate addressLine1, etc., assign them directly.
-                        // Otherwise, rely on the split logic from checkAadharNumberInquiry.
-                        inputElement.value = currentFoundRecord[field] || '';
-                    } else if (inputElement.type === 'date') {
-                        if (currentFoundRecord[field]) {
-                            const date = new Date(currentFoundRecord[field]);
-                            inputElement.value = date.toISOString().split('T')[0];
-                        } else {
-                            inputElement.value = '';
-                        }
-                    } else if (inputElement.tagName === 'SELECT') {
-                         let foundOption = false;
-                        for (let i = 0; i < inputElement.options.length; i++) {
-                            if (inputElement.options[i].value === currentFoundRecord[field]) {
-                                inputElement.value = currentFoundRecord[field];
-                                foundOption = true;
-                                break;
-                            }
-                        }
-                        if (!foundOption) {
-                            inputElement.value = '';
-                        }
-                    } else if (field !== 'firstName' && field !== 'middleName' && field !== 'lastName') { // Avoid re-assigning name fields
-                        inputElement.value = currentFoundRecord[field] || '';
+        // Populate other fields using the stored record
+        formFieldsToPopulate.forEach(field => {
+            const inputElement = document.getElementById(field);
+            if (inputElement) {
+                if (field === 'addressLine1' || field === 'addressLine2' || field === 'addressLine3' || field === 'pincode') {
+                    inputElement.value = currentFoundRecord[field] || '';
+                } else if (inputElement.type === 'date') {
+                    if (currentFoundRecord[field]) {
+                        const date = new Date(currentFoundRecord[field]);
+                        inputElement.value = date.toISOString().split('T')[0];
+                    } else {
+                        inputElement.value = '';
                     }
+                } else if (inputElement.tagName === 'SELECT') {
+                    let foundOption = false;
+                    for (let i = 0; i < inputElement.options.length; i++) {
+                        if (inputElement.options[i].value === currentFoundRecord[field]) {
+                            inputElement.value = currentFoundRecord[field];
+                            foundOption = true;
+                            break;
+                        }
+                    }
+                    if (!foundOption) {
+                        inputElement.value = '';
+                    }
+                } else if (field !== 'firstName' && field !== 'middleName' && field !== 'lastName') {
+                    inputElement.value = currentFoundRecord[field] || '';
                 }
-            });
-            closePopup();
+            }
+        });
+
+        // Handle branch field separately - only update if record has a branch value
+        if (currentFoundRecord.branch) {
+            document.getElementById('branch22').value = currentFoundRecord.branch;
+        } else {
+            // Restore original branch value if no branch in record
+            document.getElementById('branch22').value = currentBranch;
         }
+
+        closePopup();
     }
+}
 
     // This function clears the form fields, useful for new entries or after submission
     function clearInquiryFormFields(keepAadhar = false) {
         const form = document.getElementById('ifId');
         if (form) {
+          const savedInquiryTakenBy = document.getElementById('inquiryTakenBy').value;
+        const savedBranch = document.getElementById('branch22').value;
             formFieldsToPopulate.forEach(field => {
+               if (field !== 'inquiryTakenBy' && field !== 'branch22') {
                 const inputElement = document.getElementById(field);
                 if (inputElement) {
                     if (inputElement.tagName === 'SELECT') {
@@ -189,11 +250,14 @@
                         inputElement.value = '';
                     }
                 }
+                }
             });
             // Clear Aadhar unless specified not to
             if (!keepAadhar) {
                 document.getElementById('aadharNumber').value = '';
             }
+             document.getElementById('inquiryTakenBy').value = savedInquiryTakenBy;
+        document.getElementById('branch22').value = savedBranch;
 
             // Set today's date back
             const today = new Date();
