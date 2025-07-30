@@ -1481,7 +1481,7 @@ function generateReceipt() {
         // Show Inquiry Form by default after login
         openInquiryForm();
         populateInquiryTakenBy();
-        openexamfees();
+        // openexamfees();
         examfeeTakenBy();
 
         // Admin UI if role = admin
@@ -3510,34 +3510,34 @@ function populateInquiryTakenBy() {
 
 
  // --- Login Form Handling ---
-    loginForm.addEventListener('submit', function(event) {
-      event.preventDefault(); // Prevent default form submission
+    // loginForm.addEventListener('submit', function(event) {
+    //   event.preventDefault(); // Prevent default form submission
 
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
+    //   const username = document.getElementById('loginUsername').value;
+    //   const password = document.getElementById('loginPassword').value;
 
-      console.log("Attempting login for:", username); // Debugging: log username
+    //   console.log("Attempting login for:", username); // Debugging: log username
 
-      // Call the server-side loginUser function
-      google.script.run
-        .withSuccessHandler(function(response) {
-          console.log("Login Response (from server):", response); // Debugging: log server response
-          if (response.success) {
-            currentLoggedInUser = response.userName; // Store the logged-in user's name
-            sessionStorage.setItem('loggedInUser', currentLoggedInUser); // Store in session storage
-            console.log("Current Logged In User (after setting):", currentLoggedInUser); // Debugging
-            showCustomAlert("Login Successful", `Welcome, ${currentLoggedInUser}!`, true);
-            updateUI(); // Update UI after successful login
-          } else {
-            showCustomAlert("Login Failed", response.error, false);
-          }
-        })
-        .withFailureHandler(function(error) {
-          console.error("Login server error:", error);
-          showCustomAlert("Error", `An unexpected error occurred during login: ${error.message}`, false);
-        })
-        .loginUser({ username: username, password: password });
-    });
+    //   // Call the server-side loginUser function
+    //   google.script.run
+    //     .withSuccessHandler(function(response) {
+    //       console.log("Login Response (from server):", response); // Debugging: log server response
+    //       if (response.success) {
+    //         currentLoggedInUser = response.userName; // Store the logged-in user's name
+    //         sessionStorage.setItem('loggedInUser', currentLoggedInUser); // Store in session storage
+    //         console.log("Current Logged In User (after setting):", currentLoggedInUser); // Debugging
+    //         showCustomAlert("Login Successful", `Welcome, ${currentLoggedInUser}!`, true);
+    //         updateUI(); // Update UI after successful login
+    //       } else {
+    //         showCustomAlert("Login Failed", response.error, false);
+    //       }
+    //     })
+    //     .withFailureHandler(function(error) {
+    //       console.error("Login server error:", error);
+    //       showCustomAlert("Error", `An unexpected error occurred during login: ${error.message}`, false);
+    //     })
+    //     .loginUser({ username: username, password: password });
+    // });
 
 
 function copyadmissionreceipt(){
