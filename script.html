@@ -3541,9 +3541,17 @@ function copyadmissionreceipt(){
       "tempText9",
       document.getElementById("courseSelect").value
     );
-    document.getElementById("courseName").value=sessionStorage.getItem("tempText9");
+    document.getElementById("courseNameInput").value=sessionStorage.getItem("tempText9");
 
+
+ sessionStorage.setItem(
+      "tempText69",
+      document.getElementById("std_Coursepayname").value
+    );
+    document.getElementById("studentNameInput").value=sessionStorage.getItem("tempText69");
 }
+
+
 
 
 </script>
