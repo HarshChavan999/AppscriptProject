@@ -685,10 +685,11 @@ function getAnalyticsData2(
     pieData2: { paid: 0, unpaid: 0 },
     lineData2: {},
     totalAdmissions: 0,
+    totalInquiry: 0,
   };
 
   
-  var sheetStudents = ss.getSheetByName("Admissions");
+  var sheetStudents = ss.getSheetByName(CONFIG.ADMISSIONS_SHEET_NAME);
   if (!sheetStudents) {
     return { error: "Sheets not found. Check Admissions sheet." };
   }
@@ -696,6 +697,15 @@ function getAnalyticsData2(
   
   // Count total admissions (subtract 1 for header row)
   analytics.totalAdmissions = dataStudents.length > 1 ? dataStudents.length - 1 : 0;
+
+  var sheetStudents1 = ss.getSheetByName(CONFIG.INQUIRY_SHEET_NAME);
+  if (!sheetStudents1) {
+    return { error: "Sheets not found. Check Admissions sheet." };
+  }
+  var dataStudents1 = sheetStudents1.getDataRange().getValues();
+  
+  // Count total admissions (subtract 1 for header row)
+  analytics.totalInquiry = dataStudents1.length > 1 ? dataStudents1.length - 1 : 0;
   
   // Process payment data if needed
   var sheetFees = ss.getSheetByName("FEES");
