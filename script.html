@@ -2116,7 +2116,7 @@ function logout() {
         document.getElementById("cardPaidStudents2").textContent =
           an.totalAdmissions;
         document.getElementById("cardUnpaidStudents2").textContent =
-          an.unpaidStudentsCount2;
+          an.totalInquiry;
 
         const dateLabels = Object.keys(an.dateWisePaid).sort();
         const dateVals = dateLabels.map((d) => an.dateWisePaid[d]);

@@ -159,15 +159,15 @@
 // }
 
 const SPREADSHEET_ID = "1qfJIzcvO_1pNTZYEBOmVXoEL1QYbSpK32grjEXKKAZk"; // Your Sheet ID
-const SHEET_NAME = "Admissions"; // Your Sheet Name
+const SHEET_NAME = "ADMISSIONF"; // Your Sheet Name
 
 function saveToSheet(formData) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName("Admissions");
+    const sheet = ss.getSheetByName("ADMISSIONF");
     
     if (!sheet) {
-      throw new Error("Sheet 'Admissions' not found");
+      throw new Error("Sheet 'ADMISSIONF' not found");
     }
 
     // Prepare data in sheet column order
