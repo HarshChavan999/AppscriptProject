@@ -2648,8 +2648,33 @@ function logout() {
 
 
 
+  /******************************************
+   * FEE STRUCT
+   ******************************************/
+function toggleFeeStructure() {
+  hideAllSections();
+  document.getElementById("feeStructureSection").classList.remove("hidden");
 
+  // Optional: If you want to populate a dropdown filter (like course names)
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("feeStructureCourseSelect");
+      sel.innerHTML = `<option value="">All Courses</option>`;
+      if (courseList.error) {
+        console.log(courseList.error);
+      } else {
+        courseList.forEach((c) => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          sel.appendChild(opt);
+        });
+      }
+    })
+    .getCourseList(); // Create this server-side function to get distinct course names
 
+  loadFeeStructure(); // This function will load and display your FeeStructure data
+}
 
 
 
