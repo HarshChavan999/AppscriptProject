@@ -287,22 +287,26 @@ function checkAadharNumberInquiry(aadharNumber) {
       // Return individual address lines and pincode for client-side population.
       return {
         rowIndex: i,
-        aadhaar: String(row[CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] || '').trim(),
-        fullName: String(row[CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL] || '').trim(),
-        qualification: String(row[CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL] || '').trim(),
-        phoneNumber: String(row[CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL] || '').trim(),
-        whatsappNumber: String(row[CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL] || '').trim(),
-        parentsNumber: String(row[CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL] || '').trim(),
-        emailAddress: String(row[CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL] || '').trim(),
-        age: String(row[CONFIG.AADHAAR_LOOKUP.AGE_COL] || '').trim(),
+        aadhaar: String(row[CONFIG.AADHAAR_LOOKUP.AADHAAR_COL]).trim(),
+        fullName: String(row[CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL]).trim(),
+        qualification: String(row[CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL]).trim(),
+        phoneNumber: String(row[CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL]).trim(),
+        phoneNo: String(row[CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL]).trim(),
+        whatsappNumber: String(row[CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL]).trim(),
+        whatsappNo: String(row[CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL]).trim(),
+        parentsNumber: String(row[CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL]).trim(),
+        parentsNo: String(row[CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL]).trim(),
+        emailAddress: String(row[CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL]).trim(),
+        email: String(row[CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL]).trim(),
+        age: String(row[CONFIG.AADHAAR_LOOKUP.AGE_COL]).trim(),
         addressLine1: addressLine1,
         addressLine2: addressLine2,
         addressLine3: addressLine3,
         pincode: pincode,
-        interestedCourse: String(row[CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL] || '').trim(),
-        inquiryTakenBy: String(row[CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL] || '').trim(),
-        branch: String(row[CONFIG.AADHAAR_LOOKUP.BRANCH_COL] || '').trim(),
-        gender: String(row[CONFIG.AADHAAR_LOOKUP.GENDER_COL] || '').trim()
+        interestedCourse: String(row[CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL]).trim(),
+        inquiryTakenBy: String(row[CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL]).trim(),
+        branch: String(row[CONFIG.AADHAAR_LOOKUP.BRANCH_COL]).trim(),
+        gender: String(row[CONFIG.AADHAAR_LOOKUP.GENDER_COL]).trim()
       };
     }
   }
@@ -327,19 +331,19 @@ function findAadharRecord(aadharNumber, sheet) {
       const record = {};
       // These are mapped directly as stored in the sheet.
       // The `checkAadharNumberInquiry` handles the parsing for the frontend.
-      record.aadhaar = String(data[i][CONFIG.AADHAAR_LOOKUP.AADHAAR_COL] || '').trim();
-      record.fullName = String(data[i][CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL] || '').trim();
-      record.qualification = String(data[i][CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL] || '').trim();
-      record.phoneNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL] || '').trim();
-      record.whatsappNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL] || '').trim();
-      record.parentsNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL] || '').trim();
-      record.emailAddress = String(data[i][CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL] || '').trim();
-      record.age = String(data[i][CONFIG.AADHAAR_LOOKUP.AGE_COL] || '').trim();
-      record.address = String(data[i][CONFIG.AADHAAR_LOOKUP.ADDRESS_COL] || '').trim();
-      record.interestedCourse = String(data[i][CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL] || '').trim();
-      record.inquiryTakenBy = String(data[i][CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL] || '').trim();
-      record.branch = String(data[i][CONFIG.AADHAAR_LOOKUP.BRANCH_COL] || '').trim();
-      record.gender = String(data[i][CONFIG.AADHAAR_LOOKUP.GENDER_COL] || '').trim();
+      record.aadhaar = String(data[i][CONFIG.AADHAAR_LOOKUP.AADHAAR_COL]).trim();
+      record.fullName = String(data[i][CONFIG.AADHAAR_LOOKUP.FULL_NAME_COL]).trim();
+      record.qualification = String(data[i][CONFIG.AADHAAR_LOOKUP.QUALIFICATION_COL]).trim();
+      record.phoneNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.PHONE_NUMBER_COL]).trim();
+      record.whatsappNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.WHATSAPP_NUMBER_COL]).trim();
+      record.parentsNumber = String(data[i][CONFIG.AADHAAR_LOOKUP.PARENTS_NUMBER_COL]).trim();
+      record.emailAddress = String(data[i][CONFIG.AADHAAR_LOOKUP.EMAIL_ADDRESS_COL]).trim();
+      record.age = String(data[i][CONFIG.AADHAAR_LOOKUP.AGE_COL]).trim();
+      record.address = String(data[i][CONFIG.AADHAAR_LOOKUP.ADDRESS_COL]).trim();
+      record.interestedCourse = String(data[i][CONFIG.AADHAAR_LOOKUP.INTERESTED_COURSE_COL]).trim();
+      record.inquiryTakenBy = String(data[i][CONFIG.AADHAAR_LOOKUP.INQUIRY_TAKEN_BY_COL]).trim();
+      record.branch = String(data[i][CONFIG.AADHAAR_LOOKUP.BRANCH_COL]).trim();
+      record.gender = String(data[i][CONFIG.AADHAAR_LOOKUP.GENDER_COL]).trim();
 
       return { record: record, rowIndex: i };
     }
