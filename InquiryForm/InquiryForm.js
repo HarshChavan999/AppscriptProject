@@ -349,12 +349,12 @@ function findAadharRecord(aadharNumber, sheet) {
 
 // Helper function for audit logging (make sure this is defined)
 
-function createAuditLogEntry(eventType, userId, details) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const auditSheet = ss.getSheetByName(CONFIG.AUDIT_LOG_SHEET_NAME);
-  if (auditSheet) {
-    auditSheet.appendRow([new Date(), eventType, userId, JSON.stringify(details)]);
-  } else {
-    console.error(`Audit log sheet '${CONFIG.AUDIT_LOG_SHEET_NAME}' not found. Audit entry not logged.`);
-  }
-}
+// function createAuditLogEntry(eventType, userId, details) {
+//   const ss = SpreadsheetApp.getActiveSpreadsheet();
+//   const auditSheet = ss.getSheetByName(CONFIG.AUDIT_LOG_SHEET_NAME);
+//   if (auditSheet) {
+//     auditSheet.appendRow([new Date(), eventType, userId, JSON.stringify(details)]);
+//   } else {
+//     console.error(`Audit log sheet '${CONFIG.AUDIT_LOG_SHEET_NAME}' not found. Audit entry not logged.`);
+//   }
+// }
