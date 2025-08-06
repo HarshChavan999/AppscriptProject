@@ -38,12 +38,12 @@
                     .checkAadharNumberInquiry(aadharNumber);
             } else if (aadharNumber.length === 0) {
                 // If Aadhar field is cleared, also clear other fields and hide spinner
-                clearInquiryFormFields(true); // Keep Aadhar field itself clear
+                // clearInquiryFormFields(false); // Keep Aadhar field itself clear
                 loadingSpinner.style.display = 'none'; // Hide spinner
             } else {
                 // If not 12 digits, don't show spinner, don't call server
                 loadingSpinner.style.display = 'none'; // Ensure spinner is hidden if input is invalid
-                clearInquiryFormFields(true); // Clear if not valid
+                // clearInquiryFormFields(true); // Clear if not valid
             }
         }, 500); // Wait for 500ms after typing stops
 
@@ -81,7 +81,7 @@
         } else {
             currentFoundRecord = null;
             // If Aadhar is new, clear other form fields to allow fresh entry
-            clearInquiryFormFields(true); // Clear all fields except Aadhar
+            // clearInquiryFormFields(true); // Clear all fields except Aadhar
         }
     }
 
@@ -108,10 +108,10 @@
             <p><strong>Qualification:</strong> ${record.qualification || 'N/A'}</p>
             <p><strong>Age:</strong> ${record.age || 'N/A'}</p>
             <p><strong>Gender:</strong> ${record.gender || 'N/A'}</p>
-            <p><strong>Phone Number:</strong> ${record.phoneNumber || 'N/A'}</p>
-            <p><strong>WhatsApp Number:</strong> ${record.whatsappNumber || 'N/A'}</p>
-            <p><strong>Parents Number:</strong> ${record.parentsNumber || 'N/A'}</p>
-            <p><strong>Email Address:</strong> ${record.emailAddress || 'N/A'}</p>
+            <p><strong>Phone Number:</strong> ${record.phoneNo || 'N/A'}</p>
+            <p><strong>WhatsApp Number:</strong> ${record.whatsappNo ||'N/A'}</p>
+            <p><strong>Parents Number:</strong> ${record.parentsNo ||'N/A'}</p>
+            <p><strong>Email Address:</strong> ${record.email ||'N/A'}</p>
             <p><strong>Address Line 1:</strong> ${record.addressLine1 || 'N/A'}</p>
             <p><strong>Address Line 2:</strong> ${record.addressLine2 || 'N/A'}</p>
             <p><strong>Address Line 3:</strong> ${record.addressLine3 || 'N/A'}</p>
