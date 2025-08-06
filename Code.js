@@ -1104,63 +1104,260 @@ function serverSideLogout() {
 /************************************************
  * COURSE PAYMENT
  ************************************************/
-function saveCoursePayment(data) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
-
-  sheet.appendRow([
-    data.ID,
-    data.Coursepayname,
-    data.coursePaySelect,
-    data.courseDuration,
-    data.coursePayFees,
-    data.totalFees,
-    data.paySelect
-  ]);
-}
-
-
-
-// function saveExamReceipt(data) {
-//   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("EXAMRECEIPT");
-
-//   if (!sheet) {
-//     throw new Error("Sheet 'EXAMRECEIPT' not found.");
-//   }
+// function saveCoursePayment(data) {
+//   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
 
 //   sheet.appendRow([
-//     data.receiptDate1,
-//     data.receiptNumber1,
-//     data.studentName1,
-//     data.courseName1,
-//     parseFloat(data.totalAmount),
-//     data.paymentMode1,
-//     data.receivedBy,
-//     data.branch,
-//     data.agreeTerms ? "Agreed" : "Not Agreed"
+//     data.ID,
+//     data.Coursepayname,
+//     data.coursePaySelect,
+//     data.courseDuration,
+//     data.coursePayFees,
+//     data.totalFees,
+//     data.paySelect
 //   ]);
 // }
 
-function saveReceiptData(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("EXAMRECEIPT");
 
-  if (!sheet) {
-    throw new Error('Sheet "EXAMRECEIPT" not found!');
+
+// // function saveExamReceipt(data) {
+// //   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("EXAMRECEIPT");
+
+// //   if (!sheet) {
+// //     throw new Error("Sheet 'EXAMRECEIPT' not found.");
+// //   }
+
+// //   sheet.appendRow([
+// //     data.receiptDate1,
+// //     data.receiptNumber1,
+// //     data.studentName1,
+// //     data.courseName1,
+// //     parseFloat(data.totalAmount),
+// //     data.paymentMode1,
+// //     data.receivedBy,
+// //     data.branch,
+// //     data.agreeTerms ? "Agreed" : "Not Agreed"
+// //   ]);
+// // }
+
+// function saveReceiptData(data) {
+//   const ss = SpreadsheetApp.getActiveSpreadsheet();
+//   const sheet = ss.getSheetByName("EXAMRECEIPT");
+
+//   if (!sheet) {
+//     throw new Error('Sheet "EXAMRECEIPT" not found!');
+//   }
+
+//   sheet.appendRow([
+//     data.receiptDate,
+//     data.receiptNumber,
+//     data.studentName,
+//     data.courseName,
+//     parseFloat(data.totalAmount),
+//     data.paymentMode,
+//     // data.receivedBy,
+//     // data.branch,
+//     data.agreeTerms
+//   ]);
+// }
+
+
+/**
+ * Saves course payment data to FeeStructure sheet with audit logging
+ * @param {Object} data Payment data object
+ * @returns {Object} Operation result
+ */
+function saveCoursePayment(data) {
+  const userIdForAudit = data.loggedInUserId || "Anonymous";
+  
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
+    
+    if (!sheet) {
+      createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
+        error: "Sheet 'FeeStructure' not found",
+        paymentDataSummary: {
+          studentId: data.ID,
+          courseName: data.coursePaySelect
+        }
+      });
+      throw new Error('Sheet "FeeStructure" not found!');
+    }
+
+    // Validate required fields
+    const requiredFields = ["ID", "Coursepayname", "coursePaySelect", "coursePayFees"];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+      createAuditLogEntry("Payment Validation Failed", userIdForAudit, {
+        reason: `Missing required fields: ${missingFields.join(", ")}`,
+        paymentDataSummary: {
+          studentId: data.ID,
+          courseName: data.coursePaySelect
+        }
+      });
+      return {
+        success: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`
+      };
+    }
+
+    // Save payment data
+    sheet.appendRow([
+      data.ID,
+      data.Coursepayname,
+      data.coursePaySelect,
+      data.courseDuration,
+      data.coursePayFees,
+      data.totalFees,
+      data.paySelect,
+      new Date(), // Timestamp
+      userIdForAudit // Added user who recorded the payment
+    ]);
+    
+    const lastRow = sheet.getLastRow();
+    
+    // Log successful payment
+    createAuditLogEntry("Course Payment Recorded", userIdForAudit, {
+      studentId: data.ID,
+      studentName: data.Coursepayname,
+      course: data.coursePaySelect,
+      fees: data.coursePayFees,
+      totalFees: data.totalFees,
+      paymentType: data.paySelect,
+      row: lastRow
+    });
+    
+    return {
+      success: true,
+      message: "Payment data saved successfully",
+      row: lastRow
+    };
+    
+  } catch (error) {
+    console.error("Error in saveCoursePayment:", error);
+    
+    createAuditLogEntry("Payment Processing Error", userIdForAudit, {
+      error: error.message,
+      paymentDataSummary: {
+        studentId: data.ID,
+        courseName: data.coursePaySelect
+      }
+    });
+    
+    return {
+      success: false,
+      message: error.message
+    };
   }
-
-  sheet.appendRow([
-    data.receiptDate,
-    data.receiptNumber,
-    data.studentName,
-    data.courseName,
-    parseFloat(data.totalAmount),
-    data.paymentMode,
-    // data.receivedBy,
-    // data.branch,
-    data.agreeTerms
-  ]);
 }
 
+/**
+ * Saves receipt data to EXAMRECEIPT sheet with audit logging
+ * @param {Object} data Receipt data object
+ * @returns {Object} Operation result
+ */
+function saveReceiptData(data) {
+  const userIdForAudit = data.loggedInUserId || "Anonymous";
+  
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("EXAMRECEIPT");
+
+    if (!sheet) {
+      createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
+        error: "Sheet 'EXAMRECEIPT' not found",
+        receiptDataSummary: {
+          receiptNumber: data.receiptNumber,
+          studentName: data.studentName
+        }
+      });
+      throw new Error('Sheet "EXAMRECEIPT" not found!');
+    }
+
+    // Validate required fields
+    const requiredFields = ["receiptNumber", "studentName", "courseName", "totalAmount"];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+      createAuditLogEntry("Receipt Validation Failed", userIdForAudit, {
+        reason: `Missing required fields: ${missingFields.join(", ")}`,
+        receiptDataSummary: {
+          receiptNumber: data.receiptNumber,
+          studentName: data.studentName
+        }
+      });
+      return {
+        success: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`
+      };
+    }
+
+    // Parse amount to ensure it's numeric
+    const amount = parseFloat(data.totalAmount);
+    if (isNaN(amount)) {
+      createAuditLogEntry("Receipt Amount Error", userIdForAudit, {
+        error: "Invalid amount format",
+        receiptDataSummary: {
+          receiptNumber: data.receiptNumber,
+          amountEntered: data.totalAmount
+        }
+      });
+      return {
+        success: false,
+        message: "Invalid amount format"
+      };
+    }
+
+    // Save receipt data
+    sheet.appendRow([
+      data.receiptDate || new Date(),
+      data.receiptNumber,
+      data.studentName,
+      data.courseName,
+      amount,
+      data.paymentMode,
+      data.agreeTerms === 'on' ? 'Agreed' : 'Not Agreed',
+      new Date(), // Timestamp of record creation
+      userIdForAudit // Added user who created the receipt
+    ]);
+    
+    const lastRow = sheet.getLastRow();
+    
+    // Log successful receipt creation
+    createAuditLogEntry("Receipt Generated", userIdForAudit, {
+      receiptNumber: data.receiptNumber,
+      studentName: data.studentName,
+      courseName: data.courseName,
+      amount: amount,
+      paymentMode: data.paymentMode,
+      row: lastRow
+    });
+    
+    return {
+      success: true,
+      message: "Receipt data saved successfully",
+      row: lastRow,
+      receiptNumber: data.receiptNumber
+    };
+    
+  } catch (error) {
+    console.error("Error in saveReceiptData:", error);
+    
+    createAuditLogEntry("Receipt Processing Error", userIdForAudit, {
+      error: error.message,
+      receiptDataSummary: {
+        receiptNumber: data.receiptNumber,
+        studentName: data.studentName
+      }
+    });
+    
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+}
 
 
 

@@ -16,6 +16,13 @@
       size: A4;
       margin: 0;
     }
+    .undertaking-container.hidden {
+   display: none;
+    }
+.undertaking-container {
+    display: block !important;
+    page-break-before: always;
+  }
     #receiptFormSection {
       -webkit-print-color-adjust: exact;
       font-size: 10pt;
@@ -27,6 +34,54 @@
       border: none;
       box-shadow: none;
     }
+    /* Undertaking print styles */
+    .undertaking-container {
+      page-break-before: always;
+      margin-top: 20px;
+      display: block !important;
+    }
+    .undertaking-container .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #002147;
+      padding-bottom: 10px;
+    }
+    .undertaking-container .title {
+      text-align: center;
+      margin-top: 10px;
+      background-color: #002147;
+      color: white;
+      padding: 5px 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .undertaking-container ul {
+      margin-top: 20px;
+      padding-left: 20px;
+    }
+    .undertaking-container ul li {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .undertaking-container .declaration {
+      margin-top: 30px;
+      line-height: 1.6;
+    }
+    .undertaking-container .signatures {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .undertaking-container .signatures div {
+      text-align: center;
+      width: 23%;
+    }
+    .undertaking-container .signatures div hr {
+      margin-top: 40px;
+      border: none;
+      border-top: 1px solid black;
+    }
   }
 
   #receiptFormSection {
@@ -37,44 +92,28 @@
 
   #receiptFormSection .receipt-container {
     width: 210mm;
-    min-height: 297mm;
+    min-height: auto;
     margin: 0 auto;
     padding: 0;
     background: white;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
+    
   }
 
   #receiptFormSection .receipt-header {
-    background-color: #7DCEA0; /* Light Green */
-    padding: 4px 30px;
-    position: relative;
-  }
-  
-  #receiptFormSection .header-shape {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 50%;
-    height: 100%;
-    background-color: #2C3E50; /* Dark Blue/Grey */
-    clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%);
-  }
-
-  #receiptFormSection .header-content {
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
-    z-index: 1;
+    border-bottom: 1px solid #ccc;
   }
 
   #receiptFormSection .logo-section {
     display: flex;
     align-items: center;
     gap: 15px;
-    text-align: left;
   }
 
   #receiptFormSection .logo-section img {
@@ -90,12 +129,13 @@
     line-height: 1.4;
     font-weight: bold;
     color: #2C3E50;
+    text-align: right;
   }
 
   #receiptFormSection .photo-section {
     width: 90px;
     height: 110px;
-    border: 2px dashed #fff;
+    border: 2px dashed #ccc;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,21 +153,19 @@
   #receiptFormSection .photo-placeholder {
     text-align: center;
     font-size: 9pt;
-    color: #fff;
+    color: #555;
   }
 
   #receiptFormSection .receipt-title {
     text-align: center;
-    font-size: 12pt;
-    font-weight: 400;
-    margin: 0px 0;
-    color: #ffffff;
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 10px 0;
     text-transform: uppercase;
-    letter-spacing: 1px;
   }
 
   #receiptFormSection .form-content {
-    padding: 20px 20px 20px 20px;
+   padding-bottom: 10px ;
   }
 
   #receiptFormSection .form-row {
@@ -165,74 +203,42 @@
     border-bottom-color: #7DCEA0;
   }
 
-  #receiptFormSection .section-divider {
-    text-align: center;
-    font-size: 10pt;
-    font-weight: 400;
-    color: #2C3E50;
-    margin: 5px 0 20px 0;
-    border-bottom: 2px solid #7DCEA0;
-    padding-bottom: 8px;
-    text-transform: uppercase;
+  #receiptFormSection .fee-details {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
   }
 
-  #receiptFormSection .installment-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 9pt;
+  #receiptFormSection .fee-row {
+    display: flex;
+    margin-bottom: 5px;
   }
-  
-  #receiptFormSection .installment-table th,
-  #receiptFormSection .installment-table td {
-    border: 1px solid #eee;
-    padding: 4px;
-    text-align: center;
-  }
-  
-  #receiptFormSection .installment-table th {
-    background-color: #00133a;
-    font-weight: 600;
-  }
-  
-  #receiptFormSection .total-section {
+
+  #receiptFormSection .fee-label {
     font-weight: bold;
-    font-size: 11pt;
-    text-align: right;
-    margin-top: 10px;
+    width: 150px;
   }
-  
+
   #receiptFormSection .agreement-section {
     margin: 20px 0;
     font-size: 9pt;
     line-height: 1.6;
-    background: #f9f9f9;
-    padding: 15px;
-    border-left: 3px solid #7DCEA0;
-  }
-
-  #receiptFormSection .agreement-section input {
-    border: none;
-    border-bottom: 1px solid #999;
-    background: transparent;
-    font-size: 9pt;
-    margin: 0 5px;
   }
 
   #receiptFormSection .signature-section {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
-    flex-wrap: wrap;
+     page-break-inside: avoid;
   }
 
   #receiptFormSection .signature-box {
-    width: 23%;
     text-align: center;
+    width: 23%;
   }
 
   #receiptFormSection .signature-line {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #000;
     height: 40px;
     margin-bottom: 5px;
   }
@@ -275,6 +281,61 @@
   #receiptFormSection .hidden {
     display: none;
   }
+  #receiptFormSection .section-divider {
+    text-align: center;
+    font-size: 10pt;
+    font-weight: 400;
+    color: #2C3E50;
+    margin: 5px 0 20px 0;
+    border-bottom: 2px solid #7DCEA0;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  #receiptFormSection .installment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 9pt;
+  }
+
+  #receiptFormSection .installment-table th,
+  #receiptFormSection .installment-table td {
+    border: 1px solid #eee;
+    padding: 4px;
+    text-align: center;
+  }
+
+  #receiptFormSection .installment-table th {
+    background-color: #00133a;
+    color: white;
+    font-weight: 600;
+  }
+
+  #receiptFormSection .total-section {
+    font-weight: bold;
+    font-size: 11pt;
+    text-align: right;
+    margin-top: 10px;
+  }
+
+  /* Undertaking container styles */
+  .undertaking-container {
+    display: none;
+    font-family: 'Roboto', sans-serif;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 30px;
+    background: white;
+    position: relative;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  }
+
+  .undertaking-container .logo img {
+    height: 80px;
+    margin-right: 15px;
+  }
 </style>
 
 <div id="receiptFormSection">
@@ -282,27 +343,18 @@
     <form onsubmit="AdmissionHandle(event)" enctype="multipart/form-data">
       <div class="receipt-container" id="receiptContainer">
         <div class="receipt-header">
-          <div class="header-shape"></div>
-          <div class="header-content">
-            <div class="logo-section">
-              <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
-              <div class="institute-info">
-                <strong>SKILL TRAINING INSTITUTE</strong><br>
-                C/34, BUNGLOW, NEAR NANDIKESHWAR MANDIR<br>
-                KAMGAR NAGAR, KURLA (E)<br>
-                Mob: +91 9967288158 +91 7400406467
-              </div>
-            </div>
-            <div class="photo-section" onclick="document.getElementById('photoInput').click()">
-              <div class="photo-placeholder" id="photoPlaceholder">
-                Passport<br>Photo
-              </div>
-              <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
-            </div>
+          <div class="logo-section">
+            <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
+          </div>
+          <div class="institute-info">
+            <strong>SKILL TRAINING INSTITUTE</strong><br>
+            C24, BUNGLOW, NEAR NANDNE SHWAR NANDIE<br>
+            KANNEM RGADR, KURLA(E)<br>
+            Mob.: +61 9867285184 +61 7400406467
           </div>
         </div>
 
-        <div class="receipt-title">Admission Receipt</div>
+        <div class="receipt-title">ADMISSION RECEIPT</div>
 
         <div class="form-content">
           <div class="form-row">
@@ -313,6 +365,12 @@
             <div class="form-group">
               <label>Date</label>
               <input type="date" id="receiptDate" name="receiptDate">
+            </div>
+            <div class="photo-section" onclick="document.getElementById('photoInput').click()">
+              <div class="photo-placeholder" id="photoPlaceholder">
+                Passport<br>Photo
+              </div>
+              <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
             </div>
           </div>
 
@@ -326,18 +384,14 @@
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Course Name</label>
-              <select
-            id="courseName"
-            name="courseName"
-            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
-          >
-            <option value="" disabled selected>Select a course</option>
-            <option value="anm_nursing">ANM Nursing Diploma</option>
-            <option value="gnm_nursing">GNM Nursing Diploma</option>
-            <option value="dmlt">DMLT Diploma</option>
-            <option value="ot_technician">OT Technician</option>
-            <option value="general_nursing">General Nursing Assistant</option>
-          </select>
+              <select id="courseName" name="courseName">
+                <option value="" disabled selected>Select a course</option>
+                <option value="anm_nursing">ANM Nursing Diploma</option>
+                <option value="gnm_nursing">GNM Nursing Diploma</option>
+                <option value="dmlt">DMLT Diploma</option>
+                <option value="ot_technician">OT Technician</option>
+                <option value="general_nursing">General Nursing Assistant</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Course Year</label>
@@ -381,7 +435,7 @@
           </div>
 
           <div class="agreement-section">
-            <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 200px;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 200px;">. <strong>I Agree with all Terms And Conditions.</strong></p>
+            <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 150px; border: none; border-bottom: 1px solid #ccc;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 150px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
           </div>
 
           <div class="signature-section">
@@ -405,9 +459,86 @@
         </div>
       </div>
 
+      <!-- Undertaking Form -->
+      <div class="undertaking-container hidden" id="undertakingContainer">
+        <div class="header">
+          <div class="logo">
+            <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo">
+            <div>
+              <h2 style="margin: 0; color: #002147;">STI</h2>
+              <div>Shelar Training Institute</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <strong>Mob:</strong> +91 9867285184<br />
+            <strong>+91 7400406467</strong><br />
+            <div style="margin-top: 5px; font-size: 14px;">
+              Shelar Training Institute C/24, Bungalow, Near Nandikeshwar Mandir,<br />
+              Kamgar Nagar, Kurla (E)
+            </div>
+          </div>
+        </div>
+
+        <div class="title">हमी पत्र / UNDER TAKING</div>
+
+        <ul>
+          <li>भरलेली फी परत मिळणार नाही.</li>
+          <li>दिलेल्या तारखेवर फी भरावी अन्यथा आम्ही दंड घेऊ.</li>
+          <li>जर तुम्हाला प्रवेश रद्द करायचा असल्यास तुम्हाला पूर्ण फी भरणे गरजेचे आहे.</li>
+          <li>जर तुम्ही गैरवर्तन केले तर तुमचे प्रवेश रद्द करण्यात येईल.</li>
+          <li>तुमचे गुण तुमच्या उपस्थिती आणि तुमच्या वर्तनावर अवलंबून असतील.</li>
+          <li>8 दिवसांपेक्षा जास्त गैरहजर असाल तर तुमचे प्रवेश रद्द करण्यात येईल.</li>
+          <li>परीक्षेची फी एक महिना आगोदर भरावी.</li>
+          <li>जर तुम्ही OJT मध्ये संबंधीत तर STI तुमच्यासाठी जबाबदार नाही.</li>
+          <li>75% उपस्थिती अनिवार्य आहे.</li>
+          <li>दिलेल्या वेळाप्रमाणे परीक्षा द्यावी अन्यथा परीक्षेचे फी वाढेल याला STI जबाबदार नाही.</li>
+          <li>जर तुम्ही व तुमचे पालक दिलेल्या अटी विशेषता वाद घालत असतील तर कायदेशीर रित्या कारवाई केली जाईल.</li>
+          <li>विनंती वेळेवर येणे अनिवार्य आहे. अन्यथा वर्गात प्रवेश दिला जाणार नाही.</li>
+        </ul>
+
+        <ul>
+          <li>Paid Fees Not Refundable.</li>
+          <li>Pay Your Fees Above Given Date Otherwise We Charge Penalties.</li>
+          <li>If You Want To Cancel Admission Still You Have To Pay Full Fees.</li>
+          <li>If You Misbehave Then We Will Cancel Your Admission.</li>
+          <li>Final Marks Are Based On Attendance And Behavior Etc.</li>
+          <li>More Than 8 Days Absent Will Cancel The Admission, Without Your Permission.</li>
+          <li>Exam Fees Should Have To Pay Before 1 Month Of Exam.</li>
+          <li>If You Dropping OJT, STI Is Not Responsible For You.</li>
+          <li>75% Attendance Should Be Compulsory.</li>
+          <li>Give Exam In Given Schedule. If You Delay Then STI Will Not Responsible, Exam Fees Will Increase.</li>
+          <li>If You And Your Guardian Argue Against The Terms And Conditions, Legal Action Will Be Taken.</li>
+          <li>It Is Compulsory To Come on Time Otherwise You Are Not Permitted To Sit In Lecture.</li>
+        </ul>
+
+        <div class="declaration">
+          I Am Mr./Ms ___________________ Mother/ Father/Husband/ Sister/ Brother Of ____________________ I Am Agree With Terms And Condition.<br><br>
+          मी श्री / श्रीमती ________________ , ____________________ आई/वडील/पती/बहीण/भाऊ , मला सर्व अटी मंजूर आहेत.
+        </div>
+
+        <!-- <div class="signatures">
+          <div>
+            Parent Signature
+            <hr>
+          </div>
+          <div>
+            Student Signature
+            <hr>
+          </div>
+          <div>
+            Manager Signature
+            <hr>
+          </div>
+          <div>
+            Director Signature
+            <hr>
+          </div>
+        </div> -->
+      </div>
+
       <div class="download-section">
         <button type="button" class="btn" onclick="downloadPdfWithHtml2Pdf()">Download PDF</button>
-        <button type="button" class="btn btn-print" onclick="window.print()">Print Receipt</button>
+        <button type="button" class="btn btn-print" onclick="prepareForPrint()">Print Receipt</button>
       </div>
     </form>
   </main>
@@ -485,79 +616,84 @@
   }
 
   function downloadPdfWithHtml2Pdf() {
-    const element = document.getElementById('receiptContainer');
+    // Clone the containers to avoid modifying the original ones
+    const receiptClone = document.getElementById('receiptContainer').cloneNode(true);
+    const undertakingClone = document.getElementById('undertakingContainer').cloneNode(true);
+    
+    // Create a temporary container to hold both elements
+    const tempContainer = document.createElement('div');
+    tempContainer.appendChild(receiptClone);
+    tempContainer.appendChild(undertakingClone);
+    
+    // Show the undertaking container for PDF generation
+    undertakingClone.style.display = 'block';
+    
     const studentName = document.getElementById('studentName').value || 'receipt';
     const opt = {
-      margin:       0,
-      filename:     `${studentName.replace(/\s+/g, '_')}_Admission_Receipt.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      margin: 0,
+      filename: `${studentName.replace(/\s+/g, '_')}_Admission_Receipt.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().from(element).set(opt).save();
+    
+    html2pdf().from(tempContainer).set(opt).save();
+    
+    // Clean up
+    tempContainer.remove();
   }
 
-  // function openreceiptFormSection() {
-  //   hideAllSections();
+  function prepareForPrint() {
+    window.print();
+  }
 
-  //   const section = document.getElementById("receiptFormSection");
-  //   if (!section) {
-  //     console.error("Admission form section not found!");
-  //     return;
-  //   }
-  //   section.classList.remove("hidden");
-  // }
   function openreceiptFormSection() {
-  hideAllSections();
+    hideAllSections();
 
-  const section = document.getElementById("receiptFormSection");
-  if (!section) {
-    console.error("Admission form section not found!");
-    return;
-  }
-  section.classList.remove("hidden");
+    const section = document.getElementById("receiptFormSection");
+    if (!section) {
+      console.error("Admission form section not found!");
+      return;
+    }
+    section.classList.remove("hidden");
 
-  // DOM references
-  const courseSelect = document.getElementById("courseName");
-  const feeInput = document.getElementById("totalFee");
-  const durationInput = document.getElementById("courseDuration");
+    // DOM references
+    const courseSelect = document.getElementById("courseName");
+    const feeInput = document.getElementById("totalFee");
+    const durationInput = document.getElementById("courseDuration");
 
-  // Course mapping
-  // const courseData = {
-  //   anm_nursing: { duration: "1 year", fees: 55000 },
-  //   gnm_nursing: { duration: "3 years", fees: 270000 },
-  //   dmlt: { duration: "1 year", fees: 30000 },
-  //   ot_technician: { duration: "1 year", fees: 30000 },
-  //   general_nursing: { duration: "1 year", fees: 30000 },
-  // };
-        const branch24 = document.getElementById("branch22").value;
+    // Course mapping
+    // const courseData = {
+    //   anm_nursing: { duration: "1 year", fees: 55000 },
+    //   gnm_nursing: { duration: "3 years", fees: 270000 },
+    //   dmlt: { duration: "1 year", fees: 30000 },
+    //   ot_technician: { duration: "1 year", fees: 30000 },
+    //   general_nursing: { duration: "1 year", fees: 30000 },
+    // };
+    const branch24 = document.getElementById("branch22").value;
   const courseData = getCourseDataByLocation(branch24);
 
-  // Pre-fill if coming from session
-  const storedCourse = sessionStorage.getItem("STUD_Course");
-  if (storedCourse && courseData[storedCourse]) {
-    courseSelect.value = storedCourse;
-    durationInput.value = courseData[storedCourse].duration;
-    feeInput.value = courseData[storedCourse].fees;
-  }
 
-  // Set dynamic update on change
-  courseSelect.addEventListener('change', function () {
-    const selected = courseSelect.value;
-    if (courseData[selected]) {
-      durationInput.value = courseData[selected].duration;
-      feeInput.value = courseData[selected].fees;
-      generateInstallmentTables(); // refresh table
+    // Pre-fill if coming from session
+    const storedCourse = sessionStorage.getItem("STUD_Course");
+    if (storedCourse && courseData[storedCourse]) {
+      courseSelect.value = storedCourse;
+      durationInput.value = courseData[storedCourse].duration;
+      feeInput.value = courseData[storedCourse].fees;
     }
-  });
 
+    // Set dynamic update on change
+    courseSelect.addEventListener('change', function () {
+      const selected = courseSelect.value;
+      if (courseData[selected]) {
+        durationInput.value = courseData[selected].duration;
+        feeInput.value = courseData[selected].fees;
+        generateInstallmentTables(); // refresh table
+      }
+    });
 
-
-  Copycoursepay();
-  generateInstallmentTables();
-  generateYearInstallmentTable();
-}
-
+    generateInstallmentTables();
+  }
 
   function AdmissionHandle(event) {
     event.preventDefault();
