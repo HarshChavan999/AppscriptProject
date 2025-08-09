@@ -17,15 +17,15 @@
       margin: 0;
     }
     .undertaking-container.hidden {
-   display: none;
+      display: none;
     }
-.undertaking-container {
-    display: block !important;
-    page-break-before: always;
-  }
+    .undertaking-container {
+      display: block !important;
+      page-break-before: always;
+    }
     #receiptFormSection {
       -webkit-print-color-adjust: exact;
-      font-size: 10pt;
+      font-size: 9pt;
     }
     #receiptFormSection .download-section {
       display: none;
@@ -34,51 +34,98 @@
       border: none;
       box-shadow: none;
     }
+    /* Compact print styles */
+    #receiptFormSection .form-row {
+      margin-bottom: 4px !important;
+    }
+    #receiptFormSection .form-group label {
+      margin-bottom: 2px !important;
+      font-size: 8pt !important;
+    }
+    #receiptFormSection .form-group input, 
+    #receiptFormSection .form-group select {
+      padding: 2px 0 !important;
+      font-size: 8pt !important;
+    }
+    #receiptFormSection .installment-table {
+      font-size: 7pt !important;
+    }
+    #receiptFormSection .installment-table th, 
+    #receiptFormSection .installment-table td {
+      padding: 2px !important;
+    }
+    #receiptFormSection .section-divider {
+      margin: 2px 0 8px 0 !important;
+      padding-bottom: 4px !important;
+    }
+    #receiptFormSection .photo-section {
+      width: 60px !important;
+      height: 80px !important;
+    }
+    #receiptFormSection .signature-section {
+      margin-top: 8px !important;
+    }
+    #receiptFormSection .signature-line {
+      height: 25px !important;
+    }
+    #receiptFormSection .agreement-section {
+      margin: 8px 0 !important;
+      font-size: 7pt !important;
+      line-height: 1.3 !important;
+    }
+    #receiptFormSection .receipt-title {
+      font-size: 11pt !important;
+      margin: 4px 0 !important;
+    }
     /* Undertaking print styles */
     .undertaking-container {
       page-break-before: always;
-      margin-top: 20px;
+      margin-top: 10px;
       display: block !important;
+      font-size: 9pt;
     }
     .undertaking-container .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #002147;
-      padding-bottom: 10px;
+      border-bottom: 1px solid #002147;
+      padding-bottom: 5px;
     }
     .undertaking-container .title {
       text-align: center;
-      margin-top: 10px;
+      margin-top: 5px;
       background-color: #002147;
       color: white;
-      padding: 5px 0;
-      font-size: 18px;
+      padding: 3px 0;
+      font-size: 14px;
       font-weight: bold;
     }
     .undertaking-container ul {
-      margin-top: 20px;
-      padding-left: 20px;
+      margin-top: 10px;
+      padding-left: 15px;
+      font-size: 8pt;
     }
     .undertaking-container ul li {
-      margin-bottom: 10px;
-      line-height: 1.5;
+      margin-bottom: 5px;
+      line-height: 1.3;
     }
     .undertaking-container .declaration {
-      margin-top: 30px;
-      line-height: 1.6;
+      margin-top: 15px;
+      line-height: 1.4;
+      font-size: 8pt;
     }
     .undertaking-container .signatures {
-      margin-top: 40px;
+      margin-top: 20px;
       display: flex;
       justify-content: space-between;
     }
     .undertaking-container .signatures div {
       text-align: center;
       width: 23%;
+      font-size: 8pt;
     }
     .undertaking-container .signatures div hr {
-      margin-top: 40px;
+      margin-top: 20px;
       border: none;
       border-top: 1px solid black;
     }
@@ -99,11 +146,12 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
+
     
   }
 
   #receiptFormSection .receipt-header {
-    padding: 10px 20px;
+    padding: 8px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -113,28 +161,28 @@
   #receiptFormSection .logo-section {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
   }
 
   #receiptFormSection .logo-section img {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     background: white;
     border-radius: 0;
-    padding: 5px;
+    padding: 3px;
   }
 
   #receiptFormSection .institute-info {
-    font-size: 10pt;
-    line-height: 1.4;
+    font-size: 9pt;
+    line-height: 1.3;
     font-weight: bold;
     color: #2C3E50;
     text-align: right;
   }
 
   #receiptFormSection .photo-section {
-    width: 90px;
-    height: 110px;
+    width: 80px;
+    height: 100px;
     border: 2px dashed #ccc;
     display: flex;
     align-items: center;
@@ -152,26 +200,26 @@
 
   #receiptFormSection .photo-placeholder {
     text-align: center;
-    font-size: 9pt;
+    font-size: 8pt;
     color: #555;
   }
 
   #receiptFormSection .receipt-title {
     text-align: center;
-    font-size: 14pt;
+    font-size: 13pt;
     font-weight: bold;
-    margin: 10px 0;
+    margin: 8px 0;
     text-transform: uppercase;
   }
 
   #receiptFormSection .form-content {
-   padding-bottom: 10px ;
+    padding-bottom: 8px;
   }
 
   #receiptFormSection .form-row {
     display: flex;
-    gap: 15px;
-    margin-bottom: 8px;
+    gap: 10px;
+    margin-bottom: 6px;
   }
 
   #receiptFormSection .form-group {
@@ -181,18 +229,18 @@
   #receiptFormSection .form-group label {
     font-weight: 600;
     display: block;
-    margin-bottom: 5px;
-    font-size: 10pt;
+    margin-bottom: 3px;
+    font-size: 9pt;
     color: #555;
   }
 
   #receiptFormSection .form-group input,
   #receiptFormSection .form-group select {
     width: 100%;
-    padding: 4px 0;
+    padding: 3px 0;
     border: none;
     border-bottom: 1px solid #ccc;
-    font-size: 10pt;
+    font-size: 9pt;
     background: transparent;
     transition: border-color 0.3s;
   }
@@ -204,32 +252,32 @@
   }
 
   #receiptFormSection .fee-details {
-    margin-top: 20px;
+    margin-top: 15px;
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 8px;
   }
 
   #receiptFormSection .fee-row {
     display: flex;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
 
   #receiptFormSection .fee-label {
     font-weight: bold;
-    width: 150px;
+    width: 120px;
   }
 
   #receiptFormSection .agreement-section {
-    margin: 20px 0;
-    font-size: 9pt;
-    line-height: 1.6;
+    margin: 15px 0;
+    font-size: 8pt;
+    line-height: 1.4;
   }
 
   #receiptFormSection .signature-section {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
-     page-break-inside: avoid;
+    margin-top: 15px;
+    page-break-inside: avoid;
   }
 
   #receiptFormSection .signature-box {
@@ -239,30 +287,30 @@
 
   #receiptFormSection .signature-line {
     border-bottom: 1px solid #000;
-    height: 40px;
-    margin-bottom: 5px;
+    height: 30px;
+    margin-bottom: 3px;
   }
 
   #receiptFormSection .signature-box p {
-    font-size: 9pt;
+    font-size: 8pt;
     font-weight: 600;
     margin: 0;
   }
 
   #receiptFormSection .download-section {
     text-align: center;
-    padding: 20px 0;
+    padding: 15px 0;
   }
 
   #receiptFormSection .btn {
-    padding: 12px 25px;
-    margin: 0 10px;
+    padding: 10px 20px;
+    margin: 0 8px;
     border: none;
     background: #2C3E50;
     color: white;
     cursor: pointer;
-    font-size: 10pt;
-    border-radius: 5px;
+    font-size: 9pt;
+    border-radius: 4px;
     transition: background-color 0.3s;
   }
 
@@ -283,26 +331,26 @@
   }
   #receiptFormSection .section-divider {
     text-align: center;
-    font-size: 10pt;
+    font-size: 9pt;
     font-weight: 400;
     color: #2C3E50;
-    margin: 5px 0 20px 0;
-    border-bottom: 2px solid #7DCEA0;
-    padding-bottom: 8px;
+    margin: 4px 0 15px 0;
+    border-bottom: 1px solid #7DCEA0;
+    padding-bottom: 5px;
     text-transform: uppercase;
   }
 
   #receiptFormSection .installment-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 9pt;
+    margin: 15px 0;
+    font-size: 8pt;
   }
 
   #receiptFormSection .installment-table th,
   #receiptFormSection .installment-table td {
     border: 1px solid #eee;
-    padding: 4px;
+    padding: 3px;
     text-align: center;
   }
 
@@ -314,9 +362,33 @@
 
   #receiptFormSection .total-section {
     font-weight: bold;
-    font-size: 11pt;
+    font-size: 10pt;
     text-align: right;
-    margin-top: 10px;
+    margin-top: 8px;
+  }
+
+  /* Compact mode for printing with many installments */
+  .compact-mode .form-row {
+    margin-bottom: 2px !important;
+  }
+  .compact-mode .form-group label {
+    margin-bottom: 1px !important;
+    font-size: 8pt !important;
+  }
+  .compact-mode .installment-table {
+    font-size: 7pt !important;
+  }
+  .compact-mode .installment-table th,
+  .compact-mode .installment-table td {
+    padding: 1px !important;
+  }
+  .compact-mode .photo-section {
+    width: 60px !important;
+    height: 80px !important;
+  }
+  .compact-mode .agreement-section {
+    margin: 5px 0 !important;
+    font-size: 7pt !important;
   }
 
   /* Undertaking container styles */
@@ -326,15 +398,15 @@
     width: 210mm;
     min-height: 297mm;
     margin: 0 auto;
-    padding: 30px;
+    padding: 20px;
     background: white;
     position: relative;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
   }
 
   .undertaking-container .logo img {
-    height: 80px;
-    margin-right: 15px;
+    height: 70px;
+    margin-right: 10px;
   }
 </style>
 
@@ -377,7 +449,7 @@
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Student Name</label>
-              <input type="text" id="studentName" name="studentName">
+              <input type="text" id="studentName" name="studentName" style="width: 100%">
             </div>
           </div>
 
@@ -435,7 +507,7 @@
           </div>
 
           <div class="agreement-section">
-            <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 150px; border: none; border-bottom: 1px solid #ccc;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 150px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
+            <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 120px; border: none; border-bottom: 1px solid #ccc;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 120px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
           </div>
 
           <div class="signature-section">
@@ -472,7 +544,7 @@
           <div style="text-align: right;">
             <strong>Mob:</strong> +91 9867285184<br />
             <strong>+91 7400406467</strong><br />
-            <div style="margin-top: 5px; font-size: 14px;">
+            <div style="margin-top: 5px; font-size: 12px;">
               Shelar Training Institute C/24, Bungalow, Near Nandikeshwar Mandir,<br />
               Kamgar Nagar, Kurla (E)
             </div>
@@ -516,7 +588,7 @@
           मी श्री / श्रीमती ________________ , ____________________ आई/वडील/पती/बहीण/भाऊ , मला सर्व अटी मंजूर आहेत.
         </div>
 
-        <!-- <div class="signatures">
+        <div class="signatures">
           <div>
             Parent Signature
             <hr>
@@ -533,7 +605,7 @@
             Director Signature
             <hr>
           </div>
-        </div> -->
+        </div>
       </div>
 
       <div class="download-section">
@@ -644,7 +716,23 @@
   }
 
   function prepareForPrint() {
+    const installmentCount = parseInt(document.getElementById('installmentCount').value);
+    
+    // Enable compact mode if many installments
+    if (installmentCount >= 6) {
+      document.getElementById('receiptContainer').classList.add('compact-mode');
+    }
+    
+    // Show undertaking container
+    document.getElementById('undertakingContainer').classList.remove('hidden');
+    
     window.print();
+    
+    // Reset after printing
+    setTimeout(() => {
+      document.getElementById('receiptContainer').classList.remove('compact-mode');
+      document.getElementById('undertakingContainer').classList.add('hidden');
+    }, 1000);
   }
 
   function openreceiptFormSection() {
@@ -663,16 +751,13 @@
     const durationInput = document.getElementById("courseDuration");
 
     // Course mapping
-    // const courseData = {
-    //   anm_nursing: { duration: "1 year", fees: 55000 },
-    //   gnm_nursing: { duration: "3 years", fees: 270000 },
-    //   dmlt: { duration: "1 year", fees: 30000 },
-    //   ot_technician: { duration: "1 year", fees: 30000 },
-    //   general_nursing: { duration: "1 year", fees: 30000 },
-    // };
-    const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
-
+    const courseData = {
+      anm_nursing: { duration: "1 year", fees: 55000 },
+      gnm_nursing: { duration: "3 years", fees: 270000 },
+      dmlt: { duration: "1 year", fees: 30000 },
+      ot_technician: { duration: "1 year", fees: 30000 },
+      general_nursing: { duration: "1 year", fees: 30000 },
+    };
 
     // Pre-fill if coming from session
     const storedCourse = sessionStorage.getItem("STUD_Course");
