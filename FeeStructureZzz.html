@@ -37,6 +37,7 @@
       <option value="Bank">Bank</option>
       <option value="UPI">UPI</option>
       <option value="Cash">Cash</option>
+      <option value="Cheque">Cheque</option>
     </select>
     <button onclick="copyTable('fsTableContainer')"
             class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Copy</button>
@@ -49,61 +50,74 @@
   <div id="fsTableContainer" class="overflow-x-auto"></div>
 </div>
 <script>
-  function loadFeeStructure() {
-    console.log("loadFeeStructure() CALLED");
-  const selectedCourse = document.getElementById("feeStructureCourseSelect").value;
+  let feeStructureData = []; // Global
+
+function loadFeeStructure() {
+  console.log("loadFeeStructure() CALLED");
+  const selectedCourse = document.getElementById("feeStructureCourseSelect")?.value || "";
 
   google.script.run
-    .withSuccessHandler(function (data) {
-      const container = document.getElementById("feeStructureTableContainer");
-      container.innerHTML = "";
+    .withSuccessHandler(function (response) {
+      console.log("Received data:", response);
 
-      if (data.error) {
-        container.textContent = "Error loading fee structure.";
-        console.log(data.error);
-      } else {
-        const table = document.createElement("table");
-        table.border = "1";
-        table.style.width = "100%";
-
-        // Header row
-        const header = table.insertRow();
-        [
-          "ID",
-          "Course Name",
-          "Course Selected",
-          "Duration",
-          "Course Fees",
-          "Total Fees",
-          "Payment Mode"
-        ].forEach((h) => {
-          const th = document.createElement("th");
-          th.textContent = h;
-          header.appendChild(th);
-        });
-
-        // Data rows
-        data.forEach((row) => {
-          const tr = table.insertRow();
-          row.forEach((cell) => {
-            const td = tr.insertCell();
-            td.textContent = cell;
-          });
-        });
-
-        container.appendChild(table);
+      if (response.error) {
+        document.getElementById("fsTableContainer").textContent = "Error loading fee structure.";
+        console.log(response.error);
+        return;
       }
+
+      // Store global data for filtering
+      feeStructureData = response.data;
+
+      // Populate summary cards
+      document.getElementById("fsTotalRecords").textContent = response.summary.totalRecords;
+      document.getElementById("fsTotalFees").textContent = "₹" + response.summary.totalFees.toLocaleString();
+      document.getElementById("fsAverageFees").textContent = "₹" + response.summary.averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      document.getElementById("fsTopPaymentMode").textContent = response.summary.mostCommonPaymentMode || "-";
+
+      // Render table
+      renderFeeStructureTable(feeStructureData);
     })
-    .getFeeStructureData(selectedCourse); // Create this function in Apps Script to return rows
+    .getFeeStructureData("admin");
 }
+
 function filterFeeStructure() {
   const paymentMode = document.getElementById("fsPaymentModeSelect").value.toLowerCase();
+
+  // Filter the global dataset (this will hold the original fetched data)
   const filtered = feeStructureData.filter(d => {
     if (!paymentMode) return true;
     return d.payMode.toLowerCase() === paymentMode;
   });
+
+  // Update summary cards based on filtered data
+  const totalRecords = filtered.length;
+  const totalFees = filtered.reduce((sum, item) => sum + item.totalFees, 0);
+  const averageFees = totalRecords > 0 ? totalFees / totalRecords : 0;
+
+  // Find most common payment mode in filtered set
+  const paymentModeCounts = {};
+  let topMode = "-";
+  let maxCount = 0;
+  filtered.forEach(item => {
+    if (item.payMode) {
+      paymentModeCounts[item.payMode] = (paymentModeCounts[item.payMode] || 0) + 1;
+      if (paymentModeCounts[item.payMode] > maxCount) {
+        maxCount = paymentModeCounts[item.payMode];
+        topMode = item.payMode;
+      }
+    }
+  });
+
+  document.getElementById("fsTotalRecords").textContent = totalRecords;
+  document.getElementById("fsTotalFees").textContent = "₹" + totalFees.toLocaleString();
+  document.getElementById("fsAverageFees").textContent = "₹" + averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  document.getElementById("fsTopPaymentMode").textContent = topMode;
+
+  // Update table
   renderFeeStructureTable(filtered);
 }
+
 function closeFeeStructure() {
   hideAllSections();
   document.getElementById("ifId").classList.remove("hidden");
