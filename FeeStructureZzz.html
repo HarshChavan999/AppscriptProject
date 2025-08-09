@@ -1,0 +1,158 @@
+<div id="feeStructureSection"
+     class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Fee Structure</h2>
+    <button onclick="closeFeeStructure()"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i><span>Back</span>
+    </button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    <div class="bg-blue-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Total Records</p>
+      <p id="fsTotalRecords" class="text-xl font-bold text-blue-900">0</p>
+    </div>
+    <div class="bg-green-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Total Fees</p>
+      <p id="fsTotalFees" class="text-xl font-bold text-green-900">0</p>
+    </div>
+    <div class="bg-purple-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Average Fee</p>
+      <p id="fsAverageFees" class="text-xl font-bold text-purple-900">0</p>
+    </div>
+    <div class="bg-yellow-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Top Payment Mode</p>
+      <p id="fsTopPaymentMode" class="text-xl font-bold text-yellow-900">-</p>
+    </div>
+  </div>
+
+  <!-- Filter / Export Buttons -->
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <select id="fsPaymentModeSelect"
+            class="px-4 py-2 border rounded-lg border-gray-300"
+            onchange="filterFeeStructure()">
+      <option value="">All Payment Modes</option>
+      <option value="Bank">Bank</option>
+      <option value="UPI">UPI</option>
+      <option value="Cash">Cash</option>
+      <option value="Cheque">Cheque</option>
+    </select>
+    <button onclick="copyTable('fsTableContainer')"
+            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Copy</button>
+    <button onclick="exportCSV('fsTableContainer','fee_structure.csv')"
+            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">CSV</button>
+    <button onclick="exportTablePDF('fsTableContainer','FeeStructure')"
+            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">PDF</button>
+  </div>
+
+  <div id="fsTableContainer" class="overflow-x-auto"></div>
+</div>
+<script>
+  let feeStructureData = []; // Global
+
+function loadFeeStructure() {
+  console.log("loadFeeStructure() CALLED");
+  const selectedCourse = document.getElementById("feeStructureCourseSelect")?.value || "";
+
+  google.script.run
+    .withSuccessHandler(function (response) {
+      console.log("Received data:", response);
+
+      if (response.error) {
+        document.getElementById("fsTableContainer").textContent = "Error loading fee structure.";
+        console.log(response.error);
+        return;
+      }
+
+      // Store global data for filtering
+      feeStructureData = response.data;
+
+      // Populate summary cards
+      document.getElementById("fsTotalRecords").textContent = response.summary.totalRecords;
+      document.getElementById("fsTotalFees").textContent = "₹" + response.summary.totalFees.toLocaleString();
+      document.getElementById("fsAverageFees").textContent = "₹" + response.summary.averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      document.getElementById("fsTopPaymentMode").textContent = response.summary.mostCommonPaymentMode || "-";
+
+      // Render table
+      renderFeeStructureTable(feeStructureData);
+    })
+    .getFeeStructureData("admin");
+}
+
+function filterFeeStructure() {
+  const paymentMode = document.getElementById("fsPaymentModeSelect").value.toLowerCase();
+
+  // Filter the global dataset (this will hold the original fetched data)
+  const filtered = feeStructureData.filter(d => {
+    if (!paymentMode) return true;
+    return d.payMode.toLowerCase() === paymentMode;
+  });
+
+  // Update summary cards based on filtered data
+  const totalRecords = filtered.length;
+  const totalFees = filtered.reduce((sum, item) => sum + item.totalFees, 0);
+  const averageFees = totalRecords > 0 ? totalFees / totalRecords : 0;
+
+  // Find most common payment mode in filtered set
+  const paymentModeCounts = {};
+  let topMode = "-";
+  let maxCount = 0;
+  filtered.forEach(item => {
+    if (item.payMode) {
+      paymentModeCounts[item.payMode] = (paymentModeCounts[item.payMode] || 0) + 1;
+      if (paymentModeCounts[item.payMode] > maxCount) {
+        maxCount = paymentModeCounts[item.payMode];
+        topMode = item.payMode;
+      }
+    }
+  });
+
+  document.getElementById("fsTotalRecords").textContent = totalRecords;
+  document.getElementById("fsTotalFees").textContent = "₹" + totalFees.toLocaleString();
+  document.getElementById("fsAverageFees").textContent = "₹" + averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  document.getElementById("fsTopPaymentMode").textContent = topMode;
+
+  // Update table
+  renderFeeStructureTable(filtered);
+}
+
+function closeFeeStructure() {
+  hideAllSections();
+  document.getElementById("ifId").classList.remove("hidden");
+}
+
+function renderFeeStructureTable(dataArray) {
+  let h = `<table class='min-w-full'>
+      <thead class='bg-gray-50'>
+        <tr>
+          <th class='px-4 py-2 text-left'>ID</th>
+          <th class='px-4 py-2 text-left'>Name</th>
+          <th class='px-4 py-2 text-left'>Course</th>
+          <th class='px-4 py-2 text-left'>Duration</th>
+          <th class='px-4 py-2 text-left'>Pay Fees</th>
+          <th class='px-4 py-2 text-left'>Total Fees</th>
+          <th class='px-4 py-2 text-left'>Payment Mode</th>
+        </tr>
+      </thead><tbody>`;
+  dataArray.forEach(d => {
+    h += `<tr class='border-b'>
+      <td class='px-4 py-2'>${d.id}</td>
+      <td class='px-4 py-2'>${d.name}</td>
+      <td class='px-4 py-2'>${d.course}</td>
+      <td class='px-4 py-2'>${d.duration}</td>
+      <td class='px-4 py-2'>₹${d.payFees.toLocaleString()}</td>
+      <td class='px-4 py-2'>₹${d.totalFees.toLocaleString()}</td>
+      <td class='px-4 py-2'>${d.payMode}</td>
+    </tr>`;
+  });
+  h += "</tbody></table>";
+  document.getElementById("fsTableContainer").innerHTML = h;
+}
+google.script.run.withSuccessHandler(response => {
+  console.log("Received data:", response);
+  renderFeeStructureTable(response.data);
+}).getFeeStructureData("admin");
+
+</script>

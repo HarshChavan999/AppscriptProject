@@ -1102,6 +1102,86 @@ function serverSideLogout() {
 }
 
 /************************************************
+ * FEE STRUCT ANALYTICS
+ ************************************************/
+function getCourseList() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
+  const data = sheet.getRange(2, 3, sheet.getLastRow() - 1, 1).getValues(); // Column C
+  const courses = [...new Set(data.flat())].filter(String);
+  return courses;
+}
+
+function getFeeStructureData(userRole) {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
+    return { error: "You don't have permission to view Fee Structure." };
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("FeeStructure");
+  if (!sheet) {
+    return { error: "FeeStructure sheet not found." };
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const results = [];
+  let totalOverallFees = 0;
+  const paymentModeCounts = {};
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const id = String(row[0] || "").trim();
+    const name = String(row[1] || "").trim();
+    const course = String(row[2] || "").trim();
+    const duration = String(row[3] || "").trim();
+    const payFees = parseFloat(String(row[4]).replace(/[^\d.-]/g, "")) || 0;
+    const totalFees = parseFloat(String(row[5]).replace(/[^\d.-]/g, "")) || 0;
+    const payMode = String(row[6] || "").trim();
+
+    results.push({
+      id: id,
+      name: name,
+      course: course,
+      duration: duration,
+      payFees: payFees,
+      totalFees: totalFees,
+      payMode: payMode,
+    });
+
+    totalOverallFees += totalFees;
+
+    if (payMode) {
+      if (!paymentModeCounts[payMode]) paymentModeCounts[payMode] = 0;
+      paymentModeCounts[payMode]++;
+    }
+  }
+
+  const avgFee = results.length > 0 ? totalOverallFees / results.length : 0;
+
+  let commonMode = "";
+  let maxCount = 0;
+  for (const mode in paymentModeCounts) {
+    if (paymentModeCounts[mode] > maxCount) {
+      maxCount = paymentModeCounts[mode];
+      commonMode = mode;
+    }
+  }
+
+  return {
+    data: results,
+    summary: {
+      totalRecords: results.length,
+      totalFees: totalOverallFees,
+      averageFees: avgFee,
+      mostCommonPaymentMode: commonMode,
+    },
+  };
+}
+
+
+
+
+
+/************************************************
  * COURSE PAYMENT
  ************************************************/
 // function saveCoursePayment(data) {
