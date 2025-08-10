@@ -18,10 +18,43 @@ function include(filename) {
 }
 
 
+// function loginUser(loginData) {
+//   try {
+   
+   
+//     var sheet = ss.getSheetByName("LOGIN");
+//     if (!sheet) return { success: false, error: "LOGIN sheet not found." };
+
+//     var data = sheet.getDataRange().getValues();
+    
+//     for (var i = 1; i < data.length; i++) {
+//       var username = String(data[i][0]).trim();
+//       var password = String(data[i][1]).trim();
+//       var role = (data[i][2] || "").toString().toLowerCase().trim();
+//       var branch = String(data[i][3]).trim();
+
+//       if (username === loginData.username && password === loginData.password) {
+//         //  Save session data
+//         PropertiesService.getUserProperties().setProperty("loggedInUser", username);
+//           createAuditLogEntry("Login Success", username);
+//         return {
+//   success: true,
+//   userName: username,
+//   role: role,
+//   branch: branch,
+//   userId: username   // ✅ This is the ID passed to frontend
+// };
+//       }
+//     }
+
+//     return { success: false, error: "Invalid username or password." };
+//   } catch (err) {
+//     return { success: false, error: err.toString() };
+//   }
+// }
 function loginUser(loginData) {
   try {
-   
-   
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("LOGIN");
     if (!sheet) return { success: false, error: "LOGIN sheet not found." };
 
@@ -34,16 +67,17 @@ function loginUser(loginData) {
       var branch = String(data[i][3]).trim();
 
       if (username === loginData.username && password === loginData.password) {
-        //  Save session data
+        // Save session data
         PropertiesService.getUserProperties().setProperty("loggedInUser", username);
-          createAuditLogEntry("Login Success", username);
+        createAuditLogEntry("Login Success", username);
+        
         return {
-  success: true,
-  userName: username,
-  role: role,
-  branch: branch,
-  userId: username   // ✅ This is the ID passed to frontend
-};
+          success: true,
+          userName: username,
+          role: role,
+          branch: branch,
+          loggedInUserId: username  // This is the key change - using the correct property name
+        };
       }
     }
 
@@ -1248,7 +1282,9 @@ function getFeeStructureData(userRole) {
  * @returns {Object} Operation result
  */
 function saveCoursePayment(data) {
-  const userIdForAudit = data.loggedInUserId || "Anonymous";
+   const userIdForAudit = data.loggedInUserId || 
+                       PropertiesService.getUserProperties().getProperty("loggedInUser") || 
+                       "Anonymous";
   
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
@@ -1338,8 +1374,9 @@ function saveCoursePayment(data) {
  * @returns {Object} Operation result
  */
 function saveReceiptData(data) {
-  const userIdForAudit = data.loggedInUserId || "Anonymous";
-  
+ const userIdForAudit = data.loggedInUserId || 
+                       PropertiesService.getUserProperties().getProperty("loggedInUser") || 
+                       "Anonymous";  
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName("EXAMRECEIPT");

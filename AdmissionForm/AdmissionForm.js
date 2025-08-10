@@ -212,7 +212,13 @@ const SHEET_NAME = "ADMISSIONF";
  * @returns {Object} A success or error response object
  */
 function saveToSheet(formData) {
-  const userIdForAudit = formData.loggedInUserId || "Anonymous";
+  // Get user ID from (in order of priority):
+  // 1. Form data (passed from client)
+  // 2. User properties (from login)
+  // 3. Fallback to "Anonymous"
+  const userIdForAudit = formData.loggedInUserId || 
+                       PropertiesService.getUserProperties().getProperty("loggedInUser") || 
+                       "Anonymous";
   
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -312,4 +318,3 @@ function saveToSheet(formData) {
     };
   }
 }
-

@@ -32,7 +32,8 @@
                 </select>
                 <select id="analyticsPaymentModeFilter2"
                   class="px-2 py-1 border rounded" onchange="loadAnalytics2()">
-                  <option value>All Payment Modes</option>
+                  <option value>InquiryForm</option>
+                  <option value>AdmissionForm</option>
                 </select>
                 <button onclick="loadAnalytics2()"
                   class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">
@@ -79,20 +80,127 @@
                   class="text-xl font-bold text-yellow-900">0</p>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class=" hidden grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="bg-white p-4 rounded border shadow">
                 <h3 class="text-lg font-bold mb-4">Bar Chart: Fees Paid (by
                   Date)</h3>
                 <canvas id="dateWiseChart2"></canvas>
               </div>
-              <div class="bg-white p-4 rounded border shadow">
+              <div class="hidden bg-white p-4 rounded border shadow">
                 <h3 class="text-lg font-bold mb-4">Line Chart: Fees Trend</h3>
                 <canvas id="lineChart"></canvas>
               </div>
-              <div class="bg-white p-4 rounded border shadow">
+              <div class=" hidden bg-white p-4 rounded border shadow">
                 <h3 class="text-lg font-bold mb-4">Paid vs Unpaid Fees</h3>
                 <canvas id="pieChart"></canvas>
               </div>
             </div>
+             <div id="fsTableContainer1" class="overflow-x-auto"></div>
           </div>
-          
+          <script>
+  let feeStructureData = []; // Global
+
+function loadFeeStructure() {
+  console.log("loadFeeStructure() CALLED");
+  const selectedCourse = document.getElementById("feeStructureCourseSelect")?.value || "";
+
+  google.script.run
+    .withSuccessHandler(function (response) {
+      console.log("Received data:", response);
+
+      if (response.error) {
+        document.getElementById("fsTableContainer1").textContent = "Error loading fee structure.";
+        console.log(response.error);
+        return;
+      }
+
+      // Store global data for filtering
+      feeStructureData = response.data;
+
+      // Populate summary cards
+      document.getElementById("fsTotalRecords").textContent = response.summary.totalRecords;
+      document.getElementById("fsTotalFees").textContent = "₹" + response.summary.totalFees.toLocaleString();
+      document.getElementById("fsAverageFees").textContent = "₹" + response.summary.averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      document.getElementById("fsTopPaymentMode").textContent = response.summary.mostCommonPaymentMode || "-";
+
+      // Render table
+      renderFeeStructureTable(feeStructureData);
+    })
+    .getFeeStructureData("admin");
+}
+
+function filterFeeStructure() {
+  const paymentMode = document.getElementById("fsPaymentModeSelect").value.toLowerCase();
+
+  // Filter the global dataset (this will hold the original fetched data)
+  const filtered = feeStructureData.filter(d => {
+    if (!paymentMode) return true;
+    return d.payMode.toLowerCase() === paymentMode;
+  });
+
+  // Update summary cards based on filtered data
+  const totalRecords = filtered.length;
+  const totalFees = filtered.reduce((sum, item) => sum + item.totalFees, 0);
+  const averageFees = totalRecords > 0 ? totalFees / totalRecords : 0;
+
+  // Find most common payment mode in filtered set
+  const paymentModeCounts = {};
+  let topMode = "-";
+  let maxCount = 0;
+  filtered.forEach(item => {
+    if (item.payMode) {
+      paymentModeCounts[item.payMode] = (paymentModeCounts[item.payMode] || 0) + 1;
+      if (paymentModeCounts[item.payMode] > maxCount) {
+        maxCount = paymentModeCounts[item.payMode];
+        topMode = item.payMode;
+      }
+    }
+  });
+
+  document.getElementById("fsTotalRecords").textContent = totalRecords;
+  document.getElementById("fsTotalFees").textContent = "₹" + totalFees.toLocaleString();
+  document.getElementById("fsAverageFees").textContent = "₹" + averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  document.getElementById("fsTopPaymentMode").textContent = topMode;
+
+  // Update table
+  renderFeeStructureTable(filtered);
+}
+
+function closeFeeStructure() {
+  hideAllSections();
+  document.getElementById("ifId").classList.remove("hidden");
+}
+
+function renderFeeStructureTable(dataArray) {
+  let h = `<table class='min-w-full'>
+      <thead class='bg-gray-50'>
+        <tr>
+          <th class='px-4 py-2 text-left'>ID</th>
+          <th class='px-4 py-2 text-left'>Name</th>
+          <th class='px-4 py-2 text-left'>Course</th>
+          <th class='px-4 py-2 text-left'>Duration</th>
+          <th class='px-4 py-2 text-left'>Pay Fees</th>
+          <th class='px-4 py-2 text-left'>Total Fees</th>
+          <th class='px-4 py-2 text-left'>Payment Mode</th>
+        </tr>
+      </thead><tbody>`;
+  dataArray.forEach(d => {
+    h += `<tr class='border-b'>
+      <td class='px-4 py-2'>${d.id}</td>
+      <td class='px-4 py-2'>${d.name}</td>
+      <td class='px-4 py-2'>${d.course}</td>
+      <td class='px-4 py-2'>${d.duration}</td>
+      <td class='px-4 py-2'>₹${d.payFees.toLocaleString()}</td>
+      <td class='px-4 py-2'>₹${d.totalFees.toLocaleString()}</td>
+      <td class='px-4 py-2'>${d.payMode}</td>
+    </tr>`;
+  });
+  h += "</tbody></table>";
+  document.getElementById("fsTableContainer1").innerHTML = h;
+}
+google.script.run.withSuccessHandler(response => {
+  console.log("Received data:", response);
+  renderFeeStructureTable(response.data);
+}).getFeeStructureData("admin");
+
+</script>
