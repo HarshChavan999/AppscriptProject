@@ -181,8 +181,9 @@ function InquiryProcessForm(formData) {
       // This logic correctly updates only the fields provided by the form,
       // preserving other sheet columns like follow-up dates, etc.
       rowData.forEach((value, index) => {
-        if (index !== 0 && existingRowData[index] !== undefined) { // Skip timestamp (col 0)
-          existingRowData[index] = value;
+        if (value !== undefined && value !== "") {
+          // Update the corresponding column in existing row (add 1 to account for timestamp column)
+          existingRowData[index + 1] = value;
         }
       });
       existingRowData[0] = new Date(); // Update timestamp for modification
@@ -195,7 +196,13 @@ function InquiryProcessForm(formData) {
         row: rowToUpdate
       });
     } else {
-      dfSheet.appendRow([new Date(), ...rowData]);
+      // Create a properly structured row with timestamp first, then all data
+      const newRowData = [new Date()];
+      // Add each field in the correct order based on column indices
+      for (let i = 0; i <= maxColumnIndex; i++) {
+        newRowData.push(rowData[i] || "");
+      }
+      dfSheet.appendRow(newRowData);
       message = "New Aadhar record added successfully!";
       createAuditLogEntry("Inquiry Form Submission", userIdForAudit, {
         aadharNumber: formData.aadharNumber,

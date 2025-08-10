@@ -111,6 +111,7 @@ const CONFIG = {
     ADMISSION_STATUS_COL: 16,    // Column Q
     ADMISSION_DATE_COL: 17,      // Column R
     BATCH_ASSIGNED_COL: 18,      // Column S
-    LOGGED_IN_USER_ID_COL: 19    // Column T
+    LOGGED_IN_USER_ID_COL: 19,   // Column T
+    GENDER_COL: 20               // Column U
   }
 };
