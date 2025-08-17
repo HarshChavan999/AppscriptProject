@@ -401,6 +401,8 @@ function DInsReceipt(number,amount){
     document.getElementById("classMonthDashboard").classList.add("hidden");
     document.getElementById("dueFeesSection").classList.add("hidden");
     // document.getElementById("separateReceipt").classList.add("hidden");
+    document.getElementById("inquiryAnalyticsSection").classList.add("hidden");
+    document.getElementById("admissionAnalyticsSection").classList.add("hidden");
     document.getElementById("ifId").classList.add("hidden");
     document.getElementById("admissionFormSection").classList.add("hidden");
     document.getElementById("coursePaymentSection").classList.add("hidden");
@@ -2679,7 +2681,54 @@ function toggleFeeStructure() {
 }
 
 
+  /******************************************
+   * ADMISSION STRUCT ANALYTICS
+   ******************************************/
+function toggleAdmissionAnalytics() {
+  hideAllSections();
+  document.getElementById("admissionAnalyticsSection").classList.remove("hidden");
 
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("aaCourseSelect");
+      sel.innerHTML = `<option value="">All Courses</option>`;
+      courseList.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+    })
+    .getCourseListFromAdmissions();
+
+  loadAdmissionAnalytics();
+}
+
+  /******************************************
+   * INQUIRY STRUCT ANALYTICS
+   ******************************************/
+
+function toggleInquiryAnalytics() {
+  hideAllSections();
+  document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
+
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("iaCourseSelect");
+      sel.innerHTML = `<option value="">All Courses</option>`;
+      if (!courseList.error) {
+        courseList.forEach((c) => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          sel.appendChild(opt);
+        });
+      }
+    })
+    .getInquiryCourseList();
+
+  loadInquiryAnalytics();
+}
 
   /******************************************
    * 6) admission receipt

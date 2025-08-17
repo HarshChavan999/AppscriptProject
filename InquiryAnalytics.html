@@ -1,0 +1,156 @@
+<div id="inquiryAnalyticsSection"
+     class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Inquiry Analytics</h2>
+    <button onclick="closeInquiryAnalytics()"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i><span>Back</span>
+    </button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="bg-blue-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Total Inquiries</p>
+      <p id="iaTotalRecords" class="text-xl font-bold text-blue-900">0</p>
+    </div>
+    <div class="bg-green-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Unique Courses</p>
+      <p id="iaUniqueCourses" class="text-xl font-bold text-green-900">0</p>
+    </div>
+    <div class="bg-yellow-50 p-4 rounded flex flex-col items-center">
+      <p class="text-sm text-gray-700">Most Popular Course</p>
+      <p id="iaTopCourse" class="text-xl font-bold text-yellow-900">-</p>
+    </div>
+  </div>
+
+  <!-- Filter / Export Buttons -->
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <select id="iaCourseSelect"
+            class="px-4 py-2 border rounded-lg border-gray-300"
+            onchange="filterInquiryData()">
+      <option value="">All Courses</option>
+    </select>
+    <button onclick="copyTable('iaTableContainer')"
+            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Copy</button>
+    <button onclick="exportCSV('iaTableContainer','inquiry_analytics.csv')"
+            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">CSV</button>
+    <button onclick="exportTablePDF('iaTableContainer','InquiryAnalytics')"
+            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">PDF</button>
+  </div>
+
+  <div id="iaTableContainer" class="overflow-x-auto"></div>
+  <tbody id="inquiryAnalyticsTableBody"></tbody>
+</div>
+
+<script>
+let inquiryData = [];
+
+async function loadInquiryAnalytics() {
+  try {
+    const res = await fetch(
+      "YOUR_WEB_APP_URL?action=getInquiryAnalyticsData&userRole=admin"
+    );
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    const tableBody = document.getElementById("inquiryAnalyticsTableBody");
+    tableBody.innerHTML = "";
+
+    data.inquiries.forEach((inq, index) => {
+      const row = `
+        <tr>
+          <td>${inq["Date"] || ""}</td>
+          <td>${inq["aadhaar"] || ""}</td>
+          <td>${inq["Full Name"] || ""}</td>
+          <td>${inq["Qualification"] || ""}</td>
+          <td>${inq["Phone Number"] || ""}</td>
+          <td>${inq["WhatsApp Number"] || ""}</td>
+          <td>${inq["Parents Number"] || ""}</td>
+          <td>${inq["Email Address"] || ""}</td>
+          <td>${inq["Age"] || ""}</td>
+          <td>${inq["Address"] || ""}</td>
+          <td>${inq["Interested Course"] || ""}</td>
+          <td>${inq["Inquiry Taken By"] || ""}</td>
+          <td>${inq["Branch"] || ""}</td>
+        </tr>
+      `;
+      tableBody.innerHTML += row;
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load inquiry analytics.");
+  }
+}
+
+
+function filterInquiryData() {
+  const selectedCourse = document.getElementById("iaCourseSelect").value.toLowerCase();
+  const filtered = inquiryData.filter(d => {
+    if (!selectedCourse) return true;
+    return d.interestedCourse.toLowerCase() === selectedCourse;
+  });
+
+  document.getElementById("iaTotalRecords").textContent = filtered.length;
+  document.getElementById("iaUniqueCourses").textContent =
+    [...new Set(filtered.map(d => d.interestedCourse))].length;
+  const topCourse = [...new Set(filtered.map(d => d.interestedCourse))]
+    .sort((a, b) =>
+      filtered.filter(x => x.interestedCourse === b).length -
+      filtered.filter(x => x.interestedCourse === a).length
+    )[0] || "-";
+  document.getElementById("iaTopCourse").textContent = topCourse;
+
+  renderInquiryTable(filtered);
+}
+
+function closeInquiryAnalytics() {
+  hideAllSections();
+  document.getElementById("ifId").classList.remove("hidden");
+}
+
+function renderInquiryTable(dataArray) {
+  let h = `<table class='min-w-full'>
+    <thead class='bg-gray-50'>
+      <tr>
+        <th class='px-4 py-2 text-left'>Date</th>
+        <th class='px-4 py-2 text-left'>Aadhaar</th>
+        <th class='px-4 py-2 text-left'>Full Name</th>
+        <th class='px-4 py-2 text-left'>Qualification</th>
+        <th class='px-4 py-2 text-left'>Phone</th>
+        <th class='px-4 py-2 text-left'>WhatsApp</th>
+        <th class='px-4 py-2 text-left'>Parents Number</th>
+        <th class='px-4 py-2 text-left'>Email</th>
+        <th class='px-4 py-2 text-left'>Age</th>
+        <th class='px-4 py-2 text-left'>Address</th>
+        <th class='px-4 py-2 text-left'>Interested Course</th>
+        <th class='px-4 py-2 text-left'>Inquiry Taken By</th>
+        <th class='px-4 py-2 text-left'>Branch</th>
+      </tr>
+    </thead><tbody>`;
+  dataArray.forEach(d => {
+    h += `<tr class='border-b'>
+      <td class='px-4 py-2'>${d.date}</td>
+      <td class='px-4 py-2'>${d.aadhaar}</td>
+      <td class='px-4 py-2'>${d.fullName}</td>
+      <td class='px-4 py-2'>${d.qualification}</td>
+      <td class='px-4 py-2'>${d.phone}</td>
+      <td class='px-4 py-2'>${d.whatsapp}</td>
+      <td class='px-4 py-2'>${d.parentsNumber}</td>
+      <td class='px-4 py-2'>${d.email}</td>
+      <td class='px-4 py-2'>${d.age}</td>
+      <td class='px-4 py-2'>${d.address}</td>
+      <td class='px-4 py-2'>${d.interestedCourse}</td>
+      <td class='px-4 py-2'>${d.inquiryTakenBy}</td>
+      <td class='px-4 py-2'>${d.branch}</td>
+    </tr>`;
+  });
+  h += "</tbody></table>";
+  document.getElementById("iaTableContainer").innerHTML = h;
+}
+</script>

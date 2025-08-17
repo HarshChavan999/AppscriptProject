@@ -1213,6 +1213,105 @@ function getFeeStructureData(userRole) {
 
 
 
+/************************************************
+ * ADMISSION STRUCT ANALYTICS
+ ************************************************/
+function getCourseListFromAdmissions() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ADMISSIONF");
+  const data = sheet.getRange(2, 6, sheet.getLastRow() - 1, 1).getValues(); // Column F
+  return [...new Set(data.flat())].filter(String);
+}
+
+
+
+function getAdmissionAnalyticsData(userRole) {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
+    return { error: "You don't have permission to view Admission Analytics." };
+  }
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ADMISSIONF");
+  if (!sheet) return { error: "ADMISSIONF sheet not found." };
+
+  const data = sheet.getDataRange().getValues();
+  let results = [];
+  let totalFees = 0;
+  let courseCounts = {};
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const receipt = row[1] || "";
+    const name = `${row[2] || ""} ${row[3] || ""} ${row[4] || ""}`.trim();
+    const course = row[5] || "";
+    const duration = row[6] || "";
+    const totalCourseFees = parseFloat(String(row[7]).replace(/[^\d.-]/g, "")) || 0;
+    const guardianRelation = row[8] || "";
+    const agreement = row[10] || "";
+
+    results.push({
+      receipt: receipt,
+      name: name,
+      course: course,
+      duration: duration,
+      totalFees: totalCourseFees,
+      guardianRelation: guardianRelation,
+      agreement: agreement
+    });
+
+    totalFees += totalCourseFees;
+    courseCounts[course] = (courseCounts[course] || 0) + 1;
+  }
+
+  let topCourse = Object.keys(courseCounts).reduce((a, b) => courseCounts[a] > courseCounts[b] ? a : b, "");
+
+  return {
+    data: results,
+    summary: {
+      totalRecords: results.length,
+      totalFees: totalFees,
+      averageFees: results.length > 0 ? totalFees / results.length : 0,
+      topCourse: topCourse
+    }
+  };
+}
+
+/************************************************
+ * INQUIRY STRUCT ANALYTICS
+ ************************************************/
+function getInquiryCourseList() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DF");
+  const data = sheet.getRange(2, 11, sheet.getLastRow() - 1, 1).getValues(); // Column K = Interested Course
+  const courses = [...new Set(data.flat())].filter(String);
+  return courses;
+}
+
+function getInquiryAnalyticsData(userRole) {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
+    return { error: "You don't have permission to view Inquiry Analytics." };
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("DF"); // Sheet name for inquiries
+  const data = sheet.getDataRange().getValues();
+
+  if (data.length <= 1) {
+    return { inquiries: [] };
+  }
+
+  const headers = data[0];
+  const rows = data.slice(1);
+
+  const inquiries = rows
+    .filter(row => row.join("").trim() !== "") // skip empty rows
+    .map(row => {
+      let obj = {};
+      headers.forEach((header, i) => {
+        obj[header] = row[i];
+      });
+      return obj;
+    });
+
+  return { inquiries };
+}
 
 
 /************************************************
