@@ -1277,41 +1277,61 @@ function getAdmissionAnalyticsData(userRole) {
 /************************************************
  * INQUIRY STRUCT ANALYTICS
  ************************************************/
-function getInquiryCourseList() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DF");
-  const data = sheet.getRange(2, 11, sheet.getLastRow() - 1, 1).getValues(); // Column K = Interested Course
-  const courses = [...new Set(data.flat())].filter(String);
+/** DF (Inquiry) — Back End **/
+const DF_SHEET_ID = "1frBUKDLt3snAut3zcOiaNHYfv3gHQcsbBX3SttnYrB4";
+const DF_SHEET_NAME = "DF";
+
+// Distinct list of Interested Courses (Column K = index 10)
+function getInquiryList() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName("INQUIRIES");
+  if (!sh) return { error: "Sheet 'INQUIRIES' not found" };
+
+  const values = sh.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const headers = values.shift();
+  Logger.log("Headers: " + JSON.stringify(headers)); // 👈 check headers in Apps Script log
+
+  const courseIndex = headers.indexOf("interestedCourse"); // must match exactly
+
+  if (courseIndex === -1) {
+    return { error: "Column 'interestedCourse' not found. Found headers: " + headers.join(", ") };
+  }
+
+  const courses = [...new Set(values.map(r => r[courseIndex]).filter(Boolean))];
   return courses;
 }
 
-function getInquiryAnalyticsData(userRole) {
+
+
+function getInquiryData(userRole) {
   if (!userRole || userRole.toLowerCase() !== "admin") {
-    return { error: "You don't have permission to view Inquiry Analytics." };
+    return { error: "You don't have permission" };
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("DF"); // Sheet name for inquiries
-  const data = sheet.getDataRange().getValues();
+  const sh = ss.getSheetByName("INQUIRIES");
+  if (!sh) return { error: "Sheet 'INQUIRIES' not found" };
 
-  if (data.length <= 1) {
-    return { inquiries: [] };
-  }
+  const values = sh.getDataRange().getValues();
+  if (values.length < 2) return { data: [], summary: {} };
 
-  const headers = data[0];
-  const rows = data.slice(1);
-
-  const inquiries = rows
-    .filter(row => row.join("").trim() !== "") // skip empty rows
-    .map(row => {
-      let obj = {};
-      headers.forEach((header, i) => {
-        obj[header] = row[i];
-      });
-      return obj;
+  const headers = values.shift();
+  const data = values.map(row => {
+    let obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i];  // 👈 use raw header as key
     });
+    return obj;
+  });
 
-  return { inquiries };
+  return { data, summary: { totalRecords: data.length } };
 }
+
+
+
+
 
 
 /************************************************

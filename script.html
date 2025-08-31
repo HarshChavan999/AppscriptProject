@@ -401,7 +401,7 @@ function DInsReceipt(number,amount){
     document.getElementById("classMonthDashboard").classList.add("hidden");
     document.getElementById("dueFeesSection").classList.add("hidden");
     // document.getElementById("separateReceipt").classList.add("hidden");
-    document.getElementById("inquiryAnalyticsSection").classList.add("hidden");
+    document.getElementById("inquirySection").classList.add("hidden");
     document.getElementById("admissionAnalyticsSection").classList.add("hidden");
     document.getElementById("ifId").classList.add("hidden");
     document.getElementById("admissionFormSection").classList.add("hidden");
@@ -2707,28 +2707,133 @@ function toggleAdmissionAnalytics() {
   /******************************************
    * INQUIRY STRUCT ANALYTICS
    ******************************************/
+let inquiryData = [];    // holds original dataset
+let inquiryFiltered = []; // current filtered view
 
-function toggleInquiryAnalytics() {
+function toggleInquirySection() {
   hideAllSections();
-  document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
+  document.getElementById("inquirySection").classList.remove("hidden");
 
+  // Load dropdown
   google.script.run
     .withSuccessHandler(function (courseList) {
-      const sel = document.getElementById("iaCourseSelect");
+      const sel = document.getElementById("inquiryCourseSelect");
       sel.innerHTML = `<option value="">All Courses</option>`;
-      if (!courseList.error) {
+      if (Array.isArray(courseList)) {
         courseList.forEach((c) => {
           const opt = document.createElement("option");
           opt.value = c;
           opt.textContent = c;
           sel.appendChild(opt);
         });
+      } else if (courseList?.error) {
+        console.log(courseList.error);
       }
     })
-    .getInquiryCourseList();
+    .getInquiryList();
 
-  loadInquiryAnalytics();
+  // Load table data
+  loadInquiryData();
 }
+
+function loadInquiryData() {
+  google.script.run
+    .withSuccessHandler(function (response) {
+      if (response?.error) {
+        document.getElementById("inquiryTableContainer").textContent = "Error loading data.";
+        console.log(response.error);
+        return;
+      }
+      inquiryData = response.data || [];
+      inquiryFiltered = [...inquiryData];
+
+      // Fill summary
+      setInquirySummary({
+        totalRecords: response.summary?.totalRecords || inquiryFiltered.length,
+        uniqueCourses: response.summary?.uniqueCourses || new Set(inquiryFiltered.map(x => x.interestedCourse).filter(Boolean)).size,
+        uniqueBranches: response.summary?.uniqueBranches || new Set(inquiryFiltered.map(x => x.branch).filter(Boolean)).size
+      });
+
+      renderInquiryTable(inquiryFiltered);
+    })
+    .getInquiryData("admin");
+}
+
+// REQUIRED: Fix for your error
+function filterInquiryData() {
+  const course = (document.getElementById("inquiryCourseSelect").value || "").toLowerCase();
+
+  inquiryFiltered = inquiryData.filter(r => {
+    if (!course) return true;
+    return (r.interestedCourse || "").toLowerCase() === course;
+  });
+
+  // Recompute summary on filtered set
+  setInquirySummary({
+    totalRecords: inquiryFiltered.length,
+    uniqueCourses: new Set(inquiryFiltered.map(x => x.interestedCourse).filter(Boolean)).size,
+    uniqueBranches: new Set(inquiryFiltered.map(x => x.branch).filter(Boolean)).size
+  });
+
+  renderInquiryTable(inquiryFiltered);
+}
+
+function setInquirySummary({ totalRecords, uniqueCourses, uniqueBranches }) {
+  document.getElementById("inqTotalRecords").textContent = totalRecords;
+  document.getElementById("inqUniqueCourses").textContent = uniqueCourses;
+  document.getElementById("inqUniqueBranches").textContent = uniqueBranches;
+}
+
+function renderInquiryTable(rows) {
+  let h = `<table class='min-w-full'>
+    <thead class='bg-gray-50'>
+      <tr>
+        <th class='px-4 py-2 text-left'>Date</th>
+        <th class='px-4 py-2 text-left'>Aadhaar</th>
+        <th class='px-4 py-2 text-left'>Full Name</th>
+        <th class='px-4 py-2 text-left'>Qualification</th>
+        <th class='px-4 py-2 text-left'>Phone</th>
+        <th class='px-4 py-2 text-left'>WhatsApp</th>
+        <th class='px-4 py-2 text-left'>Parent</th>
+        <th class='px-4 py-2 text-left'>Email</th>
+        <th class='px-4 py-2 text-left'>Age</th>
+        <th class='px-4 py-2 text-left'>Address</th>
+        <th class='px-4 py-2 text-left'>Course</th>
+        <th class='px-4 py-2 text-left'>Inquiry Taken By</th>
+        <th class='px-4 py-2 text-left'>Branch</th>
+      </tr>
+    </thead><tbody>`;
+
+  rows.forEach(d => {
+    const safe = x => (x === undefined || x === null) ? "" : x;
+    h += `<tr class='border-b'>
+      <td class='px-4 py-2'>${safe(d.date)}</td>
+      <td class='px-4 py-2'>${safe(d.aadhaar)}</td>
+      <td class='px-4 py-2'>${safe(d.fullName)}</td>
+      <td class='px-4 py-2'>${safe(d.qualification)}</td>
+      <td class='px-4 py-2'>${safe(d.phone)}</td>
+      <td class='px-4 py-2'>${safe(d.whatsapp)}</td>
+      <td class='px-4 py-2'>${safe(d.parentPhone)}</td>
+      <td class='px-4 py-2'>${safe(d.email)}</td>
+      <td class='px-4 py-2'>${safe(d.age)}</td>
+      <td class='px-4 py-2'>${safe(d.address)}</td>
+      <td class='px-4 py-2'>${safe(d.interestedCourse)}</td>
+      <td class='px-4 py-2'>${safe(d.inquiryTakenBy)}</td>
+      <td class='px-4 py-2'>${safe(d.branch)}</td>
+    </tr>`;
+  });
+
+  h += "</tbody></table>";
+  document.getElementById("inquiryTableContainer").innerHTML = h;
+}
+
+function closeInquirySection() {
+  hideAllSections();
+  // show whatever section you want to return to, e.g.:
+  document.getElementById("ifId")?.classList.remove("hidden");
+}
+
+
 
   /******************************************
    * 6) admission receipt
