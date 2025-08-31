@@ -1284,7 +1284,7 @@ const DF_SHEET_NAME = "DF";
 // Distinct list of Interested Courses (Column K = index 10)
 function getInquiryList() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = ss.getSheetByName("INQUIRIES");
+  const sh = ss.getSheetByName("Inquiries");
   if (!sh) return { error: "Sheet 'INQUIRIES' not found" };
 
   const values = sh.getDataRange().getValues();
@@ -1300,6 +1300,8 @@ function getInquiryList() {
   }
 
   const courses = [...new Set(values.map(r => r[courseIndex]).filter(Boolean))];
+
+
   return courses;
 }
 
@@ -1311,20 +1313,25 @@ function getInquiryData(userRole) {
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = ss.getSheetByName("INQUIRIES");
+  const sh = ss.getSheetByName("Inquiries");
   if (!sh) return { error: "Sheet 'INQUIRIES' not found" };
 
   const values = sh.getDataRange().getValues();
   if (values.length < 2) return { data: [], summary: {} };
 
   const headers = values.shift();
-  const data = values.map(row => {
-    let obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = row[i];  // 👈 use raw header as key
-    });
-    return obj;
+const data = values.map(row => {
+  let obj = {};
+  headers.forEach((h, i) => {
+    // normalize header: lowercase, remove spaces
+    const key = h.toString().trim().replace(/\s+/g, "").toLowerCase();
+    obj[key] = row[i];
   });
+  return obj;
+});
+
+
+  console.log({ data, summary: { totalRecords: data.length } });
 
   return { data, summary: { totalRecords: data.length } };
 }
