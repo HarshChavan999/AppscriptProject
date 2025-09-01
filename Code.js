@@ -1277,43 +1277,136 @@ function getAdmissionAnalyticsData(userRole) {
 /************************************************
  * INQUIRY STRUCT ANALYTICS
  ************************************************/
-function getInquiryCourseList() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DF");
-  const data = sheet.getRange(2, 11, sheet.getLastRow() - 1, 1).getValues(); // Column K = Interested Course
-  const courses = [...new Set(data.flat())].filter(String);
-  return courses;
-}
-
+/**
+ * Gets course list from inquiry sheet (DF)
+ */
 function getInquiryAnalyticsData(userRole) {
-  if (!userRole || userRole.toLowerCase() !== "admin") {
-    return { error: "You don't have permission to view Inquiry Analytics." };
-  }
+  try {
+    // Check if user has permission
+    if (!userRole || userRole.toLowerCase() !== "admin") {
+      return { error: "You don't have permission to view Inquiry Analytics." };
+    }
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("DF"); // Sheet name for inquiries
-  const data = sheet.getDataRange().getValues();
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("DF");
+    
+    if (!sheet) {
+      return { error: "Inquiries sheet not found." };
+    }
 
-  if (data.length <= 1) {
-    return { inquiries: [] };
-  }
+    const data = sheet.getDataRange().getValues();
+    
+    // Check if there's any data beyond headers
+    if (data.length <= 1) {
+      return {
+        data: [],
+        summary: {
+          totalRecords: 0,
+          uniqueCourses: 0,
+          topCourse: "-"
+        }
+      };
+    }
 
-  const headers = data[0];
-  const rows = data.slice(1);
+    // Define column indices based on your spreadsheet structure
+    const COL_INDICES = {
+      DATE: 1,           // Column B (assuming 0-based index)
+      AADHAAR: 2,        // Column C
+      FULL_NAME: 3,      // Column D
+      QUALIFICATION: 4,  // Column E
+      PHONE: 5,          // Column F
+      WHATSAPP: 6,       // Column G
+      PARENTS_NUMBER: 7, // Column H
+      EMAIL: 8,          // Column I
+      AGE: 9,            // Column J
+      ADDRESS: 10,       // Column K
+      INTERESTED_COURSE: 11, // Column L (if this exists)
+      INQUIRY_BY: 12,    // Column M (if this exists)
+      BRANCH: 13,        // Column N (if this exists)
+      GENDER: 14         // Column O (if this exists)
+    };
 
-  const inquiries = rows
-    .filter(row => row.join("").trim() !== "") // skip empty rows
-    .map(row => {
-      let obj = {};
-      headers.forEach((header, i) => {
-        obj[header] = row[i];
+    let results = [];
+    let courseCounts = {};
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      
+      // Skip empty rows (check if essential fields are empty)
+      if (!row[COL_INDICES.FULL_NAME] && !row[COL_INDICES.AADHAAR]) continue;
+      
+      // Format date properly
+      let formattedDate = "";
+      if (row[COL_INDICES.DATE]) {
+        if (row[COL_INDICES.DATE] instanceof Date) {
+          formattedDate = Utilities.formatDate(row[COL_INDICES.DATE], Session.getScriptTimeZone(), "yyyy-MM-dd");
+        } else {
+          // Handle string dates
+          formattedDate = row[COL_INDICES.DATE].toString().split(' ')[0]; // Get only date part
+        }
+      }
+
+      results.push({
+        date: formattedDate,
+        aadhaar: row[COL_INDICES.AADHAAR] || "",
+        fullName: row[COL_INDICES.FULL_NAME] || "",
+        qualification: row[COL_INDICES.QUALIFICATION] || "",
+        phone: row[COL_INDICES.PHONE] || "",
+        whatsapp: row[COL_INDICES.WHATSAPP] || "",
+        parentsNumber: row[COL_INDICES.PARENTS_NUMBER] || "",
+        email: row[COL_INDICES.EMAIL] || "",
+        age: row[COL_INDICES.AGE] || "",
+        address: row[COL_INDICES.ADDRESS] || "",
+        interestedCourse: row[COL_INDICES.INTERESTED_COURSE] || "",
+        inquiryTakenBy: row[COL_INDICES.INQUIRY_BY] || "",
+        branch: row[COL_INDICES.BRANCH] || "",
+        gender: row[COL_INDICES.GENDER] || ""
       });
-      return obj;
-    });
 
-  return { inquiries };
+      // Count courses
+      const course = row[COL_INDICES.INTERESTED_COURSE];
+      if (course) {
+        courseCounts[course] = (courseCounts[course] || 0) + 1;
+      }
+    }
+
+    // Find top course
+    let topCourse = "-";
+    if (Object.keys(courseCounts).length > 0) {
+      topCourse = Object.keys(courseCounts).reduce((a, b) => 
+        courseCounts[a] > courseCounts[b] ? a : b
+      );
+    }
+
+    return {
+      data: results,
+      summary: {
+        totalRecords: results.length,
+        uniqueCourses: Object.keys(courseCounts).length,
+        topCourse: topCourse
+      }
+    };
+  } catch (error) {
+    Logger.log("Error in getInquiryAnalyticsData: " + error.toString());
+    return { error: "Error processing data: " + error.toString() };
+  }
 }
 
-
+function getCourseListFromInquiries() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DF");
+    if (!sheet) return ["Error: Inquiries sheet not found"];
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return ["No data found"];
+    
+    // Column L (12) - Interested Course (assuming it's column L based on your structure)
+    const data = sheet.getRange(2, 12, lastRow - 1, 1).getValues();
+    return [...new Set(data.flat())].filter(String);
+  } catch (error) {
+    return ["Error: " + error.toString()];
+  }
+}
 /************************************************
  * COURSE PAYMENT
  ************************************************/

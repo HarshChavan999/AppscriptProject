@@ -2712,20 +2712,19 @@ function toggleInquiryAnalytics() {
   hideAllSections();
   document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
 
+  // Load course list for filter dropdown
   google.script.run
     .withSuccessHandler(function (courseList) {
       const sel = document.getElementById("iaCourseSelect");
       sel.innerHTML = `<option value="">All Courses</option>`;
-      if (!courseList.error) {
-        courseList.forEach((c) => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          sel.appendChild(opt);
-        });
-      }
+      courseList.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
     })
-    .getInquiryCourseList();
+    .getCourseListFromInquiries(); // Changed to match GS function
 
   loadInquiryAnalytics();
 }
