@@ -1277,6 +1277,7 @@ function getAdmissionAnalyticsData(userRole) {
 /************************************************
  * INQUIRY STRUCT ANALYTICS
  ************************************************/
+
 /**
  * Gets course list from inquiry sheet (DF)
  */
@@ -1369,6 +1370,7 @@ function getInquiryAnalyticsData(userRole) {
         courseCounts[course] = (courseCounts[course] || 0) + 1;
       }
     }
+
 
     // Find top course
     let topCourse = "-";
