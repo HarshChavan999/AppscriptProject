@@ -1,5 +1,6 @@
-<div id="inquirySection"
-     class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+
+<div id="inquiryAnalyticsSection" class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+
   <div class="flex flex-col md:flex-row justify-between items-center mb-6">
     <h2 class="text-2xl font-bold text-gray-800">Inquiry Records</h2>
     <button onclick="closeInquirySection()"
@@ -38,8 +39,304 @@
     <button onclick="exportTablePDF('inquiryTableContainer','Inquiries')"
             class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">PDF</button>
   </div>
-
-  <div id="inquiryTableContainer" class="overflow-x-auto"></div>
+  <!-- <button onclick="toggleInquiryAnalytics()" class="...">
+  View Inquiry Analytics
+</button> -->
+  <div id="iaTableContainer" class="overflow-x-auto">
+    <p class="text-center py-4 text-gray-500">Loading inquiry data...</p>
+  </div>
 </div>
 
+<script>
+// Add this function if it doesn't exist
+// function hideAllSections() {
+//   const sections = [
+//     'inquiryAnalyticsSection', 
+//     'admissionFormSection',
+//     'ifId'
+//   ];
+  
+//   sections.forEach(sectionId => {
+//     const section = document.getElementById(sectionId);
+//     if (section) section.classList.add('hidden');
+//   });
+// }
+
+let inquiryData = [];
+
+function toggleInquiryAnalytics() {
+  hideAllSections();
+  document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
+
+  // Load course list for filter dropdown
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("iaCourseSelect");
+      sel.innerHTML = `<option value="">All Courses</option>`;
+      
+      // Check if courseList is valid
+      if (Array.isArray(courseList) && courseList.length > 0 && !courseList[0].includes('Error')) {
+        courseList.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          sel.appendChild(opt);
+        });
+      } else {
+        console.log("No courses found or error:", courseList);
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Failed to load course list:", error);
+    })
+    .getCourseListFromInquiries();
+
+  loadInquiryAnalytics();
+}
+
+function loadInquiryAnalytics() {
+  const tableContainer = document.getElementById("iaTableContainer");
+  tableContainer.innerHTML = "<p class='text-center py-4 text-gray-500'>Loading inquiry data...</p>";
+  
+  google.script.run
+    .withSuccessHandler(function(response) {
+      console.log("Server response:", response); // Debugging
+      
+      // Check if response is null or undefined
+      if (!response) {
+        tableContainer.innerHTML = 
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>No data received from server
+          </div>`;
+        return;
+      }
+      
+      // Check for error property
+      if (response.error) {
+        tableContainer.innerHTML = 
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>${response.error}
+          </div>`;
+        return;
+      }
+
+      // Make sure data exists
+      if (!response.data) {
+        tableContainer.innerHTML = 
+          `<div class="bg-yellow-50 p-6 rounded-lg text-center">
+            <i class="fas fa-info-circle text-yellow-500 mr-2"></i>
+            No inquiry data found
+          </div>`;
+        return;
+      }
+
+      inquiryData = response.data;
+
+      // Update summary cards
+      document.getElementById("iaTotalRecords").textContent = response.summary?.totalRecords || 0;
+      document.getElementById("iaUniqueCourses").textContent = response.summary?.uniqueCourses || 0;
+      document.getElementById("iaTopCourse").textContent = response.summary?.topCourse || "-";
+
+      // Render the table
+      renderInquiryTable(inquiryData);
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error loading analytics:", error);
+      tableContainer.innerHTML = 
+        `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Error loading inquiry data: ${error.message}
+        </div>`;
+    })
+    .getInquiryAnalyticsData("admin");
+}
+
+// The rest of your functions remain the same...
+function filterInquiryData() {
+  const selectedCourse = document.getElementById("iaCourseSelect").value;
+  
+  const filtered = inquiryData.filter(d => {
+    if (!selectedCourse) return true;
+    return d.interestedCourse === selectedCourse;
+  });
+
+  // Update summary for filtered data
+  let courseCounts = {};
+  filtered.forEach(item => {
+    const course = item.interestedCourse || "";
+    if (course) {
+      courseCounts[course] = (courseCounts[course] || 0) + 1;
+    }
+  });
+
+  let topCourse = Object.keys(courseCounts).length > 0 
+    ? Object.keys(courseCounts).reduce((a, b) => 
+        courseCounts[a] > courseCounts[b] ? a : b, "") 
+    : "-";
+
+  document.getElementById("iaTotalRecords").textContent = filtered.length;
+  document.getElementById("iaUniqueCourses").textContent = Object.keys(courseCounts).length;
+  document.getElementById("iaTopCourse").textContent = topCourse || "-";
+
+  renderInquiryTable(filtered);
+}
+
+function closeInquiryAnalytics() {
+  document.getElementById("inquiryAnalyticsSection").classList.add("hidden");
+  // document.getElementById("ifId").classList.remove("hidden");
+}
+
+function renderInquiryTable(dataArray) {
+  if (!dataArray || dataArray.length === 0) {
+    document.getElementById("iaTableContainer").innerHTML = 
+      `<div class="bg-yellow-50 p-6 rounded-lg text-center">
+        <i class="fas fa-info-circle text-yellow-500 mr-2"></i>
+        No inquiry data found
+      </div>`;
+    return;
+  }
+
+  let h = `<table class='min-w-full'>
+    <thead class='bg-gray-50'>
+      <tr>
+        <th class='px-4 py-2 text-left'>Date</th>
+        <th class='px-4 py-2 text-left'>Aadhaar</th>
+        <th class='px-4 py-2 text-left'>Full Name</th>
+        <th class='px-4 py-2 text-left'>Qualification</th>
+        <th class='px-4 py-2 text-left'>Phone</th>
+        <th class='px-4 py-2 text-left'>WhatsApp</th>
+        <th class='px-4 py-2 text-left'>Parents Number</th>
+        <th class='px-4 py-2 text-left'>Email</th>
+        <th class='px-4 py-2 text-left'>Age</th>
+        <th class='px-4 py-2 text-left'>Address</th>
+        <th class='px-4 py-2 text-left'>Interested Course</th>
+        <th class='px-4 py-2 text-left'>Inquiry Taken By</th>
+        <th class='px-4 py-2 text-left'>Branch</th>
+        <th class='px-4 py-2 text-left'>Action</th>
+      </tr>
+    </thead><tbody>`;
+  
+  dataArray.forEach(d => {
+    h += `<tr class='border-b hover:bg-gray-50'>
+      <td class='px-4 py-2'>${d.date || ''}</td>
+      <td class='px-4 py-2'>${d.aadhaar || ''}</td>
+      <td class='px-4 py-2'>${d.fullName || ''}</td>
+      <td class='px-4 py-2'>${d.qualification || ''}</td>
+      <td class='px-4 py-2'>${d.phone || ''}</td>
+      <td class='px-4 py-2'>${d.whatsapp || ''}</td>
+      <td class='px-4 py-2'>${d.parentsNumber || ''}</td>
+      <td class='px-4 py-2'>${d.email || ''}</td>
+      <td class='px-4 py-2'>${d.age || ''}</td>
+      <td class='px-4 py-2'>${d.address || ''}</td>
+      <td class='px-4 py-2'>${d.interestedCourse || ''}</td>
+      <td class='px-4 py-2'>${d.inquiryTakenBy || ''}</td>
+      <td class='px-4 py-2'>${d.branch || ''}</td>
+      <td class='px-4 py-2'>
+        <button onclick="openAdmissionFormFromInquiry(${JSON.stringify(d).replace(/"/g, '&quot;')})" 
+                class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm flex items-center gap-1">
+          <i class="fas fa-user-plus text-xs"></i> Take Admission
+        </button>
+      </td>
+    </tr>`;
+  });
+  
+  h += "</tbody></table>";
+  document.getElementById("iaTableContainer").innerHTML = h;
+}
+
+function openAdmissionFormFromInquiry(data) {
+  // Close analytics and open admission form
+  closeInquiryAnalytics();
+  document.getElementById("admissionFormSection").classList.remove("hidden");
+  
+  // Pre-fill the form with selected inquiry data
+  prefillAdmissionFormFromInquiry(data);
+}
+
+function prefillAdmissionFormFromInquiry(data) {
+  // Split name into parts if possible
+  const fullName = data.fullName || "";
+  const nameParts = fullName ? fullName.split(' ') : ['', '', ''];
+  
+  // Pre-fill basic information
+  if (document.getElementById('receipt_number')) {
+    document.getElementById('receipt_number').value = '';
+  }
+  if (document.getElementById('first_name')) {
+    document.getElementById('first_name').value = nameParts[0] || '';
+  }
+  if (document.getElementById('last_name')) {
+    document.getElementById('last_name').value = nameParts[nameParts.length - 1] || '';
+  }
+  
+  // Middle name if applicable
+  if (nameParts.length > 2 && document.getElementById('middle_name')) {
+    document.getElementById('middle_name').value = nameParts.slice(1, -1).join(' ') || '';
+  }
+  // Pre-fill course information
+  const interestedCourse = data.interestedCourse || "";
+if (interestedCourse && document.getElementById('courseSelect')) {
+    const courseSelect = document.getElementById('courseSelect');
+    const searchTerm = interestedCourse.toLowerCase().trim();
+    let found = false;
+    
+    // First try exact match
+    for (let i = 0; i < courseSelect.options.length; i++) {
+        if (courseSelect.options[i].value.toLowerCase() === searchTerm || 
+            courseSelect.options[i].text.toLowerCase() === searchTerm) {
+            courseSelect.selectedIndex = i;
+            found = true;
+            break;
+        }
+    }
+    
+    // If not found, try partial match
+    if (!found) {
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].text.toLowerCase().includes(searchTerm) ||
+                courseSelect.options[i].value.toLowerCase().includes(searchTerm)) {
+                courseSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    
+    // If still not found, try matching course codes like "gnm", "enn"
+    if (!found) {
+        const courseCode = searchTerm.split('_')[0]; // Get "gnm" from "gnm_unsing"
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].value.toLowerCase().includes(courseCode) ||
+                courseSelect.options[i].text.toLowerCase().includes(courseCode)) {
+                courseSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    
+    if (found && typeof updateCourseDetails === 'function') {
+        updateCourseDetails();
+    }
+}
+  
+  // Pre-fill contact information if available
+  const phone = data.phone || "";
+  if (phone) {
+    const phoneInput = document.querySelector('input[name="phone"]');
+    if (phoneInput) phoneInput.value = phone;
+  }
+  
+  const email = data.email || "";
+  if (email) {
+    const emailInput = document.querySelector('input[name="email"]');
+    if (emailInput) emailInput.value = email;
+  }
+  
+  const address = data.address || "";
+  if (address) {
+    const addressInput = document.querySelector('input[name="address"], textarea[name="address"]');
+    if (addressInput) addressInput.value = address;
+  }
+}
+</script>
 

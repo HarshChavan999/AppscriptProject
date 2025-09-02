@@ -2714,59 +2714,23 @@ function toggleInquirySection() {
   hideAllSections();
   document.getElementById("inquirySection").classList.remove("hidden");
 
-  // Load dropdown
+
+  // Load course list for filter dropdown
+
   google.script.run
     .withSuccessHandler(function (courseList) {
       const sel = document.getElementById("inquiryCourseSelect");
       sel.innerHTML = `<option value="">All Courses</option>`;
-      if (Array.isArray(courseList)) {
-        courseList.forEach((c) => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          sel.appendChild(opt);
-        });
-      } else if (courseList?.error) {
-        console.log(courseList.error);
-      }
-    })
-    .getInquiryList();
 
-  // Load table data
-  loadInquiryData();
-}
-
-function loadInquiryData() {
-  google.script.run
-    .withSuccessHandler(function (response) {
-      if (response?.error) {
-        document.getElementById("inquiryTableContainer").textContent = "Error loading data.";
-        console.log(response.error);
-        return;
-      }
-      inquiryData = response.data || [];
-      inquiryFiltered = [...inquiryData];
-
-      // Fill summary
-      setInquirySummary({
-        totalRecords: response.summary?.totalRecords || inquiryFiltered.length,
-        uniqueCourses: response.summary?.uniqueCourses || new Set(inquiryFiltered.map(x => x.interestedCourse).filter(Boolean)).size,
-        uniqueBranches: response.summary?.uniqueBranches || new Set(inquiryFiltered.map(x => x.branch).filter(Boolean)).size
+      courseList.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
       });
-
-      renderInquiryTable(inquiryFiltered);
     })
-    .getInquiryData("admin");
-}
+    .getCourseListFromInquiries(); // Changed to match GS function
 
-// REQUIRED: Fix for your error
-function filterInquiryData() {
-  const course = (document.getElementById("inquiryCourseSelect").value || "").toLowerCase();
-
-  inquiryFiltered = inquiryData.filter(r => {
-    if (!course) return true;
-    return (r.interestedCourse || "").toLowerCase() === course;
-  });
 
   // Recompute summary on filtered set
   setInquirySummary({

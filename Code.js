@@ -1277,70 +1277,138 @@ function getAdmissionAnalyticsData(userRole) {
 /************************************************
  * INQUIRY STRUCT ANALYTICS
  ************************************************/
-/** DF (Inquiry) — Back End **/
-const DF_SHEET_ID = "1frBUKDLt3snAut3zcOiaNHYfv3gHQcsbBX3SttnYrB4";
-const DF_SHEET_NAME = "DF";
 
-// Distinct list of Interested Courses (Column K = index 10)
-function getInquiryList() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = ss.getSheetByName("Inquiries");
-  if (!sh) return { error: "Sheet 'INQUIRIES' not found" };
+/**
+ * Gets course list from inquiry sheet (DF)
+ */
+function getInquiryAnalyticsData(userRole) {
+  try {
+    // Check if user has permission
+    if (!userRole || userRole.toLowerCase() !== "admin") {
+      return { error: "You don't have permission to view Inquiry Analytics." };
+    }
 
-  const values = sh.getDataRange().getValues();
-  if (values.length < 2) return [];
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("DF");
+    
+    if (!sheet) {
+      return { error: "Inquiries sheet not found." };
+    }
 
-  const headers = values.shift();
-  Logger.log("Headers: " + JSON.stringify(headers)); // 👈 check headers in Apps Script log
+    const data = sheet.getDataRange().getValues();
+    
+    // Check if there's any data beyond headers
+    if (data.length <= 1) {
+      return {
+        data: [],
+        summary: {
+          totalRecords: 0,
+          uniqueCourses: 0,
+          topCourse: "-"
+        }
+      };
+    }
 
-  const courseIndex = headers.indexOf("interestedCourse"); // must match exactly
+    // Define column indices based on your spreadsheet structure
+    const COL_INDICES = {
+      DATE: 1,           // Column B (assuming 0-based index)
+      AADHAAR: 2,        // Column C
+      FULL_NAME: 3,      // Column D
+      QUALIFICATION: 4,  // Column E
+      PHONE: 5,          // Column F
+      WHATSAPP: 6,       // Column G
+      PARENTS_NUMBER: 7, // Column H
+      EMAIL: 8,          // Column I
+      AGE: 9,            // Column J
+      ADDRESS: 10,       // Column K
+      INTERESTED_COURSE: 11, // Column L (if this exists)
+      INQUIRY_BY: 12,    // Column M (if this exists)
+      BRANCH: 13,        // Column N (if this exists)
+      GENDER: 14         // Column O (if this exists)
+    };
 
-  if (courseIndex === -1) {
-    return { error: "Column 'interestedCourse' not found. Found headers: " + headers.join(", ") };
+    let results = [];
+    let courseCounts = {};
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      
+      // Skip empty rows (check if essential fields are empty)
+      if (!row[COL_INDICES.FULL_NAME] && !row[COL_INDICES.AADHAAR]) continue;
+      
+      // Format date properly
+      let formattedDate = "";
+      if (row[COL_INDICES.DATE]) {
+        if (row[COL_INDICES.DATE] instanceof Date) {
+          formattedDate = Utilities.formatDate(row[COL_INDICES.DATE], Session.getScriptTimeZone(), "yyyy-MM-dd");
+        } else {
+          // Handle string dates
+          formattedDate = row[COL_INDICES.DATE].toString().split(' ')[0]; // Get only date part
+        }
+      }
+
+      results.push({
+        date: formattedDate,
+        aadhaar: row[COL_INDICES.AADHAAR] || "",
+        fullName: row[COL_INDICES.FULL_NAME] || "",
+        qualification: row[COL_INDICES.QUALIFICATION] || "",
+        phone: row[COL_INDICES.PHONE] || "",
+        whatsapp: row[COL_INDICES.WHATSAPP] || "",
+        parentsNumber: row[COL_INDICES.PARENTS_NUMBER] || "",
+        email: row[COL_INDICES.EMAIL] || "",
+        age: row[COL_INDICES.AGE] || "",
+        address: row[COL_INDICES.ADDRESS] || "",
+        interestedCourse: row[COL_INDICES.INTERESTED_COURSE] || "",
+        inquiryTakenBy: row[COL_INDICES.INQUIRY_BY] || "",
+        branch: row[COL_INDICES.BRANCH] || "",
+        gender: row[COL_INDICES.GENDER] || ""
+      });
+
+      // Count courses
+      const course = row[COL_INDICES.INTERESTED_COURSE];
+      if (course) {
+        courseCounts[course] = (courseCounts[course] || 0) + 1;
+      }
+    }
+
+
+    // Find top course
+    let topCourse = "-";
+    if (Object.keys(courseCounts).length > 0) {
+      topCourse = Object.keys(courseCounts).reduce((a, b) => 
+        courseCounts[a] > courseCounts[b] ? a : b
+      );
+    }
+
+    return {
+      data: results,
+      summary: {
+        totalRecords: results.length,
+        uniqueCourses: Object.keys(courseCounts).length,
+        topCourse: topCourse
+      }
+    };
+  } catch (error) {
+    Logger.log("Error in getInquiryAnalyticsData: " + error.toString());
+    return { error: "Error processing data: " + error.toString() };
   }
-
-  const courses = [...new Set(values.map(r => r[courseIndex]).filter(Boolean))];
-
-
-  return courses;
 }
 
-
-
-function getInquiryData(userRole) {
-  if (!userRole || userRole.toLowerCase() !== "admin") {
-    return { error: "You don't have permission" };
+function getCourseListFromInquiries() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DF");
+    if (!sheet) return ["Error: Inquiries sheet not found"];
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return ["No data found"];
+    
+    // Column L (12) - Interested Course (assuming it's column L based on your structure)
+    const data = sheet.getRange(2, 12, lastRow - 1, 1).getValues();
+    return [...new Set(data.flat())].filter(String);
+  } catch (error) {
+    return ["Error: " + error.toString()];
   }
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = ss.getSheetByName("Inquiries");
-  if (!sh) return { error: "Sheet 'INQUIRIES' not found" };
-
-  const values = sh.getDataRange().getValues();
-  if (values.length < 2) return { data: [], summary: {} };
-
-  const headers = values.shift();
-const data = values.map(row => {
-  let obj = {};
-  headers.forEach((h, i) => {
-    // normalize header: lowercase, remove spaces
-    const key = h.toString().trim().replace(/\s+/g, "").toLowerCase();
-    obj[key] = row[i];
-  });
-  return obj;
-});
-
-
-  console.log({ data, summary: { totalRecords: data.length } });
-
-  return { data, summary: { totalRecords: data.length } };
 }
-
-
-
-
-
-
 /************************************************
  * COURSE PAYMENT
  ************************************************/
