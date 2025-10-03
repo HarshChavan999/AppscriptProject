@@ -592,6 +592,12 @@ function generateInstallmentReceipt(number,amount){
         balanceAmount = totalAmount - paidAmount;
         // The paymentMethod field is not explicitly used in the new HTML structure, but kept for completeness if needed elsewhere.
         // const paymentMethod = document.getElementById('pay-select')?.value || "Cash";
+        
+        // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
+        const loggedInUser = sessionStorage.getItem("loggedInUser") || 
+                            document.getElementById("loggedInUserId")?.value || 
+                            document.getElementById("userName")?.value || 
+                            "Admin";
 
         // Prepare data for the new HTML structure
         const receiptData = {
@@ -603,7 +609,7 @@ function generateInstallmentReceipt(number,amount){
             paid: formatCurrency(paidAmount),
             balance: formatCurrency(balanceAmount),
             examFees: "-", // Hardcoded as per the provided HTML
-            receivedBy: "Admin" // Hardcoded as per the provided HTML
+            receivedBy: loggedInUser // Hardcoded as per the provided HTML
         };
 
         // The entire HTML structure for the receipt, including internal CSS
