@@ -401,7 +401,7 @@ function DInsReceipt(number,amount){
     document.getElementById("classMonthDashboard").classList.add("hidden");
     document.getElementById("dueFeesSection").classList.add("hidden");
     // document.getElementById("separateReceipt").classList.add("hidden");
-    document.getElementById("inquirySection").classList.add("hidden");
+    document.getElementById("inquiryAnalyticsSection").classList.add("hidden");
     document.getElementById("admissionAnalyticsSection").classList.add("hidden");
     document.getElementById("ifId").classList.add("hidden");
     document.getElementById("admissionFormSection").classList.add("hidden");
@@ -1033,6 +1033,12 @@ function generateReceipt() {
         const paymentTypeEl = document.querySelector('input[name="Coursepayment_type"]:checked');
         const paymentType = paymentTypeEl?.value || "full";
 
+        // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
+        const loggedInUser = sessionStorage.getItem("loggedInUser") || 
+                            document.getElementById("loggedInUserId")?.value || 
+                            document.getElementById("userName")?.value || 
+                            "Admin";
+
         let paidAmount = 0;
         let balanceAmount = 0;
 
@@ -1048,8 +1054,6 @@ function generateReceipt() {
         }
 
         balanceAmount = totalAmount - paidAmount;
-        // The paymentMethod field is not explicitly used in the new HTML structure, but kept for completeness if needed elsewhere.
-        // const paymentMethod = document.getElementById('pay-select')?.value || "Cash";
 
         // Prepare data for the new HTML structure
         const receiptData = {
@@ -1061,7 +1065,7 @@ function generateReceipt() {
             paid: formatCurrency(paidAmount),
             balance: formatCurrency(balanceAmount),
             examFees: "-", // Hardcoded as per the provided HTML
-            receivedBy: "Admin" // Hardcoded as per the provided HTML
+            receivedBy: loggedInUser // ✅ FIXED: Now using actual logged-in user name
         };
 
         // The entire HTML structure for the receipt, including internal CSS
@@ -1115,23 +1119,22 @@ function generateReceipt() {
                         padding-bottom: 10px;
                     }
 
-.logo {
-    width: 60px;
-    height: 60px;
-    margin-right: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
+                    .logo {
+                        width: 60px;
+                        height: 60px;
+                        margin-right: 15px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                    }
 
-.logo img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    display: block;
-}
-
+                    .logo img {
+                        width: 100%;
+                        height: auto;
+                        object-fit: contain;
+                        display: block;
+                    }
 
                     .institute-name {
                         font-size: 28px;
@@ -1270,10 +1273,16 @@ function generateReceipt() {
                     <!-- First Receipt -->
                     <div class="receipt">
                         <div class="header">
-                           <div class="logo">
-  <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
-</div>
+                          <div class="logo">
+                               <img src="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
+  <circle cx='80' cy='80' r='75' fill='%232c3e50'/>
+  <text x='50%' y='55%' font-size='80' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>S</text>
+</svg>"
+alt="Logo"
+style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
 
+                            </div>
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -1336,15 +1345,20 @@ function generateReceipt() {
                             </div>
                         </div>
                     </div>
-
+ <hr style="border: 2px dashed #000; margin: 25px 0;">
                     <!-- Second Receipt (Copy) -->
                     <div class="receipt">
                         <div class="header">
-                           <div class="logo">
-  <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
-</div>
+                             <div class="logo">
+                               <img src="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
+  <circle cx='80' cy='80' r='75' fill='%232c3e50'/>
+  <text x='50%' y='55%' font-size='80' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>S</text>
+</svg>"
+alt="Logo"
+style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
 
-
+                            </div>
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -1449,7 +1463,6 @@ function generateReceipt() {
         document.body.appendChild(errorDiv);
     }
 }
-
 
 
   document.getElementById("loginForm").addEventListener("submit", function (e) {
@@ -2707,133 +2720,27 @@ function toggleAdmissionAnalytics() {
   /******************************************
    * INQUIRY STRUCT ANALYTICS
    ******************************************/
-let inquiryData = [];    // holds original dataset
-let inquiryFiltered = []; // current filtered view
 
-function toggleInquirySection() {
+function toggleInquiryAnalytics() {
   hideAllSections();
-  document.getElementById("inquirySection").classList.remove("hidden");
+  document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
 
-  // Load dropdown
+  // Load course list for filter dropdown
   google.script.run
     .withSuccessHandler(function (courseList) {
-      const sel = document.getElementById("inquiryCourseSelect");
+      const sel = document.getElementById("iaCourseSelect");
       sel.innerHTML = `<option value="">All Courses</option>`;
-      if (Array.isArray(courseList)) {
-        courseList.forEach((c) => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          sel.appendChild(opt);
-        });
-      } else if (courseList?.error) {
-        console.log(courseList.error);
-      }
-    })
-    .getInquiryList();
-
-  // Load table data
-  loadInquiryData();
-}
-
-function loadInquiryData() {
-  google.script.run
-    .withSuccessHandler(function (response) {
-      if (response?.error) {
-        document.getElementById("inquiryTableContainer").textContent = "Error loading data.";
-        console.log(response.error);
-        return;
-      }
-      inquiryData = response.data || [];
-      inquiryFiltered = [...inquiryData];
-
-      // Fill summary
-      setInquirySummary({
-        totalRecords: response.summary?.totalRecords || inquiryFiltered.length,
-        uniqueCourses: response.summary?.uniqueCourses || new Set(inquiryFiltered.map(x => x.interestedCourse).filter(Boolean)).size,
-        uniqueBranches: response.summary?.uniqueBranches || new Set(inquiryFiltered.map(x => x.branch).filter(Boolean)).size
+      courseList.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
       });
-
-      renderInquiryTable(inquiryFiltered);
     })
-    .getInquiryData("admin");
+    .getCourseListFromInquiries(); // Changed to match GS function
+
+  loadInquiryAnalytics();
 }
-
-// REQUIRED: Fix for your error
-function filterInquiryData() {
-  const course = (document.getElementById("inquiryCourseSelect").value || "").toLowerCase();
-
-  inquiryFiltered = inquiryData.filter(r => {
-    if (!course) return true;
-    return (r.interestedCourse || "").toLowerCase() === course;
-  });
-
-  // Recompute summary on filtered set
-  setInquirySummary({
-    totalRecords: inquiryFiltered.length,
-    uniqueCourses: new Set(inquiryFiltered.map(x => x.interestedCourse).filter(Boolean)).size,
-    uniqueBranches: new Set(inquiryFiltered.map(x => x.branch).filter(Boolean)).size
-  });
-
-  renderInquiryTable(inquiryFiltered);
-}
-
-function setInquirySummary({ totalRecords, uniqueCourses, uniqueBranches }) {
-  document.getElementById("inqTotalRecords").textContent = totalRecords;
-  document.getElementById("inqUniqueCourses").textContent = uniqueCourses;
-  document.getElementById("inqUniqueBranches").textContent = uniqueBranches;
-}
-
-function renderInquiryTable(rows) {
-  let h = `<table class='min-w-full'>
-    <thead class='bg-gray-50'>
-      <tr>
-        <th class='px-4 py-2 text-left'>Date</th>
-        <th class='px-4 py-2 text-left'>Aadhaar</th>
-        <th class='px-4 py-2 text-left'>Full Name</th>
-        <th class='px-4 py-2 text-left'>Qualification</th>
-        <th class='px-4 py-2 text-left'>Phone</th>
-        <th class='px-4 py-2 text-left'>WhatsApp</th>
-        <th class='px-4 py-2 text-left'>Parent</th>
-        <th class='px-4 py-2 text-left'>Email</th>
-        <th class='px-4 py-2 text-left'>Age</th>
-        <th class='px-4 py-2 text-left'>Address</th>
-        <th class='px-4 py-2 text-left'>Course</th>
-        <th class='px-4 py-2 text-left'>Inquiry Taken By</th>
-        <th class='px-4 py-2 text-left'>Branch</th>
-      </tr>
-    </thead><tbody>`;
-
-  rows.forEach(d => {
-    const safe = x => (x === undefined || x === null) ? "" : x;
-    h += `<tr class='border-b'>
-      <td class='px-4 py-2'>${safe(d.date)}</td>
-      <td class='px-4 py-2'>${safe(d.aadhaar)}</td>
-      <td class='px-4 py-2'>${safe(d.fullName)}</td>
-      <td class='px-4 py-2'>${safe(d.qualification)}</td>
-      <td class='px-4 py-2'>${safe(d.phone)}</td>
-      <td class='px-4 py-2'>${safe(d.whatsapp)}</td>
-      <td class='px-4 py-2'>${safe(d.parentPhone)}</td>
-      <td class='px-4 py-2'>${safe(d.email)}</td>
-      <td class='px-4 py-2'>${safe(d.age)}</td>
-      <td class='px-4 py-2'>${safe(d.address)}</td>
-      <td class='px-4 py-2'>${safe(d.interestedCourse)}</td>
-      <td class='px-4 py-2'>${safe(d.inquiryTakenBy)}</td>
-      <td class='px-4 py-2'>${safe(d.branch)}</td>
-    </tr>`;
-  });
-
-  h += "</tbody></table>";
-  document.getElementById("inquiryTableContainer").innerHTML = h;
-}
-
-function closeInquirySection() {
-  hideAllSections();
-  // show whatever section you want to return to, e.g.:
-  document.getElementById("ifId")?.classList.remove("hidden");
-}
-
-
 
   /******************************************
    * 6) admission receipt

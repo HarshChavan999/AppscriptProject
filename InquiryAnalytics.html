@@ -1,8 +1,7 @@
-<div id="inquirySection"
-     class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+<div id="inquiryAnalyticsSection" class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
   <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Inquiry Records</h2>
-    <button onclick="closeInquirySection()"
+    <h2 class="text-2xl font-bold text-gray-800">Inquiry Analytics</h2>
+    <button onclick="closeInquiryAnalytics()"
             class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2">
       <i class="fas fa-arrow-left"></i><span>Back</span>
     </button>
@@ -11,35 +10,539 @@
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
     <div class="bg-blue-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Total Records</p>
-      <p id="inqTotalRecords" class="text-xl font-bold text-blue-900">0</p>
+      <p class="text-sm text-gray-700">Total Inquiries</p>
+      <p id="iaTotalRecords" class="text-xl font-bold text-blue-900">0</p>
     </div>
     <div class="bg-green-50 p-4 rounded flex flex-col items-center">
       <p class="text-sm text-gray-700">Unique Courses</p>
-      <p id="inqUniqueCourses" class="text-xl font-bold text-green-900">0</p>
+      <p id="iaUniqueCourses" class="text-xl font-bold text-green-900">0</p>
     </div>
     <div class="bg-yellow-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Unique Branches</p>
-      <p id="inqUniqueBranches" class="text-xl font-bold text-yellow-900">0</p>
+      <p class="text-sm text-gray-700">Most Popular Course</p>
+      <p id="iaTopCourse" class="text-xl font-bold text-yellow-900">-</p>
     </div>
   </div>
 
-  <!-- Filter / Export -->
+  <!-- Enhanced Filter Section -->
+  <div class="bg-gray-50 p-4 rounded-lg mb-4">
+    <h3 class="text-lg font-semibold text-gray-700 mb-3">Filter Options</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Course Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
+        <select id="iaCourseSelect"
+                class="w-full px-4 py-2 border rounded-lg border-gray-300"
+                onchange="filterInquiryData()">
+          <option value="">All Courses</option>
+        </select>
+      </div>
+      
+      <!-- Phone/Aadhaar Search -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Search by Phone/Aadhaar</label>
+        <div class="flex gap-2">
+          <input type="text" id="iaSearchInput" 
+                 class="flex-1 px-4 py-2 border rounded-lg border-gray-300"
+                 placeholder="Enter phone or Aadhaar number">
+          <button onclick="handleSearch()"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+      
+      <!-- Date Range Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+        <div class="flex gap-2">
+          <input type="date" id="iaDateFrom" 
+                 class="w-1/2 px-4 py-2 border rounded-lg border-gray-300"
+                 onchange="filterInquiryData()">
+          <input type="date" id="iaDateTo" 
+                 class="w-1/2 px-4 py-2 border rounded-lg border-gray-300"
+                 onchange="filterInquiryData()">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Reset Filters Button -->
+    <div class="mt-3 flex justify-end">
+      <button onclick="resetFilters()"
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">
+        Reset Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Export Buttons -->
   <div class="flex flex-wrap items-center gap-2 mb-4">
-    <select id="inquiryCourseSelect"
-            class="px-4 py-2 border rounded-lg border-gray-300"
-            onchange="filterInquiryData()">
-      <option value="">All Courses</option>
-    </select>
-    <button onclick="copyTable('inquiryTableContainer')"
+    <button onclick="copyTable('iaTableContainer')"
             class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Copy</button>
-    <button onclick="exportCSV('inquiryTableContainer','inquiries.csv')"
+    <button onclick="exportCSV('iaTableContainer','inquiry_analytics.csv')"
             class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">CSV</button>
-    <button onclick="exportTablePDF('inquiryTableContainer','Inquiries')"
+    <button onclick="exportTablePDF('iaTableContainer','InquiryAnalytics')"
             class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">PDF</button>
   </div>
 
-  <div id="inquiryTableContainer" class="overflow-x-auto"></div>
+  <!-- Table Container -->
+  <div id="iaTableContainer" class="overflow-x-auto">
+    <p class="text-center py-4 text-gray-500">Loading inquiry data...</p>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div id="iaPagination" class="flex justify-center items-center mt-6 hidden">
+    <button id="iaFirstPage" onclick="changePage(1)" 
+            class="px-3 py-1 mx-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">First</button>
+    <button id="iaPrevPage" onclick="changePage(currentPage - 1)" 
+            class="px-3 py-1 mx-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Previous</button>
+    
+    <div id="iaPageNumbers" class="flex mx-2">
+      <!-- Page numbers will be generated here -->
+    </div>
+    
+    <button id="iaNextPage" onclick="changePage(currentPage + 1)" 
+            class="px-3 py-1 mx-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Next</button>
+    <button id="iaLastPage" onclick="changePage(totalPages)" 
+            class="px-3 py-1 mx-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Last</button>
+  </div>
+  
+  <!-- Page Size Selector -->
+  <div class="flex justify-end items-center mt-4">
+    <label class="text-sm text-gray-700 mr-2">Show:</label>
+    <select id="iaPageSize" onchange="changePageSize()" class="px-2 py-1 border rounded border-gray-300">
+      <option value="10">10</option>
+      <option value="25">25</option>
+      <option value="50" selected>50</option>
+      <option value="100">100</option>
+    </select>
+    <span class="text-sm text-gray-700 ml-2">entries per page</span>
+  </div>
 </div>
 
+<script>
+let inquiryData = [];
+let filteredData = [];
+let currentPage = 1;
+let pageSize = 50;
+let totalPages = 1;
 
+function toggleInquiryAnalytics() {
+  hideAllSections();
+  document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
+
+  // Load course list for filter dropdown
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("iaCourseSelect");
+      sel.innerHTML = `<option value="">All Courses</option>`;
+      
+      // Check if courseList is valid
+      if (Array.isArray(courseList) && courseList.length > 0 && !courseList[0].includes('Error')) {
+        courseList.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          sel.appendChild(opt);
+        });
+      } else {
+        console.log("No courses found or error:", courseList);
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Failed to load course list:", error);
+    })
+    .getCourseListFromInquiries();
+
+  loadInquiryAnalytics();
+}
+
+function loadInquiryAnalytics() {
+  const tableContainer = document.getElementById("iaTableContainer");
+  tableContainer.innerHTML = "<p class='text-center py-4 text-gray-500'>Loading inquiry data...</p>";
+  
+  google.script.run
+    .withSuccessHandler(function(response) {
+      console.log("Server response:", response); // Debugging
+      
+      // Check if response is null or undefined
+      if (!response) {
+        tableContainer.innerHTML = 
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>No data received from server
+          </div>`;
+        return;
+      }
+      
+      // Check for error property
+      if (response.error) {
+        tableContainer.innerHTML = 
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>${response.error}
+          </div>`;
+        return;
+      }
+
+      // Make sure data exists
+      if (!response.data) {
+        tableContainer.innerHTML = 
+          `<div class="bg-yellow-50 p-6 rounded-lg text-center">
+            <i class="fas fa-info-circle text-yellow-500 mr-2"></i>
+            No inquiry data found
+          </div>`;
+        return;
+      }
+
+      inquiryData = response.data;
+      filteredData = [...inquiryData];
+      
+      // Initialize pagination
+      currentPage = 1;
+      updatePagination();
+      
+      // Update summary cards
+      updateSummaryCards(inquiryData);
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error loading analytics:", error);
+      tableContainer.innerHTML = 
+        `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Error loading inquiry data: ${error.message}
+        </div>`;
+    })
+    .getInquiryAnalyticsData("admin");
+}
+
+// Handle search button click
+function handleSearch() {
+  filterInquiryData();
+}
+
+// Allow Enter key to trigger search
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('iaSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+    });
+  }
+});
+
+function filterInquiryData() {
+  const selectedCourse = document.getElementById("iaCourseSelect").value;
+  const searchTerm = document.getElementById("iaSearchInput").value.trim();
+  const dateFrom = document.getElementById("iaDateFrom").value;
+  const dateTo = document.getElementById("iaDateTo").value;
+  
+  filteredData = inquiryData.filter(d => {
+    // Course filter
+    if (selectedCourse && d.interestedCourse !== selectedCourse) {
+      return false;
+    }
+    
+    // Phone/Aadhaar search - FIXED LOGIC
+    if (searchTerm) {
+      const phoneMatch = d.phone && d.phone.toString().includes(searchTerm);
+      const aadhaarMatch = d.aadhaar && d.aadhaar.toString().includes(searchTerm);
+      
+      // Return false if neither phone nor aadhaar matches
+      if (!phoneMatch && !aadhaarMatch) {
+        return false;
+      }
+    }
+    
+    // Date range filter
+    if (dateFrom && d.date) {
+      const recordDate = new Date(d.date);
+      const fromDate = new Date(dateFrom);
+      if (recordDate < fromDate) {
+        return false;
+      }
+    }
+    
+    if (dateTo && d.date) {
+      const recordDate = new Date(d.date);
+      const toDate = new Date(dateTo);
+      toDate.setDate(toDate.getDate() + 1); // Include the end date
+      if (recordDate >= toDate) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+
+  // Reset to first page after filtering
+  currentPage = 1;
+  updatePagination();
+  updateSummaryCards(filteredData);
+}
+
+function resetFilters() {
+  document.getElementById("iaCourseSelect").value = "";
+  document.getElementById("iaSearchInput").value = "";
+  document.getElementById("iaDateFrom").value = "";
+  document.getElementById("iaDateTo").value = "";
+  
+  filteredData = [...inquiryData];
+  currentPage = 1;
+  updatePagination();
+  updateSummaryCards(filteredData);
+}
+
+function updateSummaryCards(data) {
+  let courseCounts = {};
+  data.forEach(item => {
+    const course = item.interestedCourse || "";
+    if (course) {
+      courseCounts[course] = (courseCounts[course] || 0) + 1;
+    }
+  });
+
+  let topCourse = Object.keys(courseCounts).length > 0 
+    ? Object.keys(courseCounts).reduce((a, b) => 
+        courseCounts[a] > courseCounts[b] ? a : b, "") 
+    : "-";
+
+  document.getElementById("iaTotalRecords").textContent = data.length;
+  document.getElementById("iaUniqueCourses").textContent = Object.keys(courseCounts).length;
+  document.getElementById("iaTopCourse").textContent = topCourse || "-";
+}
+
+function updatePagination() {
+  totalPages = Math.ceil(filteredData.length / pageSize);
+  
+  // Show/hide pagination controls
+  const paginationEl = document.getElementById("iaPagination");
+  if (totalPages > 1) {
+    paginationEl.classList.remove("hidden");
+  } else {
+    paginationEl.classList.add("hidden");
+  }
+  
+  // Update page number buttons
+  const pageNumbersEl = document.getElementById("iaPageNumbers");
+  pageNumbersEl.innerHTML = "";
+  
+  // Determine which page numbers to show
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, startPage + 4);
+  
+  // Adjust if we're near the end
+  if (endPage - startPage < 4 && startPage > 1) {
+    startPage = Math.max(1, endPage - 4);
+  }
+  
+  // Create page number buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement("button");
+    pageBtn.textContent = i;
+    pageBtn.className = `px-3 py-1 mx-1 rounded text-sm ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`;
+    pageBtn.onclick = () => changePage(i);
+    pageNumbersEl.appendChild(pageBtn);
+  }
+  
+  // Update navigation button states
+  document.getElementById("iaFirstPage").disabled = currentPage === 1;
+  document.getElementById("iaPrevPage").disabled = currentPage === 1;
+  document.getElementById("iaNextPage").disabled = currentPage === totalPages;
+  document.getElementById("iaLastPage").disabled = currentPage === totalPages;
+  
+  // Render the current page
+  renderCurrentPage();
+}
+
+function changePage(page) {
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  updatePagination();
+}
+
+function changePageSize() {
+  pageSize = parseInt(document.getElementById("iaPageSize").value);
+  currentPage = 1;
+  updatePagination();
+}
+
+function renderCurrentPage() {
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+  const pageData = filteredData.slice(startIndex, endIndex);
+  
+  renderInquiryTable(pageData);
+  
+  // Update page info
+  const pageInfo = document.getElementById("iaPageInfo");
+  if (!pageInfo) {
+    const tableContainer = document.getElementById("iaTableContainer");
+    const infoDiv = document.createElement("div");
+    infoDiv.id = "iaPageInfo";
+    infoDiv.className = "text-sm text-gray-600 mb-2";
+    tableContainer.parentNode.insertBefore(infoDiv, tableContainer);
+  }
+  document.getElementById("iaPageInfo").textContent = 
+    `Showing ${startIndex + 1} to ${endIndex} of ${filteredData.length} entries`;
+}
+
+function renderInquiryTable(dataArray) {
+  const tableContainer = document.getElementById("iaTableContainer");
+  
+  if (!dataArray || dataArray.length === 0) {
+    tableContainer.innerHTML = 
+      `<div class="bg-yellow-50 p-6 rounded-lg text-center">
+        <i class="fas fa-info-circle text-yellow-500 mr-2"></i>
+        No inquiry data found matching your search criteria
+      </div>`;
+    return;
+  }
+
+  let h = `<table class='min-w-full'>
+    <thead class='bg-gray-50'>
+      <tr>
+        <th class='px-4 py-2 text-left'>Date</th>
+        <th class='px-4 py-2 text-left'>Aadhaar</th>
+        <th class='px-4 py-2 text-left'>Full Name</th>
+        <th class='px-4 py-2 text-left'>Qualification</th>
+        <th class='px-4 py-2 text-left'>Phone</th>
+        <th class='px-4 py-2 text-left'>WhatsApp</th>
+        <th class='px-4 py-2 text-left'>Parents Number</th>
+        <th class='px-4 py-2 text-left'>Email</th>
+        <th class='px-4 py-2 text-left'>Age</th>
+        <th class='px-4 py-2 text-left'>Address</th>
+        <th class='px-4 py-2 text-left'>Interested Course</th>
+        <th class='px-4 py-2 text-left'>Inquiry Taken By</th>
+        <th class='px-4 py-2 text-left'>Branch</th>
+        <th class='px-4 py-2 text-left'>Action</th>
+      </tr>
+    </thead><tbody>`;
+  
+  dataArray.forEach(d => {
+    h += `<tr class='border-b hover:bg-gray-50'>
+      <td class='px-4 py-2'>${d.date || ''}</td>
+      <td class='px-4 py-2'>${d.aadhaar || ''}</td>
+      <td class='px-4 py-2'>${d.fullName || ''}</td>
+      <td class='px-4 py-2'>${d.qualification || ''}</td>
+      <td class='px-4 py-2'>${d.phone || ''}</td>
+      <td class='px-4 py-2'>${d.whatsapp || ''}</td>
+      <td class='px-4 py-2'>${d.parentsNumber || ''}</td>
+      <td class='px-4 py-2'>${d.email || ''}</td>
+      <td class='px-4 py-2'>${d.age || ''}</td>
+      <td class='px-4 py-2'>${d.address || ''}</td>
+      <td class='px-4 py-2'>${d.interestedCourse || ''}</td>
+      <td class='px-4 py-2'>${d.inquiryTakenBy || ''}</td>
+      <td class='px-4 py-2'>${d.branch || ''}</td>
+      <td class='px-4 py-2'>
+        <button onclick="openAdmissionFormFromInquiry(${JSON.stringify(d).replace(/"/g, '&quot;')})" 
+                class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm flex items-center gap-1">
+          <i class="fas fa-user-plus text-xs"></i> Take Admission
+        </button>
+      </td>
+    </tr>`;
+  });
+  
+  h += "</tbody></table>";
+  tableContainer.innerHTML = h;
+}
+
+function closeInquiryAnalytics() {
+  document.getElementById("inquiryAnalyticsSection").classList.add("hidden");
+}
+
+function openAdmissionFormFromInquiry(data) {
+  // Close analytics and open admission form
+  closeInquiryAnalytics();
+  document.getElementById("admissionFormSection").classList.remove("hidden");
+  
+  // Pre-fill the form with selected inquiry data
+  prefillAdmissionFormFromInquiry(data);
+}
+
+function prefillAdmissionFormFromInquiry(data) {
+  // Split name into parts if possible
+  const fullName = data.fullName || "";
+  const nameParts = fullName ? fullName.split(' ') : ['', '', ''];
+  
+  // Pre-fill basic information
+  if (document.getElementById('receipt_number')) {
+      const receiptNumber = data.rowNumber || data.serialNumber || '';
+    document.getElementById('receipt_number').value = receiptNumber;
+  }
+  if (document.getElementById('first_name')) {
+    document.getElementById('first_name').value = nameParts[0] || '';
+  }
+  if (document.getElementById('last_name')) {
+    document.getElementById('last_name').value = nameParts[nameParts.length - 1] || '';
+  }
+  
+  // Middle name if applicable
+  if (nameParts.length > 2 && document.getElementById('middle_name')) {
+    document.getElementById('middle_name').value = nameParts.slice(1, -1).join(' ') || '';
+  }
+  // Pre-fill course information
+  const interestedCourse = data.interestedCourse || "";
+if (interestedCourse && document.getElementById('courseSelect')) {
+    const courseSelect = document.getElementById('courseSelect');
+    const searchTerm = interestedCourse.toLowerCase().trim();
+    let found = false;
+    
+    // First try exact match
+    for (let i = 0; i < courseSelect.options.length; i++) {
+        if (courseSelect.options[i].value.toLowerCase() === searchTerm || 
+            courseSelect.options[i].text.toLowerCase() === searchTerm) {
+            courseSelect.selectedIndex = i;
+            found = true;
+            break;
+        }
+    }
+    
+    // If not found, try partial match
+    if (!found) {
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].text.toLowerCase().includes(searchTerm) ||
+                courseSelect.options[i].value.toLowerCase().includes(searchTerm)) {
+                courseSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    
+    // If still not found, try matching course codes like "gnm", "enn"
+    if (!found) {
+        const courseCode = searchTerm.split('_')[0]; // Get "gnm" from "gnm_unsing"
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].value.toLowerCase().includes(courseCode) ||
+                courseSelect.options[i].text.toLowerCase().includes(courseCode)) {
+                courseSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    
+    if (found && typeof updateCourseDetails === 'function') {
+        updateCourseDetails();
+    }
+}
+  
+  // Pre-fill contact information if available
+  const phone = data.phone || "";
+  if (phone) {
+    const phoneInput = document.querySelector('input[name="phone"]');
+    if (phoneInput) phoneInput.value = phone;
+  }
+  
+  const email = data.email || "";
+  if (email) {
+    const emailInput = document.querySelector('input[name="email"]');
+    if (emailInput) emailInput.value = email;
+  }
+  
+  const address = data.address || "";
+  if (address) {
+    const addressInput = document.querySelector('input[name="address"], textarea[name="address"]');
+    if (addressInput) addressInput.value = address;
+  }
+}
+</script>
