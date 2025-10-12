@@ -1,142 +1,523 @@
-<div id="admissionAnalyticsSection"
-     class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+<div id="admissionAnalyticsSection" class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
   <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Admission Analytics</h2>
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Admission Analytics</h2>
+      <p class="text-gray-600 mt-1">Track and analyze all student admissions</p>
+    </div>
     <button onclick="closeAdmissionAnalytics()"
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2">
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2 transition-colors">
       <i class="fas fa-arrow-left"></i><span>Back</span>
     </button>
   </div>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-    <div class="bg-blue-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Total Records</p>
-      <p id="aaTotalRecords" class="text-xl font-bold text-blue-900">0</p>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-users text-blue-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Total Records</p>
+      </div>
+      <p id="aaTotalRecords" class="text-2xl font-bold text-blue-900">0</p>
     </div>
-    <div class="bg-green-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Total Course Fees</p>
-      <p id="aaTotalFees" class="text-xl font-bold text-green-900">0</p>
+    <div class="bg-green-50 p-4 rounded-lg border border-green-100 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-rupee-sign text-green-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Total Course Fees</p>
+      </div>
+      <p id="aaTotalFees" class="text-2xl font-bold text-green-900">₹0</p>
     </div>
-    <div class="bg-purple-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Average Course Fee</p>
-      <p id="aaAverageFees" class="text-xl font-bold text-purple-900">0</p>
+    <div class="bg-purple-50 p-4 rounded-lg border border-purple-100 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-chart-bar text-purple-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Average Course Fee</p>
+      </div>
+      <p id="aaAverageFees" class="text-2xl font-bold text-purple-900">₹0</p>
     </div>
-    <div class="bg-yellow-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Top Course</p>
+    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-trophy text-yellow-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Top Course</p>
+      </div>
       <p id="aaTopCourse" class="text-xl font-bold text-yellow-900">-</p>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="flex flex-wrap items-center gap-2 mb-4">
-    <select id="aaCourseSelect"
-            class="px-4 py-2 border rounded-lg border-gray-300"
-            onchange="filterAdmissionAnalytics()">
-      <option value="">All Courses</option>
-    </select>
-    <select id="aaAgreementSelect"
-            class="px-4 py-2 border rounded-lg border-gray-300"
-            onchange="filterAdmissionAnalytics()">
-      <option value="">All Agreements</option>
-      <option value="Agreed">Agreed</option>
-      <option value="Not Agreed">Not Agreed</option>
-    </select>
-    <button onclick="copyTable('aaTableContainer')"
-            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Copy</button>
-    <button onclick="exportCSV('aaTableContainer','admission_analytics.csv')"
-            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">CSV</button>
-    <button onclick="exportTablePDF('aaTableContainer','AdmissionAnalytics')"
-            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">PDF</button>
+  <!-- Enhanced Filter Section -->
+  <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-gray-800">Filter & Search</h3>
+      <button onclick="resetAdmissionFilters()"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded text-sm border border-gray-300 transition-colors">
+        Reset Filters
+      </button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Course Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+        <select id="aaCourseSelect"
+                class="w-full px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onchange="filterAdmissionAnalytics()">
+          <option value="">All Courses</option>
+        </select>
+      </div>
+      
+      <!-- Agreement Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Agreement Status</label>
+        <select id="aaAgreementSelect"
+                class="w-full px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onchange="filterAdmissionAnalytics()">
+          <option value="">All Agreements</option>
+          <option value="Agreed">Agreed</option>
+          <option value="Not Agreed">Not Agreed</option>
+        </select>
+      </div>
+      
+      <!-- Search by Name/Receipt -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name/Receipt</label>
+        <div class="flex gap-2">
+          <input type="text" id="aaSearchInput" 
+                 class="flex-1 px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 placeholder="Enter name or receipt number">
+          <button onclick="handleAdmissionSearch()"
+                  class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg flex items-center gap-2 transition-colors">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="aaTableContainer" class="overflow-x-auto"></div>
+  <!-- Table Controls -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-700">Show:</span>
+      <select id="aaPageSize" onchange="changeAdmissionPageSize()" class="px-2 py-1.5 border rounded border-gray-300 bg-white">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+      <span class="text-sm text-gray-700">entries per page</span>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-2">
+      <button onclick="copyTable('aaTableContainer')"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm transition-colors flex items-center gap-1">
+        <i class="fas fa-copy text-xs"></i> Copy
+      </button>
+      <button onclick="exportCSV('aaTableContainer','admission_analytics.csv')"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm transition-colors flex items-center gap-1">
+        <i class="fas fa-file-csv text-xs"></i> CSV
+      </button>
+      <button onclick="exportTablePDF('aaTableContainer','AdmissionAnalytics')"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm transition-colors flex items-center gap-1">
+        <i class="fas fa-file-pdf text-xs"></i> PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div id="aaTableContainer" class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <div class="min-w-full">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt No</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Course Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
+            <!-- <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th> -->
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr>
+            <td colspan="8" class="px-4 py-4 text-center text-gray-500">Loading admission data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="flex flex-col md:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200">
+    <div id="aaPageInfo" class="text-sm text-gray-700 mb-3 md:mb-0"></div>
+    
+    <div id="aaPagination" class="flex items-center gap-1">
+      <button id="aaFirstPage" onclick="changeAdmissionPage(1)" 
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+      <button id="aaPrevPage" onclick="changeAdmissionPage(currentAdmissionPage - 1)" 
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-left"></i>
+      </button>
+      
+      <div id="aaPageNumbers" class="flex mx-1">
+        <!-- Page numbers will be generated here -->
+      </div>
+      
+      <button id="aaNextPage" onclick="changeAdmissionPage(currentAdmissionPage + 1)" 
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-right"></i>
+      </button>
+      <button id="aaLastPage" onclick="changeAdmissionPage(totalAdmissionPages)" 
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
 let admissionData = [];
+let filteredAdmissionData = [];
+let currentAdmissionPage = 1;
+let admissionPageSize = 50;
+let totalAdmissionPages = 1;
+
+function toggleAdmissionAnalytics() {
+  hideAllSections();
+  document.getElementById("admissionAnalyticsSection").classList.remove("hidden");
+  
+  // Load course list for filter dropdown
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("aaCourseSelect");
+      sel.innerHTML = `<option value="">All Courses</option>`;
+      
+      // Check if courseList is valid
+      if (Array.isArray(courseList) && courseList.length > 0 && !courseList[0].includes('Error')) {
+        courseList.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          sel.appendChild(opt);
+        });
+      } else {
+        console.log("No courses found or error:", courseList);
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Failed to load course list:", error);
+    })
+    .getCourseListFromAdmissions();
+
+  loadAdmissionAnalytics();
+}
 
 function loadAdmissionAnalytics() {
+  const tableContainer = document.getElementById("aaTableContainer");
+  tableContainer.innerHTML = `
+    <div class="min-w-full">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt No</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Course Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr>
+            <td colspan="8" class="px-4 py-4 text-center text-gray-500">Loading admission data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+  
   google.script.run
-    .withSuccessHandler(function (response) {
+    .withSuccessHandler(function(response) {
+      console.log("Server response:", response);
+      
+      if (!response) {
+        tableContainer.innerHTML = 
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center border border-red-200">
+            <i class="fas fa-exclamation-triangle mr-2"></i>No data received from server
+          </div>`;
+        return;
+      }
+      
       if (response.error) {
-        document.getElementById("aaTableContainer").textContent = "Error loading admissions.";
+        tableContainer.innerHTML = 
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center border border-red-200">
+            <i class="fas fa-exclamation-triangle mr-2"></i>${response.error}
+          </div>`;
+        return;
+      }
+
+      if (!response.data) {
+        tableContainer.innerHTML = 
+          `<div class="bg-gray-50 p-6 rounded-lg text-center border border-gray-200">
+            <i class="fas fa-info-circle text-gray-500 mr-2"></i>
+            No admission data found
+          </div>`;
         return;
       }
 
       admissionData = response.data;
-
-      document.getElementById("aaTotalRecords").textContent = response.summary.totalRecords;
-      document.getElementById("aaTotalFees").textContent = "₹" + response.summary.totalFees.toLocaleString();
-      document.getElementById("aaAverageFees").textContent = "₹" + response.summary.averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
-      document.getElementById("aaTopCourse").textContent = response.summary.topCourse || "-";
-
-      renderAdmissionAnalyticsTable(admissionData);
+      filteredAdmissionData = [...admissionData];
+      
+      // Initialize pagination
+      currentAdmissionPage = 1;
+      updateAdmissionPagination();
+      
+      // Update summary cards
+      updateAdmissionSummaryCards(admissionData);
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error loading analytics:", error);
+      tableContainer.innerHTML = 
+        `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center border border-red-200">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Error loading admission data: ${error.message}
+        </div>`;
     })
     .getAdmissionAnalyticsData("admin");
 }
 
-function filterAdmissionAnalytics() {
-  const course = document.getElementById("aaCourseSelect").value.toLowerCase();
-  const agreement = document.getElementById("aaAgreementSelect").value.toLowerCase();
+function handleAdmissionSearch() {
+  filterAdmissionAnalytics();
+}
 
-  const filtered = admissionData.filter(d => {
-    let courseMatch = !course || d.course.toLowerCase() === course;
-    let agreementMatch = !agreement || d.agreement.toLowerCase() === agreement;
-    return courseMatch && agreementMatch;
+// Allow Enter key to trigger search
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('aaSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleAdmissionSearch();
+      }
+    });
+  }
+});
+
+function filterAdmissionAnalytics() {
+  const selectedCourse = document.getElementById("aaCourseSelect").value;
+  const agreementStatus = document.getElementById("aaAgreementSelect").value;
+  const searchTerm = document.getElementById("aaSearchInput").value.trim().toLowerCase();
+  
+  filteredAdmissionData = admissionData.filter(d => {
+    // Course filter
+    if (selectedCourse && d.course !== selectedCourse) {
+      return false;
+    }
+    
+    // Agreement filter
+    if (agreementStatus && d.agreement !== agreementStatus) {
+      return false;
+    }
+    
+    // Name/Receipt search
+    if (searchTerm) {
+      const nameMatch = d.name && d.name.toLowerCase().includes(searchTerm);
+      const receiptMatch = d.receipt && d.receipt.toString().includes(searchTerm);
+      
+      if (!nameMatch && !receiptMatch) {
+        return false;
+      }
+    }
+    
+    return true;
   });
 
-  const totalRecords = filtered.length;
-  const totalFees = filtered.reduce((sum, item) => sum + item.totalFees, 0);
+  // Reset to first page after filtering
+  currentAdmissionPage = 1;
+  updateAdmissionPagination();
+  updateAdmissionSummaryCards(filteredAdmissionData);
+}
+
+function resetAdmissionFilters() {
+  document.getElementById("aaCourseSelect").value = "";
+  document.getElementById("aaAgreementSelect").value = "";
+  document.getElementById("aaSearchInput").value = "";
+  
+  filteredAdmissionData = [...admissionData];
+  currentAdmissionPage = 1;
+  updateAdmissionPagination();
+  updateAdmissionSummaryCards(filteredAdmissionData);
+}
+
+function updateAdmissionSummaryCards(data) {
+  const totalRecords = data.length;
+  const totalFees = data.reduce((sum, item) => sum + (item.totalFees || 0), 0);
   const averageFees = totalRecords > 0 ? totalFees / totalRecords : 0;
 
   let topCourse = "-";
   let counts = {};
-  filtered.forEach(item => {
+  data.forEach(item => {
     counts[item.course] = (counts[item.course] || 0) + 1;
     if (counts[item.course] > (counts[topCourse] || 0)) {
       topCourse = item.course;
     }
   });
 
-  document.getElementById("aaTotalRecords").textContent = totalRecords;
+  document.getElementById("aaTotalRecords").textContent = totalRecords.toLocaleString();
   document.getElementById("aaTotalFees").textContent = "₹" + totalFees.toLocaleString();
   document.getElementById("aaAverageFees").textContent = "₹" + averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  document.getElementById("aaTopCourse").textContent = topCourse;
-
-  renderAdmissionAnalyticsTable(filtered);
+  document.getElementById("aaTopCourse").textContent = topCourse || "-";
 }
 
-function renderAdmissionAnalyticsTable(dataArray) {
-  let h = `<table class='min-w-full'>
-      <thead class='bg-gray-50'>
-        <tr>
-          <th class='px-4 py-2 text-left'>Receipt No</th>
-          <th class='px-4 py-2 text-left'>Name</th>
-          <th class='px-4 py-2 text-left'>Course</th>
-          <th class='px-4 py-2 text-left'>Duration</th>
-          <th class='px-4 py-2 text-left'>Total Course Fees</th>
-          <th class='px-4 py-2 text-left'>Guardian</th>
-          <th class='px-4 py-2 text-left'>Agreement</th>
-        </tr>
-      </thead><tbody>`;
+function updateAdmissionPagination() {
+  totalAdmissionPages = Math.ceil(filteredAdmissionData.length / admissionPageSize);
+  
+  // Show/hide pagination controls
+  const paginationEl = document.getElementById("aaPagination");
+  if (totalAdmissionPages > 1) {
+    paginationEl.classList.remove("hidden");
+  } else {
+    paginationEl.classList.add("hidden");
+  }
+  
+  // Update page number buttons
+  const pageNumbersEl = document.getElementById("aaPageNumbers");
+  pageNumbersEl.innerHTML = "";
+  
+  // Determine which page numbers to show
+  let startPage = Math.max(1, currentAdmissionPage - 2);
+  let endPage = Math.min(totalAdmissionPages, startPage + 4);
+  
+  // Adjust if we're near the end
+  if (endPage - startPage < 4 && startPage > 1) {
+    startPage = Math.max(1, endPage - 4);
+  }
+  
+  // Create page number buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement("button");
+    pageBtn.textContent = i;
+    pageBtn.className = `px-3 py-1.5 mx-0.5 rounded text-sm border transition-colors ${i === currentAdmissionPage ? 'bg-gray-800 text-white border-gray-800' : 'bg-white hover:bg-gray-100 border-gray-300 text-gray-700'}`;
+    pageBtn.onclick = () => changeAdmissionPage(i);
+    pageNumbersEl.appendChild(pageBtn);
+  }
+  
+  // Update navigation button states
+  document.getElementById("aaFirstPage").disabled = currentAdmissionPage === 1;
+  document.getElementById("aaPrevPage").disabled = currentAdmissionPage === 1;
+  document.getElementById("aaNextPage").disabled = currentAdmissionPage === totalAdmissionPages;
+  document.getElementById("aaLastPage").disabled = currentAdmissionPage === totalAdmissionPages;
+  
+  // Render the current page
+  renderCurrentAdmissionPage();
+}
+
+function changeAdmissionPage(page) {
+  if (page < 1 || page > totalAdmissionPages) return;
+  currentAdmissionPage = page;
+  updateAdmissionPagination();
+}
+
+function changeAdmissionPageSize() {
+  admissionPageSize = parseInt(document.getElementById("aaPageSize").value);
+  currentAdmissionPage = 1;
+  updateAdmissionPagination();
+}
+
+function renderCurrentAdmissionPage() {
+  const startIndex = (currentAdmissionPage - 1) * admissionPageSize;
+  const endIndex = Math.min(startIndex + admissionPageSize, filteredAdmissionData.length);
+  const pageData = filteredAdmissionData.slice(startIndex, endIndex);
+  
+  renderAdmissionTable(pageData);
+  
+  // Update page info
+  const pageInfo = document.getElementById("aaPageInfo");
+  if (pageInfo) {
+    pageInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${filteredAdmissionData.length} entries`;
+  }
+}
+
+function renderAdmissionTable(dataArray) {
+  const tableContainer = document.getElementById("aaTableContainer");
+  
+  if (!dataArray || dataArray.length === 0) {
+    tableContainer.innerHTML = 
+      `<div class="bg-gray-50 p-6 rounded-lg text-center border border-gray-200">
+        <i class="fas fa-info-circle text-gray-500 mr-2"></i>
+        No admission data found matching your search criteria
+      </div>`;
+    return;
+  }
+
+  let h = `
+    <div class="min-w-full">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt No</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Course Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+  `;
+  
   dataArray.forEach(d => {
-    h += `<tr class='border-b'>
-      <td class='px-4 py-2'>${d.receipt}</td>
-      <td class='px-4 py-2'>${d.name}</td>
-      <td class='px-4 py-2'>${d.course}</td>
-      <td class='px-4 py-2'>${d.duration}</td>
-      <td class='px-4 py-2'>₹${d.totalFees.toLocaleString()}</td>
-      <td class='px-4 py-2'>${d.guardianRelation}</td>
-      <td class='px-4 py-2'>${d.agreement}</td>
-    </tr>`;
+    h += `
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.receipt || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${d.name || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.course || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.duration || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-600">₹${(d.totalFees || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.guardianRelation || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <span class="px-2 py-1 rounded-full text-xs font-medium ${d.agreement === 'Agreed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+            ${d.agreement || 'Not Agreed'}
+          </span>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <button onclick="viewAdmissionDetails(${JSON.stringify(d).replace(/"/g, '&quot;')})" 
+                  class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm flex items-center gap-1 transition-colors">
+            <i class="fas fa-eye text-xs"></i> View Details
+          </button>
+        </td>
+      </tr>
+    `;
   });
-  h += "</tbody></table>";
-  document.getElementById("aaTableContainer").innerHTML = h;
+  
+  h += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  tableContainer.innerHTML = h;
 }
 
 function closeAdmissionAnalytics() {
   hideAllSections();
   document.getElementById("ifId").classList.remove("hidden");
 }
+function viewAdmissionDetails(data) {
+  // Implement view admission details functionality
+  console.log("View admission details:", data);
+  // You can implement a modal or redirect to detailed view
+  alert(`Viewing details for: ${data.name}\nCourse: ${data.course}\nTotal Fees: ₹${data.totalFees}`);
+}
 </script>
+
