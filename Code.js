@@ -7,7 +7,14 @@ var ss = SpreadsheetApp.getActiveSpreadsheet();
 
 
 function doGet(e) {
-  return HtmlService.createTemplateFromFile("index").evaluate();
+  try {
+    return HtmlService.createTemplateFromFile("index").evaluate();
+  } catch (error) {
+    // Return error message for debugging
+    return HtmlService
+      .createHtmlOutput("Script error: " + error.toString())
+      .setTitle("Error");
+  }
 }
 
 /************************************************
@@ -1277,9 +1284,7 @@ function getAdmissionAnalyticsData(userRole) {
 /************************************************
  * INQUIRY STRUCT ANALYTICS
  ************************************************/
-/** DF (Inquiry) — Back End **/
-const DF_SHEET_ID = "1frBUKDLt3snAut3zcOiaNHYfv3gHQcsbBX3SttnYrB4";
-const DF_SHEET_NAME = "DF";
+// DF Inquiry constants moved to CONFIG.INQUIRY_SPREADSHEET_ID and CONFIG.INQUIRY_SHEET_NAME
 
 // Distinct list of Interested Courses (Column K = index 10)
 function getInquiryList() {
@@ -1601,14 +1606,3 @@ function saveReceiptData(data) {
     };
   }
 }
-
-
-
-
-
-
-
- 
-
-
-
