@@ -425,55 +425,59 @@
                 </div>
 
                 <div class="form-body">
-                    <div id="FeeReceiptForm" class="form-fields-grid">
-                        <div class="form-row grid grid-cols-2 gap-4">
+                    <div id="FeeReceiptForm" class="form-fields-grid space-y-6">
+                        <!-- Date and Receipt No Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="flex flex-col">
-                                <label for="receiptDate" class="form-label mb-1">
-                                    <i class="fas fa-calendar-alt"></i> Date
+                                <label for="receiptDate" class="form-label mb-2 text-sm font-medium text-gray-700">
+                                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i> Date
                                 </label>
-                                <input type="date" id="receiptDate" name="receiptDate" required class="form-input w-full">
+                                <input type="date" id="receiptDate" name="receiptDate" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             </div>
                             <div class="flex flex-col">
-                                <label for="ExamReceiptNumber" class="form-label mb-1">
-                                    <i class="fas fa-hashtag"></i> Receipt No
+                                <label for="ExamReceiptNumber" class="form-label mb-2 text-sm font-medium text-gray-700">
+                                    <i class="fas fa-hashtag mr-2 text-blue-500"></i> Receipt No
                                 </label>
-                                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input w-full">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row grid grid-cols-2 gap-4 mt-4">
-                            <div class="flex flex-col">
-                                <label for="studentNameInput" class="form-label mb-1">
-                                    <i class="fas fa-user-graduate"></i> Student Name
-                                </label>
-                                <input type="text" id="studentNameInput" name="studentName" required class="form-input w-full">
-                            </div>
-                            <div class="flex flex-col">
-                                <label for="courseNameInput" class="form-label mb-1">
-                                    <i class="fas fa-book"></i> Course Name
-                                </label>
-                                <input type="text" id="courseNameInput" name="courseName" required class="form-input w-full">
+                                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             </div>
                         </div>
                         
-                        <div class="payment-info-box mt-6">
-                            <h3 class="payment-info-title mb-4">
-                                <i class="fas fa-money-bill-wave"></i> Payment Information
+                        <!-- Student Name and Course Name Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex flex-col">
+                                <label for="studentNameInput" class="form-label mb-2 text-sm font-medium text-gray-700">
+                                    <i class="fas fa-user-graduate mr-2 text-blue-500"></i> Student Name
+                                </label>
+                                <input type="text" id="studentNameInput" name="studentName" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div class="flex flex-col">
+                                <label for="courseNameInput" class="form-label mb-2 text-sm font-medium text-gray-700">
+                                    <i class="fas fa-book mr-2 text-blue-500"></i> Course Name
+                                </label>
+                                <input type="text" id="courseNameInput" name="courseName" required class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Information Section -->
+                        <div class="payment-info-box bg-gray-50 p-6 rounded-lg border border-gray-200">
+                            <h3 class="payment-info-title mb-4 text-lg font-semibold text-gray-800">
+                                <i class="fas fa-money-bill-wave mr-2 text-green-500"></i> Payment Information
                             </h3>
                             <div class="payment-info-grid">
-                                <div class="flex flex-col w-full md:w-1/2">
-                                    <label for="totalAmount" class="form-label mb-1">Total Amount (₹)</label>
-                                    <input type="number" id="totalAmount" name="totalAmount" value="500" class="form-input w-full">
+                                <div class="flex flex-col">
+                                    <label for="totalAmount" class="form-label mb-2 text-sm font-medium text-gray-700">Total Amount (₹)</label>
+                                    <input type="number" id="totalAmount" name="totalAmount" value="500" class="form-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="form-row mt-4">
-                            <div class="flex flex-col w-full md:w-1/2">
-                                <label for="paymentModeInput" class="form-label mb-1">
-                                    <i class="fas fa-credit-card"></i> Payment Mode
+                        <!-- Payment Mode Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex flex-col">
+                                <label for="paymentModeInput" class="form-label mb-2 text-sm font-medium text-gray-700">
+                                    <i class="fas fa-credit-card mr-2 text-blue-500"></i> Payment Mode
                                 </label>
-                                <select id="paymentModeInput" name="paymentMode" required class="form-select w-full">
+                                <select id="paymentModeInput" name="paymentMode" required class="form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     <option value="" disabled selected>Select Payment Mode</option>
                                     <option value="Cash">Cash</option>
                                     <option value="Cheque">Cheque</option>
@@ -484,24 +488,25 @@
                             </div>
                         </div>
 
-                        <div class="form-footer mt-8">
+                        <!-- Footer with Terms and Buttons -->
+                        <div class="form-footer pt-8 border-t border-gray-200">
                             <div class="footer-actions">
-                                <div class="terms-checkbox mb-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required class="mr-2">
-                                        <span>I acknowledge the above payment details</span>
+                                <div class="terms-checkbox mb-6">
+                                    <label class="flex items-start">
+                                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required class="mr-3 mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <span class="text-sm text-gray-600">I acknowledge the above payment details</span>
                                     </label>
-                                    <div id="agreeError" class="error-message"></div>
+                                    <div id="agreeError" class="error-message mt-1 text-red-500 text-sm"></div>
                                 </div>
                                 
-                                <div class="flex justify-end space-x-4">
+                                <div class="flex flex-col sm:flex-row justify-end gap-3">
                                     <button type="button" onclick="generateexamReceipt()" 
-                                        class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
-                                        <i class="fas fa-receipt mr-2"></i>Generate Receipt
+                                        class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium py-3 px-8 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2 w-full sm:w-auto">
+                                        <i class="fas fa-receipt"></i> Generate Receipt
                                     </button>
                                     <button type="submit" id="submitReceipt" 
-                                        class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
-                                        <i class="fas fa-save mr-2"></i>Save Receipt
+                                        class="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-medium py-3 px-8 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2 w-full sm:w-auto">
+                                        <i class="fas fa-save"></i> Save Receipt
                                     </button>
                                 </div>
                             </div>
