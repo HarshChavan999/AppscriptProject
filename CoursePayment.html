@@ -377,8 +377,15 @@
   };
 
   google.script.run
-    .withSuccessHandler(() => {
-      alert("Course payment saved successfully!");
+    .withSuccessHandler((result) => {
+      if (result.success) {
+        alert("Course payment saved successfully!");
+      } else {
+        alert("Error: " + result.message);
+      }
+    })
+    .withFailureHandler((error) => {
+      alert("Error saving payment: " + error);
     })
     .saveCoursePayment(formData); // Backend function
 }

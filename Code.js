@@ -1401,12 +1401,12 @@ function getInquiryData(userRole) {
  * @returns {Object} Operation result
  */
 function saveCoursePayment(data) {
-   const userIdForAudit = data.loggedInUserId || 
-                       PropertiesService.getUserProperties().getProperty("loggedInUser") || 
+   const userIdForAudit = data.loggedInUserId ||
+                       PropertiesService.getUserProperties().getProperty("loggedInUser") ||
                        "Anonymous";
-  
+
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Feestructure");
     
     if (!sheet) {
       createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
@@ -1594,14 +1594,3 @@ function saveReceiptData(data) {
     };
   }
 }
-
-
-
-
-
-
-
- 
-
-
-
