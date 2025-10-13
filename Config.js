@@ -2,6 +2,8 @@ const CONFIG = {
   // Your Google Drive Folder ID for PDFs
   ADMISSIONS_PDF_FOLDER_ID: '1z9SkGw0JXQmlj_NjLcK7Cal1Vvgctcwr',
 
+  // Using active spreadsheet for all operations - no separate IDs needed
+
   // Sheet Names
   ADMISSIONS_SHEET_NAME: 'ADMISSIONF',
   INQUIRY_SHEET_NAME: 'DF', // Your main inquiry sheet

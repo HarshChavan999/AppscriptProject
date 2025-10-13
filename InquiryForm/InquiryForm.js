@@ -11,26 +11,26 @@ function InquiryProcessForm(formData) {
   const userIdForAudit = formData.loggedInUserId || "Anonymous";
   const ss = SpreadsheetApp.getActiveSpreadsheet(); // Assuming active spreadsheet is the one containing all sheets
 
-  // 1. PDF Folder Setup
-  let pdfFolder;
-  try {
-    pdfFolder = DriveApp.getFolderById(CONFIG.ADMISSIONS_PDF_FOLDER_ID);
-  } catch (e) {
-    console.error("InquiryProcessForm: PDF folder access error:", e);
-    createAuditLogEntry("PDF Folder Access Error", userIdForAudit, {
-      error: e.message,
-      formDataSummary: {
-        aadharNumber: formData.aadharNumber,
-        fullName: formData.fullName,
-        email: formData.email
-      }
-    });
-    return {
-      success: false,
-      message: "Cannot access PDF folder. Please check configuration.",
-      error: e.message
-    };
-  }
+  // 1. PDF Folder Setup - TEMPORARILY DISABLED
+  // let pdfFolder;
+  // try {
+  //   pdfFolder = DriveApp.getFolderById(CONFIG.ADMISSIONS_PDF_FOLDER_ID);
+  // } catch (e) {
+  //   console.error("InquiryProcessForm: PDF folder access error:", e);
+  //   createAuditLogEntry("PDF Folder Access Error", userIdForAudit, {
+  //     error: e.message,
+  //     formDataSummary: {
+  //       aadharNumber: formData.aadharNumber,
+  //       fullName: formData.fullName,
+  //       email: formData.email
+  //     }
+  //   });
+  //   return {
+  //     success: false,
+  //     message: "Cannot access PDF folder. Please check configuration.",
+  //     error: e.message
+  //   };
+  // }
 
   // 2. Get the Inquiry Sheet (DF)
   const dfSheet = ss.getSheetByName(CONFIG.INQUIRY_SHEET_NAME);
@@ -94,28 +94,28 @@ function InquiryProcessForm(formData) {
     };
   }
 
-  // 4. PDF Generation
-  let pdfBlob;
-  try {
-    pdfBlob = Utilities.newBlob(htmlContent, 'text/html')
-      .getAs('application/pdf')
-      .setName(`Inquiry_Form_${formData.fullName.replace(/ /g, '_')}_${new Date().getTime()}.pdf`);
-    pdfFolder.createFile(pdfBlob);
-    console.log("InquiryProcessForm: PDF generated and saved.");
-  } catch (e) {
-    console.error("InquiryProcessForm: PDF conversion error:", e);
-    createAuditLogEntry("PDF Conversion Error", userIdForAudit, {
-      error: e.message,
-      formDataSummary: {
-        aadharNumber: formData.aadharNumber,
-        fullName: formData.fullName
-      }
-    });
-    return {
-      success: false,
-      message: "PDF generation failed."
-    };
-  }
+  // 4. PDF Generation - TEMPORARILY DISABLED
+  // let pdfBlob;
+  // try {
+  //   pdfBlob = Utilities.newBlob(htmlContent, 'text/html')
+  //     .getAs('application/pdf')
+  //     .setName(`Inquiry_Form_${formData.fullName.replace(/ /g, '_')}_${new Date().getTime()}.pdf`);
+  //   pdfFolder.createFile(pdfBlob);
+  //   console.log("InquiryProcessForm: PDF generated and saved.");
+  // } catch (e) {
+  //   console.error("InquiryProcessForm: PDF conversion error:", e);
+  //   createAuditLogEntry("PDF Conversion Error", userIdForAudit, {
+  //     error: e.message,
+  //     formDataSummary: {
+  //       aadharNumber: formData.aadharNumber,
+  //       fullName: formData.fullName
+  //     }
+  //   });
+  //   return {
+  //     success: false,
+  //     message: "PDF generation failed."
+  //   };
+  // }
 
   // 5. Data Validation and Sheet Update/Append
   try {

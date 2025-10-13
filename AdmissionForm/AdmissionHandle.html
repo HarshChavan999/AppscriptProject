@@ -672,6 +672,11 @@ function loadReceipt(enrollmentID, studentName, course) {
         const courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
         const totalAmountText = document.getElementById('totalCourseFees').value || "₹0";
         const totalAmount = parseFloat(totalAmountText.replace(/[^0-9.]/g, '')) || 0;
+         // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
+        const loggedInUser = sessionStorage.getItem("loggedInUser") || 
+                            document.getElementById("loggedInUserId")?.value || 
+                            document.getElementById("userName")?.value || 
+                            "Admin";
 
         // Prepare data for the receipt
         const receiptData = {
@@ -683,7 +688,7 @@ function loadReceipt(enrollmentID, studentName, course) {
             paid: formatCurrency(totalAmount), // Assuming full payment
             balance: formatCurrency(0), // Zero balance
             examFees: "-",
-            receivedBy: "Admin",
+            receivedBy: loggedInUser,
             enrollmentID: enrollmentID || "Not Generated" // Added enrollment ID with fallback
         };
 
@@ -966,7 +971,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                             </div>
                         </div>
                     </div>
-
+                   <hr style="border: 2px dashed #000; margin: 25px 0;">
                     <!-- Second Receipt (Copy) -->
                     <div class="receipt">
                         <div class="header">
