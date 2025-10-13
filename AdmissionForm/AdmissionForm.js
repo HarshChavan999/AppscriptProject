@@ -3,8 +3,13 @@
  * All hardcoded IDs moved to CONFIG.js
  */
 
+// Local CONFIG object for AdmissionForm.js
+const CONFIG_ADMISSION = {
+  ADMISSIONS_SHEET_NAME: 'ADMISSIONF',
+  AUDIT_LOG_SHEET_NAME: 'AuditLog'
+};
 
-const SHEET_NAME = CONFIG.ADMISSIONS_SHEET_NAME;
+const SHEET_NAME = CONFIG_ADMISSION.ADMISSIONS_SHEET_NAME;
 
 /**
  * Saves admission form data to the active spreadsheet sheet and creates audit log entries

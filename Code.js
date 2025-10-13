@@ -21,7 +21,7 @@ function doGet(e) {
  * HELPER: Include other .html files if needed
  ************************************************/
 function include(filename) {
-  return HtmlService.createTemplateFromFile(filename).getRawContent();getInquiryAnalyticsData()
+  return HtmlService.createTemplateFromFile(filename).getRawContent();
 }
 
 
