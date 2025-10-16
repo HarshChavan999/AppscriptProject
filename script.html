@@ -383,10 +383,19 @@ function DInsReceipt(number,amount){
   }
 
   // Open course payment section
-  function openCoursePayment() {
+// function openCoursePayment() {
+//   hideAllSections();
+//   document.getElementById("coursePaymentSection").classList.remove("hidden");
+// }
+
+function openCoursePayment() {
     hideAllSections();
     document.getElementById("coursePaymentSection").classList.remove("hidden");
-  }
+    // Populate fields from admission data after section is shown
+    setTimeout(() => {
+        copyAdmission();
+    }, 100); // Small delay to ensure DOM is updated
+}
 
   /******************************************
    * 1) HELPER FUNCTIONS
@@ -523,58 +532,68 @@ function DInsReceipt(number,amount){
   }
 
   function copyAdmission(){
-    console.log("🔵 copyAdmission called");
-
-    // Name
+    // Name - include middle name
      sessionStorage.setItem(
       "first_name",
-      document.getElementById("first_name").value
+      document.getElementById("first_name")?.value || ""
+    );
+     sessionStorage.setItem(
+      "middle_name",
+      document.getElementById("middle_name")?.value || ""
     );
     sessionStorage.setItem(
       "last_name",
-      document.getElementById("last_name").value
+      document.getElementById("last_name")?.value || ""
     );
     let firstName = sessionStorage.getItem('first_name');
+    let middleName = sessionStorage.getItem('middle_name');
     let lastName = sessionStorage.getItem('last_name');
-    let fullName = firstName + ' ' + lastName;
-    document.getElementById("std_Coursepayname").value= fullName;
+    let fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+    let nameElement = document.getElementById("std_Coursepayname");
+    if (nameElement) {
+      nameElement.value = fullName.trim();
+    }
 
     //ID
-            sessionStorage.setItem(
-      "tempText4",
-      document.getElementById("receipt_number").value
-    );
-    document.getElementById("ID").value=sessionStorage.getItem("tempText4");
+    let receiptElement = document.getElementById("receipt_number");
+    if (receiptElement) {
+      sessionStorage.setItem(
+        "tempText4",
+        receiptElement.value
+      );
+    }
+    let idElement = document.getElementById("ID");
+    if (idElement) {
+      idElement.value = sessionStorage.getItem("tempText4") || "";
+    }
 
     // 🔥 CRITICAL FIX: Also transfer branch information for proper course data
     sessionStorage.setItem(
       "tempText6",
       document.getElementById("branch22")?.value || ""
     );
-    document.getElementById("branch22_course").value = sessionStorage.getItem("tempText6");
+    let branchElement = document.getElementById("branch22_course");
+    if (branchElement) {
+      branchElement.value = sessionStorage.getItem("tempText6");
+    }
 
     //Courseselect - 🔥 CRITICAL FIX: Set value and TRIGGER change event to auto-update details
-                sessionStorage.setItem(
-      "tempText5",
-      document.getElementById("courseSelect").value
-    );
-    const coursePaySelect = document.getElementById("coursePaySelect");
-    coursePaySelect.value = sessionStorage.getItem("tempText5");
-    // 🔥 Dispatch change event to automatically update course details, fees, and payment options
-    const changeEvent = new Event('change', { bubbles: true });
-    coursePaySelect.dispatchEvent(changeEvent);
+    let courseSelectElement = document.getElementById("courseSelect");
+    if (courseSelectElement) {
+      sessionStorage.setItem(
+        "tempText5",
+        courseSelectElement.value
+      );
+      const coursePaySelect = document.getElementById("coursePaySelect");
+      if (coursePaySelect) {
+        coursePaySelect.value = sessionStorage.getItem("tempText5");
+        // 🔥 Dispatch change event to automatically update course details, fees, and payment options
+        const changeEvent = new Event('change', { bubbles: true });
+        coursePaySelect.dispatchEvent(changeEvent);
+      }
+    }
 
     // 🔥 CRITICAL: Store complete admission data for receipt including guardian info
-    // 🔴 FIXED: Changed to correct field IDs and fixed guardian data mapping
-    const guardianRelationEl = document.getElementById("guardian_relation");
-    const guardianNameEl = document.getElementById("guardian_name");
-
-    const guardian_relation = guardianRelationEl ? guardianRelationEl.value : "";
-    const guardian_name = guardianNameEl ? guardianNameEl.value : "";
-
-    console.log("🔵 Found guardian elements:", !!guardianRelationEl, !!guardianNameEl);
-    console.log("🔵 Guardian values:", guardian_relation, guardian_name);
-
     const admissionData = {
       firstName: document.getElementById("first_name")?.value || "",
       middleName: document.getElementById("middle_name")?.value || "",
@@ -583,12 +602,11 @@ function DInsReceipt(number,amount){
       courseSelect: document.getElementById("courseSelect")?.value || "",
       courseDurationText: document.getElementById("courseDurationText")?.textContent || "",
       totalCourseFees: document.getElementById("totalCourseFees")?.textContent || "",
-      // 🔴 FIXED: Using correct IDs from the form and ensuring fallback
-      guardian_relation: guardian_relation,
-      guardian_name: guardian_name,
+      guardianRelation: document.getElementById("guardian_relation")?.value || "",
+      guardianName: document.getElementById("guardian_name")?.value || "",
       agree: document.getElementById('agree')?.checked || false,
-      consentText: `I am ${guardian_relation} of ${guardian_name}`,
-      studentName: fullName,
+      consentText: `I am ${document.getElementById("guardian_relation")?.value || ""} of ${document.getElementById("guardian_name")?.value || ""}`,
+      studentName: fullName.trim(),
       addressLine1: document.getElementById("addressLine1")?.value || '',
       addressLine2: document.getElementById("addressLine2")?.value || '',
       addressLine3: document.getElementById("addressLine3")?.value || '',
@@ -602,13 +620,9 @@ function DInsReceipt(number,amount){
       gender: document.getElementById("gender")?.value || '',
       interestedCourse: document.getElementById("courseSelect")?.value || ""
     };
-
-    // Save to BOTH sessionStorage AND localStorage for backup
     sessionStorage.setItem('admissionData', JSON.stringify(admissionData));
-    localStorage.setItem('admissionDataBackup', JSON.stringify(admissionData));
 
-    console.log("🔵 admissionData object saved:", admissionData); // 🔴 DEBUG LOG
-    console.log("🔵 admissionData now in sessionStorage:", sessionStorage.getItem('admissionData'));
+    console.log("Admission data copied:", admissionData);
 
     // No need to call updateCoursePayDetails() twice anymore - change event handles it
     // updateCoursePayDetails();
@@ -3371,28 +3385,9 @@ html2pdf()
     } else {
       console.log('No inquiry data found in sessionStorage');
     }
-
-    // 🔴 CRITICAL: Try to restore data if it was saved in localStorage (backup)
-    const savedAdmissionData = localStorage.getItem('admissionDataBackup');
-    if (savedAdmissionData) {
-      console.log("🔵 Restoring admission data from localStorage backup:", savedAdmissionData);
-      const data = JSON.parse(savedAdmissionData);
-      if (data.guardian_relation) document.getElementById('guardian_relation').value = data.guardian_relation;
-      if (data.guardian_name) document.getElementById('guardian_name').value = data.guardian_name;
-      console.log("🔵 Restored guardian data from localStorage");
-    }
   }
 
   //Handle admission form submission
-function handleNextStep() {
-  // Ensure we copy the admission data immediately before navigating
-  console.log("🔵 NEXT BUTTON CLICKED - Starting copyAdmission");
-  copyAdmission();
-  console.log("🔵 copyAdmission completed - checking sessionStorage:", sessionStorage.getItem('admissionData'));
-  alert("Admissions form data saved. Proceeding to course payment.");
-  openCoursePayment();
-}
-
   document.addEventListener("DOMContentLoaded", function () {
   const admissionBtn = document.getElementById("admissionBtn");
   if (admissionBtn) {
