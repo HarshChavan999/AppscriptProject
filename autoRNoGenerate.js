@@ -1,6 +1,6 @@
 
 /**
- * Finds the highest numeric part of a receipt number (e.g., 23 from 'R-0023')
+ * Finds the highest numeric part of a receipt number (e.g., 23 from 'AR-0023')
  * in a specified sheet. It checks the entire column to find the true maximum.
  * @param {string} sheetName The name of the sheet to check.
  * @returns {number} The highest receipt number found, or 0 if none are found.
@@ -26,8 +26,8 @@ function findLastReceiptInSheet(sheetName) {
     // Loop through all values to find valid receipt numbers and get the maximum.
     for (let i = 0; i < columnValues.length; i++) {
       const cellValue = columnValues[i][0];
-      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('R-')) {
-        const numericPart = parseInt(cellValue.substring(2), 10);
+      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('AR-')) {
+        const numericPart = parseInt(cellValue.substring(3), 10);
         if (!isNaN(numericPart) && numericPart > lastNumericPart) {
           lastNumericPart = numericPart;
         }

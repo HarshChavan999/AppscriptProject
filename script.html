@@ -544,15 +544,56 @@ function DInsReceipt(number,amount){
     );
     document.getElementById("ID").value=sessionStorage.getItem("tempText4");
 
-    //Courseselect
+    // 🔥 CRITICAL FIX: Also transfer branch information for proper course data
+    sessionStorage.setItem(
+      "tempText6",
+      document.getElementById("branch22")?.value || ""
+    );
+    document.getElementById("branch22_course").value = sessionStorage.getItem("tempText6");
+
+    //Courseselect - 🔥 CRITICAL FIX: Set value and TRIGGER change event to auto-update details
                 sessionStorage.setItem(
       "tempText5",
       document.getElementById("courseSelect").value
     );
-    document.getElementById("coursePaySelect").value=sessionStorage.getItem("tempText5");
+    const coursePaySelect = document.getElementById("coursePaySelect");
+    coursePaySelect.value = sessionStorage.getItem("tempText5");
+    // 🔥 Dispatch change event to automatically update course details, fees, and payment options
+    const changeEvent = new Event('change', { bubbles: true });
+    coursePaySelect.dispatchEvent(changeEvent);
 
-    updateCoursePayDetails();
-    updatePaymentOptions();
+    // 🔥 CRITICAL: Store complete admission data for receipt including guardian info
+    const admissionData = {
+      firstName: document.getElementById("first_name").value,
+      middleName: document.getElementById("middle_name").value,
+      lastName: document.getElementById("last_name").value,
+      receiptNumber: document.getElementById("receipt_number").value,
+      courseSelect: document.getElementById("courseSelect").value,
+      courseDurationText: document.getElementById("courseDurationText").textContent,
+      totalCourseFees: document.getElementById("totalCourseFees").textContent,
+      guardianRelation: document.getElementById("guardian_relation").value,
+      guardianName: document.getElementById("guardian_name").value,
+      agree: document.getElementById('agree').checked,
+      consentText: `I am ${document.getElementById("guardian_relation").value} of ${document.getElementById("guardian_name").value}`,
+      studentName: fullName,
+      addressLine1: document.getElementById("addressLine1")?.value || '',
+      addressLine2: document.getElementById("addressLine2")?.value || '',
+      addressLine3: document.getElementById("addressLine3")?.value || '',
+      pincode: document.getElementById("pincode")?.value || '',
+      qualification: document.getElementById("qualification")?.value || '',
+      phoneNo: document.getElementById("phoneNo")?.value || '',
+      whatsappNo: document.getElementById("whatsappNo")?.value || '',
+      parentsNo: document.getElementById("parentsNo")?.value || '',
+      email: document.getElementById("email")?.value || '',
+      age: document.getElementById("age")?.value || '',
+      gender: document.getElementById("gender")?.value || '',
+      interestedCourse: document.getElementById("courseSelect").value
+    };
+    sessionStorage.setItem('admissionData', JSON.stringify(admissionData));
+
+    // No need to call updateCoursePayDetails() twice anymore - change event handles it
+    // updateCoursePayDetails();
+    // updatePaymentOptions(); // This will be called by updateCoursePayDetails() through the normal flow
 
   }
 
@@ -1025,45 +1066,75 @@ function generateInstallmentReceipt(number,amount){
         document.body.appendChild(errorDiv);
     }
 }
+function storeCoursePaymentData() {
+    // 🔥 CRITICAL: Store course payment data when clicking Save & Generate Receipt
+    const coursePayData = {
+        courseName: document.getElementById('coursePaySelect')?.value || '',
+        totalFees: document.getElementById('totalFees')?.textContent || '₹0',
+        paymentType: document.querySelector('input[name="Coursepayment_type"]:checked')?.value || 'full',
+        paidAmount: calculatePaidAmount(),
+        balanceAmount: calculateBalanceAmount()
+    };
+    sessionStorage.setItem('coursePaymentData', JSON.stringify(coursePayData));
+    return coursePayData;
+}
+
+function calculatePaidAmount() {
+    const totalAmount = parseFloat((document.getElementById('totalFees')?.textContent || "₹0").replace(/[^0-9.]/g, ''));
+    const paymentType = document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full";
+
+    let paidAmount = 0;
+    if (paymentType === 'full') {
+        paidAmount = totalAmount; // Full payment
+    } else if (paymentType === 'partial') {
+        paidAmount = Math.ceil(totalAmount * 0.5);
+    } else if (paymentType === 'emi') {
+        paidAmount = Math.ceil(totalAmount * 0.1);
+    }
+    return paidAmount;
+}
+
+function calculateBalanceAmount() {
+    const totalAmount = parseFloat((document.getElementById('totalFees')?.textContent || "₹0").replace(/[^0-9.]/g, ''));
+    return totalAmount - calculatePaidAmount();
+}
+
 function generateReceipt() {
     try {
-        const receiptNo = "REC" + Math.floor(1000 + Math.random() * 9000);
+        // 🔥 CRITICAL: First store latest course payment data
+        storeCoursePaymentData();
+
+        // 🔥 CRITICAL: Aggregate data from all sessionStorage keys for complete workflow
+        const inquiryData = JSON.parse(sessionStorage.getItem('inquiryDataForAdmission') || '{}');
+        const admissionData = JSON.parse(sessionStorage.getItem('admissionData') || '{}');
+        const coursePayData = JSON.parse(sessionStorage.getItem('coursePaymentData') || '{}');
+
+        console.log("Aggregated session data:", {inquiryData, admissionData, coursePayData});
+
+        const receiptNo = document.getElementById('ID')?.value || "AR-" + Math.floor(1000 + Math.random() * 9000);
         const date = new Date().toLocaleDateString('en-GB');
 
-        const studentName = document.getElementById('std_Coursepayname')?.value || "N/A";
-        const courseSelect = document.getElementById('coursePaySelect');
-        const courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
-        const totalAmountText = document.getElementById('totalFees')?.textContent || "₹0";
-        const totalAmount = parseFloat(totalAmountText.replace(/[^0-9.]/g, ''));
+        // Primary: Admission, Fallback: Inquiry, Last: Current form
+        const studentName = admissionData.studentName || inquiryData.firstName + ' ' + (inquiryData.middleName || '') + ' ' + inquiryData.lastName || document.getElementById('std_Coursepayname')?.value || "N/A";
+        const courseName = coursePayData.courseName || admissionData.courseSelect || inquiryData.interestedCourse || document.getElementById('coursePaySelect')?.value || "N/A";
+        const totalAmount = coursePayData.totalFees ? parseFloat(coursePayData.totalFees.replace(/[^0-9.]/g, '')) : parseFloat((document.getElementById('totalFees')?.textContent || "₹0").replace(/[^0-9.]/g, ''));
+        const paidAmount = coursePayData.paidAmount || calculatePaidAmount();
+        const balanceAmount = coursePayData.balanceAmount || (totalAmount - paidAmount);
 
-        const paymentTypeEl = document.querySelector('input[name="Coursepayment_type"]:checked');
-        const paymentType = paymentTypeEl?.value || "full";
-
-        // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
-        const loggedInUser = sessionStorage.getItem("loggedInUser") || 
-                            document.getElementById("loggedInUserId")?.value || 
-                            document.getElementById("userName")?.value || 
+        const loggedInUser = admissionData.loggedInUserId ||
+                            sessionStorage.getItem("loggedInUser") ||
+                            document.getElementById("loggedInUserId")?.value ||
+                            document.getElementById("userName")?.value ||
                             "Admin";
 
-        let paidAmount = 0;
-        let balanceAmount = 0;
+        // 🔥 CRITICAL: Consent text from admission data
+        const consentText = admissionData.consentText || admissionData.guardianRelation ?
+                           `I am ${admissionData.guardianRelation} of ${admissionData.guardianName}` :
+                           "I am the guardian of the student";
 
-        if (paymentType === 'full') {
-            const fullTotalText = document.getElementById('fullTotal')?.textContent || totalAmountText;
-            paidAmount = parseFloat(fullTotalText.replace(/[^0-9.]/g, ''));
-        } else if (paymentType === 'partial') {
-            const partialInitialText = document.getElementById('partialInitial')?.textContent || (totalAmount * 0.5).toString();
-            paidAmount = parseFloat(partialInitialText.replace(/[^0-9.]/g, ''));
-        } else if (paymentType === 'emi') {
-            const emiDownPaymentText = document.getElementById('emiDownPayment')?.textContent || (totalAmount * 0.1).toString();
-            paidAmount = parseFloat(emiDownPaymentText.replace(/[^0-9.]/g, ''));
-        }
-
-        balanceAmount = totalAmount - paidAmount;
-
-        // Prepare data for the new HTML structure
+        // Prepare data for the receipt including consent section
         const receiptData = {
-            receiptNo: receiptNo.replace('REC', ''), // Remove 'REC' prefix as per the target image
+            receiptNo: receiptNo.replace('AR-', ''), // Remove 'AR-' prefix if present
             date: date,
             fullName: studentName,
             proposeToPay: courseName,
@@ -1071,17 +1142,18 @@ function generateReceipt() {
             paid: formatCurrency(paidAmount),
             balance: formatCurrency(balanceAmount),
             examFees: "-", // Hardcoded as per the provided HTML
-            receivedBy: loggedInUser // ✅ FIXED: Now using actual logged-in user name
+            receivedBy: loggedInUser,
+            consentText: consentText // 🔥 Added consent text
         };
 
-        // The entire HTML structure for the receipt, including internal CSS
+        // The entire HTML structure for the receipt with consent section
         const receiptPageHTML = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Shelar Training Institute Receipt</title>
+                <title>Shelar Training Institute Admission Receipt</title>
                 <style>
                     @page {
                         size: A4;
@@ -1107,7 +1179,7 @@ function generateReceipt() {
 
                     .receipt {
                         width: 100%;
-                        height: 45%; /* Approximately half the page height for two receipts */
+                        height: 42%; /* Adjusted for consent section */
                         border: 3px solid #000;
                         border-radius: 15px;
                         padding: 15px;
@@ -1162,7 +1234,7 @@ function generateReceipt() {
                     .receipt-content {
                         display: flex;
                         flex-direction: column;
-                        height: calc(100% - 100px); /* Adjust height based on header/footer */
+                        height: calc(100% - 120px); /* Adjust for header/footer + consent */
                     }
 
                     .receipt-info {
@@ -1205,12 +1277,11 @@ function generateReceipt() {
                         border-bottom: 1px solid #000;
                         padding: 2px 5px;
                         min-height: 20px;
-                        color: #0066cc; /* Color for dynamic values, adjust if needed */
-                        /* Added styles for value overflow fix */
-                        white-space: nowrap; /* Prevent text from wrapping by default */
-                        overflow: hidden; /* Hide overflow content */
-                        text-overflow: ellipsis; /* Add ellipsis for overflow */
-                        max-width: calc(100% - 140px); /* Ensure it doesn't push the label too much */
+                        color: #0066cc;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: calc(100% - 140px);
                     }
 
                     .amount-fields {
@@ -1220,18 +1291,27 @@ function generateReceipt() {
 
                     .amount-field {
                         flex: 1;
-                        /* Added min-width to ensure fields don't shrink too much */
                         min-width: 30%;
                     }
-                    /* Adjust field-value specifically within amount-fields for better distribution */
+
                     .amount-fields .field-value {
-                        max-width: none; /* Remove the general max-width constraint */
-                        white-space: normal; /* Allow wrapping within amount fields */
-                        word-break: break-all; /* Break long words if necessary */
+                        max-width: none;
+                        white-space: normal;
+                        word-break: break-all;
                         flex-grow: 1;
                     }
+
                     .amount-fields .field-label {
-                        min-width: 80px; /* Adjust label width for amount fields */
+                        min-width: 80px;
+                    }
+
+                    .consent-section {
+                        margin-top: 15px;
+                        padding-top: 10px;
+                        border-top: 1px solid #ccc;
+                        text-align: left;
+                        font-weight: bold;
+                        font-size: 13px;
                     }
 
                     .footer {
@@ -1262,14 +1342,14 @@ function generateReceipt() {
                         font-size: 12px;
                         font-weight: bold;
                     }
-                    /* Adjust for printing to ensure two receipts fit nicely */
+
                     @media print {
                         .page-container {
-                            height: 297mm; /* Full A4 height */
-                            padding: 0.5in; /* Match @page margin */
+                            height: 297mm;
+                            padding: 0.5in;
                         }
                         .receipt {
-                            margin-bottom: 5mm; /* Slightly less margin for print */
+                            margin-bottom: 5mm;
                         }
                     }
                 </style>
@@ -1287,10 +1367,9 @@ function generateReceipt() {
 </svg>"
 alt="Logo"
 style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
-
                             </div>
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
-                            <div class="receipt-label">RECEIPT</div>
+                            <div class="receipt-label">ADMISSION RECEIPT</div>
                         </div>
 
                         <div class="receipt-content">
@@ -1306,14 +1385,14 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                                 </div>
 
                                 <div class="field-row">
-                                    <div class="field-label">Propose to Pay :</div>
+                                    <div class="field-label">Course :</div>
                                     <div class="field-value">${receiptData.proposeToPay}</div>
                                 </div>
 
                                 <div class="field-row amount-fields">
                                     <div class="amount-field">
                                         <div class="field-row">
-                                            <div class="field-label">Total Amount :</div>
+                                            <div class="field-label">Total :</div>
                                             <div class="field-value">${receiptData.totalAmount}</div>
                                         </div>
                                     </div>
@@ -1325,7 +1404,7 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                                     </div>
                                     <div class="amount-field">
                                         <div class="field-row">
-                                            <div class="field-label">Balance Amount :</div>
+                                            <div class="field-label">Balance :</div>
                                             <div class="field-value">${receiptData.balance}</div>
                                         </div>
                                     </div>
@@ -1342,16 +1421,20 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                                 </div>
                             </div>
 
-                            <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
-                                <div class="signature-area">
-                                    <div class="signature-line"></div>
-                                    <div class="signature-label">Authority Signature</div>
-                                </div>
+                            <div class="consent-section">
+                                ${receiptData.consentText}
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            <div class="note">• Once you pay fees for course not refundable.</div>
+                            <div class="signature-area">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Authority Signature</div>
                             </div>
                         </div>
                     </div>
- <hr style="border: 2px dashed #000; margin: 25px 0;">
+
                     <!-- Second Receipt (Copy) -->
                     <div class="receipt">
                         <div class="header">
@@ -1363,10 +1446,9 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
 </svg>"
 alt="Logo"
 style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
-
                             </div>
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
-                            <div class="receipt-label">RECEIPT</div>
+                            <div class="receipt-label">ADMISSION RECEIPT</div>
                         </div>
 
                         <div class="receipt-content">
@@ -1382,14 +1464,14 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                                 </div>
 
                                 <div class="field-row">
-                                    <div class="field-label">Propose to Pay :</div>
+                                    <div class="field-label">Course :</div>
                                     <div class="field-value">${receiptData.proposeToPay}</div>
                                 </div>
 
                                 <div class="field-row amount-fields">
                                     <div class="amount-field">
                                         <div class="field-row">
-                                            <div class="field-label">Total Amount :</div>
+                                            <div class="field-label">Total :</div>
                                             <div class="field-value">${receiptData.totalAmount}</div>
                                         </div>
                                     </div>
@@ -1401,7 +1483,7 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                                     </div>
                                     <div class="amount-field">
                                         <div class="field-row">
-                                            <div class="field-label">Balance Amount :</div>
+                                            <div class="field-label">Balance :</div>
                                             <div class="field-value">${receiptData.balance}</div>
                                         </div>
                                     </div>
@@ -1418,12 +1500,16 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                                 </div>
                             </div>
 
-                            <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
-                                <div class="signature-area">
-                                    <div class="signature-line"></div>
-                                    <div class="signature-label">Authority Signature</div>
-                                </div>
+                            <div class="consent-section">
+                                ${receiptData.consentText}
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            <div class="note">• Once you pay fees for course not refundable.</div>
+                            <div class="signature-area">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Authority Signature</div>
                             </div>
                         </div>
                     </div>
@@ -1437,14 +1523,37 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
             </html>
         `;
 
-        // Open a new tab and write the receipt
-        const printWindow = window.open('', '_blank', 'width=800,height=1000');
-        printWindow.document.write(receiptPageHTML); // Write the entire HTML string
-        printWindow.document.close();
+        // 🔥 CRITICAL: Save complete data to AdmissionReceipts sheet before printing
+        google.script.run
+            .withSuccessHandler(() => {
+                // Open a new tab and write the receipt after saving
+                const printWindow = window.open('', '_blank', 'width=800,height=1000');
+                printWindow.document.write(receiptPageHTML);
+                printWindow.document.close();
+            })
+            .withFailureHandler((error) => {
+                console.error("Failed to save admission receipt:", error);
+                // Still show receipt even if saving fails
+                const printWindow = window.open('', '_blank', 'width=800,height=1000');
+                printWindow.document.write(receiptPageHTML);
+                printWindow.document.close();
+            })
+            .saveAdmissionReceipt({
+                receiptNumber: receiptNo,
+                studentName: studentName,
+                courseName: courseName,
+                totalAmount: totalAmount,
+                paidAmount: paidAmount,
+                balanceAmount: balanceAmount,
+                consentText: consentText,
+                loggedInUser: loggedInUser,
+                inquiryData: inquiryData,
+                admissionData: admissionData,
+                paymentData: coursePayData
+            });
 
     } catch (error) {
         console.error("Error generating receipt:", error);
-        // Using a custom message box instead of alert() for better user experience in an iframe environment
         const errorMessage = "Something went wrong. Please check the browser console for details.";
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = `
@@ -3173,10 +3282,76 @@ html2pdf()
       })
       .getNextReceiptNumber();
 
-    document.getElementById("Student_namee").value =
-      sessionStorage.getItem("tempText");
+    // Prefill data from inquiry if it exists
+    const inquiryData = sessionStorage.getItem('inquiryDataForAdmission');
+    if (inquiryData) {
+      const data = JSON.parse(inquiryData);
+      console.log('Prefilling admission form with inquiry data:', data);
 
-    
+      // Split name
+      const fullName = data.firstName + ' ' + (data.middleName || '') + ' ' + data.lastName;
+      const nameParts = fullName.trim().split(/\s+/).filter(n => n); // Split on whitespace and filter empty strings
+      document.getElementById('first_name').value = nameParts[0] || '';
+      document.getElementById('middle_name').value = nameParts.slice(1, -1).join(' ') || '';
+      document.getElementById('last_name').value = nameParts[nameParts.length - 1] || '';
+
+      // Prefill course from inquiry more robustly
+      if (data.interestedCourse) {
+        const courseSelect = document.getElementById('courseSelect');
+        if (courseSelect) {
+          const options = courseSelect.options;
+          const inquiryCourse = data.interestedCourse.toLowerCase().trim();
+
+          console.log('Looking for course match:', inquiryCourse);
+          console.log('Available options:', Array.from(options).map(o => ({value: o.value, text: o.text})));
+
+          let foundIndex = -1;
+
+          // First try exact case-insensitive match on option values
+          for (let i = 0; i < options.length; i++) {
+            if (options[i].value.toLowerCase() === inquiryCourse) {
+              foundIndex = i;
+              break;
+            }
+          }
+
+          // If no exact value match, try matching on course name (case-insensitive)
+          if (foundIndex === -1) {
+            for (let i = 0; i < options.length; i++) {
+              if (options[i].text.toLowerCase().includes(inquiryCourse)) {
+                foundIndex = i;
+                break;
+              }
+            }
+          }
+
+          // Try partial match on value
+          if (foundIndex === -1) {
+            for (let i = 0; i < options.length; i++) {
+              if (inquiryCourse.includes(options[i].value.toLowerCase())) {
+                foundIndex = i;
+                break;
+              }
+            }
+          }
+
+          // If found, select it and trigger update
+          if (foundIndex !== -1) {
+            courseSelect.selectedIndex = foundIndex;
+            console.log('Selected course:', courseSelect.value, 'with text:', courseSelect.options[foundIndex].text);
+            // Trigger change event to update course details
+            const event = new Event('change', { bubbles: true });
+            courseSelect.dispatchEvent(event);
+          } else {
+            console.warn('No matching course found for:', data.interestedCourse);
+          }
+        }
+      } else {
+        console.warn('No interestedCourse in inquiry data');
+      }
+    } else {
+      console.log('No inquiry data found in sessionStorage');
+    }
   }
 
   //Handle admission form submission

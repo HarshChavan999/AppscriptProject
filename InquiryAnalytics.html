@@ -547,9 +547,66 @@ function openAdmissionFormFromInquiry(data) {
   // Close analytics and open admission form
   closeInquiryAnalytics();
   document.getElementById("admissionFormSection").classList.remove("hidden");
-  
-  // Pre-fill the form with selected inquiry data
+
+  // Pre-fill the form with selected inquiry data (includes course pre-filling)
   prefillAdmissionFormFromInquiry(data);
+
+  // Wait for form to be ready, then execute both operations
+  setTimeout(() => {
+    // Generate receipt number and update course details simultaneously
+    generateReceiptNumber();
+
+    if (document.getElementById('courseSelect') && typeof updateCourseDetails === 'function') {
+      updateCourseDetails();
+    }
+  }, 100);
+}
+
+function generateReceiptNumber() {
+  const receiptInput = document.getElementById("receipt_number");
+  if (receiptInput) {
+    // 1. Reset the input field's state each time the form is opened.
+    receiptInput.readOnly = false;
+    receiptInput.value = "Generating..."; // Show immediate feedback.
+
+    // 2. Clear any lingering timers from previous times the form was opened.
+    if (typeof receiptLockTimer !== 'undefined' && receiptLockTimer) {
+      clearTimeout(receiptLockTimer);
+    }
+
+    // 3. Call the backend script to fetch the number.
+    google.script.run
+      .withSuccessHandler(function (newReceiptNumber) {
+        // 4. Populate the input field as soon as the number is received.
+        receiptInput.value = newReceiptNumber;
+        console.log(
+          `Populated receipt number: ${newReceiptNumber}. Field will lock in 5 seconds if not edited.`
+        );
+
+        // 5. Set a 5-second timer. If it completes, the field becomes read-only.
+        receiptLockTimer = setTimeout(() => {
+          receiptInput.readOnly = true;
+          console.log(`Receipt number ${newReceiptNumber} is now locked.`);
+        }, 5000); // 5000 milliseconds = 5 seconds
+
+        // 6. Listen for the *very first* input from the user.
+        // The { once: true } option automatically removes the listener after it runs once.
+        receiptInput.addEventListener(
+          "input",
+          () => {
+            console.log("User is typing. Cancelling the auto-lock timer.");
+            // If the user starts typing, cancel the timer that would have locked the field.
+            clearTimeout(receiptLockTimer);
+          },
+          { once: true }
+        );
+      })
+      .withFailureHandler(function (error) {
+        console.error("Error fetching receipt number: " + error.message);
+        receiptInput.value = "Error fetching number";
+      })
+      .getNextReceiptNumber();
+  }
 }
 
 function prefillAdmissionFormFromInquiry(data) {
@@ -575,21 +632,21 @@ function prefillAdmissionFormFromInquiry(data) {
   }
   // Pre-fill course information
   const interestedCourse = data.interestedCourse || "";
-if (interestedCourse && document.getElementById('courseSelect')) {
+  if (interestedCourse && document.getElementById('courseSelect')) {
     const courseSelect = document.getElementById('courseSelect');
     const searchTerm = interestedCourse.toLowerCase().trim();
     let found = false;
-    
+
     // First try exact match
     for (let i = 0; i < courseSelect.options.length; i++) {
-        if (courseSelect.options[i].value.toLowerCase() === searchTerm || 
+        if (courseSelect.options[i].value.toLowerCase() === searchTerm ||
             courseSelect.options[i].text.toLowerCase() === searchTerm) {
             courseSelect.selectedIndex = i;
             found = true;
             break;
         }
     }
-    
+
     // If not found, try partial match
     if (!found) {
         for (let i = 0; i < courseSelect.options.length; i++) {
@@ -601,7 +658,7 @@ if (interestedCourse && document.getElementById('courseSelect')) {
             }
         }
     }
-    
+
     // If still not found, try matching course codes like "gnm", "enn"
     if (!found) {
         const courseCode = searchTerm.split('_')[0]; // Get "gnm" from "gnm_unsing"
@@ -614,11 +671,9 @@ if (interestedCourse && document.getElementById('courseSelect')) {
             }
         }
     }
-    
-    if (found && typeof updateCourseDetails === 'function') {
-        updateCourseDetails();
-    }
-}
+
+    // Note: Course details update is now handled after this pre-filling in openAdmissionFormFromInquiry
+  }
   
   // Pre-fill contact information if available
   const phone = data.phone || "";
