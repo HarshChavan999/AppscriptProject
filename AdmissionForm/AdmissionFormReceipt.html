@@ -747,39 +747,151 @@
     }
     section.classList.remove("hidden");
 
-    // DOM references
-    const courseSelect = document.getElementById("courseName");
-    const feeInput = document.getElementById("totalFee");
-    const durationInput = document.getElementById("courseDuration");
+    // 🔥 CRITICAL: Check if coming from CoursePayment workflow vs. direct access
+    const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
 
-    // Course mapping
-    const courseData = {
-      anm_nursing: { duration: "1 year", fees: 55000 },
-      gnm_nursing: { duration: "3 years", fees: 270000 },
-      dmlt: { duration: "1 year", fees: 30000 },
-      ot_technician: { duration: "1 year", fees: 30000 },
-      general_nursing: { duration: "1 year", fees: 30000 },
-    };
+    if (Object.keys(completeReceiptData).length > 0) {
+      console.log("Prefilling from complete workflow data:", completeReceiptData);
+      prefillAdmissionReceipt(completeReceiptData);
+    } else {
+      // Fallback to old behavior for direct access
+      // DOM references
+      const courseSelect = document.getElementById("courseName");
+      const feeInput = document.getElementById("totalFee");
+      const durationInput = document.getElementById("courseDuration");
 
-    // Pre-fill if coming from session
-    const storedCourse = sessionStorage.getItem("STUD_Course");
-    if (storedCourse && courseData[storedCourse]) {
-      courseSelect.value = storedCourse;
-      durationInput.value = courseData[storedCourse].duration;
-      feeInput.value = courseData[storedCourse].fees;
+      // Course mapping
+      const courseData = {
+        anm_nursing: { duration: "1 year", fees: 55000 },
+        gnm_nursing: { duration: "3 years", fees: 270000 },
+        dmlt: { duration: "1 year", fees: 30000 },
+        ot_technician: { duration: "1 year", fees: 30000 },
+        general_nursing: { duration: "1 year", fees: 30000 },
+      };
+
+      // Pre-fill if coming from session
+      const storedCourse = sessionStorage.getItem("STUD_Course");
+      if (storedCourse && courseData[storedCourse]) {
+        courseSelect.value = storedCourse;
+        durationInput.value = courseData[storedCourse].duration;
+        feeInput.value = courseData[storedCourse].fees;
+      }
+
+      // Set dynamic update on change
+      courseSelect.addEventListener('change', function () {
+        const selected = courseSelect.value;
+        if (courseData[selected]) {
+          durationInput.value = courseData[selected].duration;
+          feeInput.value = courseData[selected].fees;
+          generateInstallmentTables(); // refresh table
+        }
+      });
     }
 
-    // Set dynamic update on change
-    courseSelect.addEventListener('change', function () {
-      const selected = courseSelect.value;
-      if (courseData[selected]) {
-        durationInput.value = courseData[selected].duration;
-        feeInput.value = courseData[selected].fees;
-        generateInstallmentTables(); // refresh table
-      }
-    });
-
     generateInstallmentTables();
+  }
+
+  function prefillAdmissionReceipt(completeReceiptData) {
+    try {
+      console.log("🔥 STARTING PREFILL - Complete receipt data:", completeReceiptData);
+
+      // 🔴 CRITICAL: Force enable the form elements (they may be hidden after initialization)
+      const section = document.getElementById("receiptFormSection");
+      if (section) {
+        section.style.display = "block";
+        section.classList.remove("hidden");
+      }
+
+      // Basic info - Set with default today date
+      if (document.getElementById("receiptNo")) {
+        document.getElementById("receiptNo").value = completeReceiptData.receiptNo || "";
+        console.log("Receipt No set to:", completeReceiptData.receiptNo);
+      }
+
+      if (document.getElementById("receiptDate")) {
+        // Force today's date if not provided
+        const todayDate = new Date().toISOString().split('T')[0];
+        document.getElementById("receiptDate").value = completeReceiptData.receiptDate || todayDate;
+        console.log("Receipt Date set to:", completeReceiptData.receiptDate || todayDate);
+      }
+
+      if (document.getElementById("studentName")) {
+        document.getElementById("studentName").value = completeReceiptData.studentName || "";
+        console.log("Student Name set to:", completeReceiptData.studentName);
+      }
+
+      // Course info
+      if (document.getElementById("courseName")) {
+        document.getElementById("courseName").value = completeReceiptData.courseName || "";
+        console.log("Course Name set to:", completeReceiptData.courseName);
+      }
+      if (document.getElementById("courseYear")) {
+        document.getElementById("courseYear").value = completeReceiptData.courseYear || "1";
+      }
+      if (document.getElementById("courseDuration")) {
+        document.getElementById("courseDuration").value = completeReceiptData.courseDuration || "";
+      }
+
+      // Fee details
+      if (document.getElementById("totalFee")) {
+        document.getElementById("totalFee").value = completeReceiptData.totalFee || "";
+        console.log("Total Fee set to:", completeReceiptData.totalFee);
+      }
+      if (document.getElementById("installmentCount")) {
+        document.getElementById("installmentCount").value = completeReceiptData.installmentCount || "12";
+      }
+      if (document.getElementById("startDate")) {
+        document.getElementById("startDate").value = completeReceiptData.startDate || new Date().toISOString().split('T')[0];
+      }
+
+      // 🔴 CRITICAL: Guardian agreement section - Check all possible field names and IDs
+      let guardianNameField = document.getElementById("guardianName");
+      let studentRelationField = document.getElementById("studentRelation");
+
+      // If not found, try input fields inside the agreement section
+      if (!guardianNameField) {
+        guardianNameField = document.querySelector('input[name="guardianName"]');
+      }
+      if (!studentRelationField) {
+        studentRelationField = document.querySelector('input[name="studentRelation"]');
+      }
+
+      console.log("Guardian fields found - guardianName:", guardianNameField ? 'YES' : 'NO', "studentRelation:", studentRelationField ? 'YES' : 'NO');
+      console.log("Guardian data - Name:", completeReceiptData.guardianName, "Relation:", completeReceiptData.studentRelation);
+
+      if (guardianNameField && studentRelationField) {
+        const guardianName = completeReceiptData.guardianName || completeReceiptData.guardian_name || "";
+        const studentRelation = completeReceiptData.studentRelation || completeReceiptData.studentRelation || "";
+
+        guardianNameField.value = guardianName;
+        studentRelationField.value = studentRelation;
+
+        console.log("🔴 GUARDIAN FIELDS SET - Name element:", guardianNameField, "Relation element:", studentRelationField);
+        console.log("🔴 GUARDIAN VALUES SET - Name:", guardianName, "Relation:", studentRelation);
+
+        // 🔴 FINAL CREATION: Manually set the consent text
+        const consentText = `I Am Mr./Ms. ${guardianName} ${studentRelation} of ${completeReceiptData.studentName}. I Agree with all Terms And Conditions.`;
+        console.log("🔴 MANUAL CONSENT TEXT CREATED:", consentText);
+      } else {
+        console.warn("🔴 GUARDIAN FIELDS NOT FOUND");
+        console.log("All input elements:", document.querySelectorAll('input'));
+      }
+
+      console.log("🔥 PREFILL COMPLETED SUCCESSFULLY");
+
+      // Auto-generate installment tables after prefill
+      setTimeout(() => {
+        generateInstallmentTables();
+        console.log("🔥 GENERATE TABLES CALLED");
+      }, 200);
+
+      // Force show the section and alert user
+      alert("Please check the console for field population details. Student name, date, and guardian details should now be visible.");
+
+    } catch (error) {
+      console.error("🔴 ERROR in prefillAdmissionReceipt:", error);
+      alert("Error prefilling admission receipt: " + error.message);
+    }
   }
 
   function AdmissionHandle(event) {

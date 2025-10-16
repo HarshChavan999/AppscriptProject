@@ -358,6 +358,10 @@
 <button onclick="submitCoursePayment() "
  class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
       >Submit to sheet</button>
+&nbsp;&nbsp;
+<button onclick="proceedToAdmissionReceipt()"
+ class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
+      >(NEW) Proceed to Main Admission Receipt</button>
  </div>
 <!-- Add this receipt container (if missing) -->
   </div>
@@ -388,6 +392,110 @@
       alert("Error saving payment: " + error);
     })
     .saveCoursePayment(formData); // Backend function
+}
+
+function proceedToAdmissionReceipt() {
+  try {
+    console.log("🔥 START: proceedToAdmissionReceipt called");
+
+    // 🔥 CRITICAL: Store current course payment data along with combined workflow data
+    const coursePaymentData = {
+      receiptNo: document.getElementById("ID")?.value || "AR-" + Math.floor(1000 + Math.random() * 9000),
+      studentName: document.getElementById("std_Coursepayname")?.value || "",
+      courseName: document.getElementById("coursePaySelect")?.value || "",
+      courseDuration: document.getElementById("courseDuration")?.textContent || "",
+      totalFee: document.getElementById("totalFees")?.textContent ? parseFloat(document.getElementById("totalFees").textContent.replace(/[^0-9.]/g, '')) : 0,
+      paymentMethod: document.getElementById("pay-select")?.value || "Cash",
+      startDate: new Date().toISOString().split('T')[0], // Today's date as start date
+      courseYear: 1, // Default to 1st year
+      installmentCount: 12, // Default to 12 installments (monthly)
+      loggedInUser: document.getElementById("loggedInUserId")?.value || "Admin",
+      receiptDate: new Date().toISOString().split('T')[0]
+    };
+
+    console.log("🔥 Step 1: Course Payment Data:", coursePaymentData);
+
+    // 🔥 CRITICAL: Retrieve and merge previous workflow data
+    const inquiryData = JSON.parse(sessionStorage.getItem('inquiryDataForAdmission') || '{}');
+    const admissionData = JSON.parse(sessionStorage.getItem('admissionData') || '{}');
+
+    console.log("🔥 Step 2a: Raw sessionStorage admissionData:", sessionStorage.getItem('admissionData'));
+    console.log("🔥 Step 2b: Retrieved Data - Inquiry:", inquiryData);
+    console.log("🔥 Step 2c: Retrieved Data - Admission:", admissionData);
+    console.log("🔥 Step 2d: admissionData keys:", Object.keys(admissionData));
+    console.log("🔥 Step 2e: admissionData.guardian_name:", admissionData.guardian_name, "admissionData.guardian_relation:", admissionData.guardian_relation);
+
+    // 🔥 CRITICAL: Create complete admission receipt data by merging all sources
+    const completeReceiptData = {
+      // Basic Info
+      receiptNo: coursePaymentData.receiptNo,
+      receiptDate: coursePaymentData.receiptDate,
+      studentName: coursePaymentData.studentName || admissionData.studentName || `${inquiryData.firstName} ${inquiryData.middleName} ${inquiryData.lastName}`.trim(),
+
+      // Course Info
+      courseName: coursePaymentData.courseName,
+      courseYear: coursePaymentData.courseYear,
+      courseDuration: coursePaymentData.courseDuration,
+
+      // Fee Details
+      totalFee: coursePaymentData.totalFee,
+      installmentCount: coursePaymentData.installmentCount,
+      startDate: coursePaymentData.startDate,
+
+      // Guardian Info (critical for agreement section) - Fix the field names from admission form
+      guardianName: admissionData.guardian_name || admissionData.guardianName || "", // Check both
+      studentRelation: admissionData.guardian_relation || admissionData.studentRelation || "", // Check both
+
+      // Additional fields from admission form - Map correct field names
+      addressLine1: admissionData.addressLine1 || "",
+      addressLine2: admissionData.addressLine2 || "",
+      addressLine3: admissionData.addressLine3 || "",
+      pincode: admissionData.pincode || "",
+      phoneNo: admissionData.phoneNo || inquiryData.phoneNo || "",
+      whatsappNo: admissionData.whatsappNo || inquiryData.whatsappNo || "",
+      email: admissionData.email || inquiryData.email || "",
+      age: admissionData.age || inquiryData.age || "",
+      gender: admissionData.gender || "",
+      qualification: admissionData.qualification || inquiryData.qualification || "",
+      parentsNo: admissionData.parentsNo || "",
+
+      // Workflow metadata
+      loggedInUser: coursePaymentData.loggedInUser,
+      inquiryTakenBy: inquiryData.inquiryTakenBy || "",
+      branch: admissionData.branch || inquiryData.branch22 || "",
+      interestedCourse: admissionData.interestedCourse || inquiryData.interestedCourse || coursePaymentData.courseName,
+
+      // Consent status
+      agree: admissionData.agree || false,
+      consentText: admissionData.consentText ||
+                   (admissionData.guardian_name && admissionData.guardian_relation ?
+                     `I am ${admissionData.guardian_relation.trim()} of ${admissionData.guardian_name.trim()}` :
+                     admissionData.guardianRelation && admissionData.guardianName ?
+                     `I am ${admissionData.guardianRelation.trim()} of ${admissionData.guardianName.trim()}` : "")
+    };
+
+    console.log("🔥 Step 3: Complete Receipt Data:", completeReceiptData);
+
+    // 🔥 CRITICAL: Store complete workflow data in sessionStorage with temporary KEY
+    const tempKey = 'completeReceiptData_' + Date.now();
+    sessionStorage.setItem(tempKey, JSON.stringify(completeReceiptData));
+    sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
+    sessionStorage.setItem('tempReceiptKey', tempKey);
+
+    console.log("🔥 Step 4: Data stored in sessionStorage with keys:", Object.keys(sessionStorage));
+
+    alert(`Debug Info:\nStudent: ${completeReceiptData.studentName}\nGuardian: ${completeReceiptData.guardianName}\nRelation: ${completeReceiptData.studentRelation}\n\nCheck console for more details.`);
+
+    // 🔥 CRITICAL: Use the same function as sidebar instead of navigating to new page
+    setTimeout(() => {
+      openreceiptFormSection();
+      console.log("🔥 Step 5: Called openreceiptFormSection()");
+    }, 100);
+
+  } catch (error) {
+    console.error("🔴 ERROR in proceedToAdmissionReceipt:", error);
+    alert("Error preparing admission receipt: " + error.message);
+  }
 }
 
 </script>

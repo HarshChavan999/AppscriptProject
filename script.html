@@ -523,6 +523,8 @@ function DInsReceipt(number,amount){
   }
 
   function copyAdmission(){
+    console.log("🔵 copyAdmission called");
+
     // Name
      sessionStorage.setItem(
       "first_name",
@@ -563,18 +565,29 @@ function DInsReceipt(number,amount){
     coursePaySelect.dispatchEvent(changeEvent);
 
     // 🔥 CRITICAL: Store complete admission data for receipt including guardian info
+    // 🔴 FIXED: Changed to correct field IDs and fixed guardian data mapping
+    const guardianRelationEl = document.getElementById("guardian_relation");
+    const guardianNameEl = document.getElementById("guardian_name");
+
+    const guardian_relation = guardianRelationEl ? guardianRelationEl.value : "";
+    const guardian_name = guardianNameEl ? guardianNameEl.value : "";
+
+    console.log("🔵 Found guardian elements:", !!guardianRelationEl, !!guardianNameEl);
+    console.log("🔵 Guardian values:", guardian_relation, guardian_name);
+
     const admissionData = {
-      firstName: document.getElementById("first_name").value,
-      middleName: document.getElementById("middle_name").value,
-      lastName: document.getElementById("last_name").value,
-      receiptNumber: document.getElementById("receipt_number").value,
-      courseSelect: document.getElementById("courseSelect").value,
-      courseDurationText: document.getElementById("courseDurationText").textContent,
-      totalCourseFees: document.getElementById("totalCourseFees").textContent,
-      guardianRelation: document.getElementById("guardian_relation").value,
-      guardianName: document.getElementById("guardian_name").value,
-      agree: document.getElementById('agree').checked,
-      consentText: `I am ${document.getElementById("guardian_relation").value} of ${document.getElementById("guardian_name").value}`,
+      firstName: document.getElementById("first_name")?.value || "",
+      middleName: document.getElementById("middle_name")?.value || "",
+      lastName: document.getElementById("last_name")?.value || "",
+      receiptNumber: document.getElementById("receipt_number")?.value || "",
+      courseSelect: document.getElementById("courseSelect")?.value || "",
+      courseDurationText: document.getElementById("courseDurationText")?.textContent || "",
+      totalCourseFees: document.getElementById("totalCourseFees")?.textContent || "",
+      // 🔴 FIXED: Using correct IDs from the form and ensuring fallback
+      guardian_relation: guardian_relation,
+      guardian_name: guardian_name,
+      agree: document.getElementById('agree')?.checked || false,
+      consentText: `I am ${guardian_relation} of ${guardian_name}`,
       studentName: fullName,
       addressLine1: document.getElementById("addressLine1")?.value || '',
       addressLine2: document.getElementById("addressLine2")?.value || '',
@@ -587,9 +600,15 @@ function DInsReceipt(number,amount){
       email: document.getElementById("email")?.value || '',
       age: document.getElementById("age")?.value || '',
       gender: document.getElementById("gender")?.value || '',
-      interestedCourse: document.getElementById("courseSelect").value
+      interestedCourse: document.getElementById("courseSelect")?.value || ""
     };
+
+    // Save to BOTH sessionStorage AND localStorage for backup
     sessionStorage.setItem('admissionData', JSON.stringify(admissionData));
+    localStorage.setItem('admissionDataBackup', JSON.stringify(admissionData));
+
+    console.log("🔵 admissionData object saved:", admissionData); // 🔴 DEBUG LOG
+    console.log("🔵 admissionData now in sessionStorage:", sessionStorage.getItem('admissionData'));
 
     // No need to call updateCoursePayDetails() twice anymore - change event handles it
     // updateCoursePayDetails();
@@ -3352,9 +3371,28 @@ html2pdf()
     } else {
       console.log('No inquiry data found in sessionStorage');
     }
+
+    // 🔴 CRITICAL: Try to restore data if it was saved in localStorage (backup)
+    const savedAdmissionData = localStorage.getItem('admissionDataBackup');
+    if (savedAdmissionData) {
+      console.log("🔵 Restoring admission data from localStorage backup:", savedAdmissionData);
+      const data = JSON.parse(savedAdmissionData);
+      if (data.guardian_relation) document.getElementById('guardian_relation').value = data.guardian_relation;
+      if (data.guardian_name) document.getElementById('guardian_name').value = data.guardian_name;
+      console.log("🔵 Restored guardian data from localStorage");
+    }
   }
 
   //Handle admission form submission
+function handleNextStep() {
+  // Ensure we copy the admission data immediately before navigating
+  console.log("🔵 NEXT BUTTON CLICKED - Starting copyAdmission");
+  copyAdmission();
+  console.log("🔵 copyAdmission completed - checking sessionStorage:", sessionStorage.getItem('admissionData'));
+  alert("Admissions form data saved. Proceeding to course payment.");
+  openCoursePayment();
+}
+
   document.addEventListener("DOMContentLoaded", function () {
   const admissionBtn = document.getElementById("admissionBtn");
   if (admissionBtn) {
