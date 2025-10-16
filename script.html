@@ -119,30 +119,101 @@ function getCourseDataByLocation(branch) {
   const courseData = getCourseDataByLocation(branch24);
 
     // Full Payment
-    const discount = totalFees * 0.05;
-    const fullTotal = totalFees - discount;
+    updateFullPaymentDiscount();
 
-    document.getElementById("fullCourseFees").textContent =
-      formatCurrency(totalFees);
-    document.getElementById("fullDiscount").textContent =
-      formatCurrency(discount);
-    document.getElementById("fullTotal").textContent =
-      formatCurrency(fullTotal);
-
-    // Partial Payment
-    const partialInitial = Math.ceil(totalFees * 0.5);
-    const partialRemaining = totalFees - partialInitial;
-    const partialEMI = Math.ceil(partialRemaining / 6);
-
-    document.getElementById("partialInitial").textContent =
-      formatCurrency(partialInitial);
-    document.getElementById("partialRemaining").textContent =
-      formatCurrency(partialRemaining);
-    document.getElementById("partialEMI").textContent =
-      formatCurrency(partialEMI);
+    // Partial Payment - Update with default values but let user edit (minimum 20%)
+    const partialInitialInput = document.getElementById("partialInitialInput");
+    if (partialInitialInput && partialInitialInput.value === "") {
+      // Default to 50% or 20% minimum
+      partialInitialInput.value = Math.max(Math.ceil(totalFees * 0.5), Math.ceil(totalFees * 0.2));
+    }
+    updatePartialPayment();
 
     // EMI Payment
-    calculateEMI();
+    const emiDownPaymentInput = document.getElementById("emiDownPaymentInput");
+    if (emiDownPaymentInput && emiDownPaymentInput.value === "") {
+      emiDownPaymentInput.value = Math.ceil(totalFees * 0.1);
+    }
+    updateEMIPayment();
+  }
+
+  // Update partial payment calculations
+  function updatePartialPayment() {
+    const totalFees = getTotalFees();
+    let initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
+    const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
+
+    // Ensure minimum initial payment is above 20%
+    const minInitialPayment = Math.ceil(totalFees * 0.2) + 1;
+    if (initialPayment <= Math.floor(totalFees * 0.2)) {
+      initialPayment = Math.max(initialPayment, minInitialPayment);
+      document.getElementById("partialInitialInput").value = initialPayment.toFixed(2);
+    }
+
+    // Calculate remaining amount and EMI
+    const remainingAmount = Math.max(0, totalFees - initialPayment);
+    const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
+
+    // Update UI
+    document.getElementById("partialRemaining").textContent = formatCurrency(remainingAmount);
+    document.getElementById("partialEMI").textContent = formatCurrency(emiAmount);
+
+    // Update installment schedule if partial payment is selected
+    if (selectedPaymentType === "partial") {
+      generatePaymentInstallmentSchedule("partial");
+    }
+  }
+
+  // Update EMI payment calculations
+  function updateEMIPayment() {
+    const totalFees = getTotalFees();
+    const downPayment = parseFloat(document.getElementById("emiDownPaymentInput").value) || 0;
+    const tenure = parseInt(document.getElementById("emiTenure").value) || 6;
+
+    // Ensure down payment doesn't exceed total fees
+    const actualDownPayment = Math.min(downPayment, totalFees);
+    const remainingAmount = totalFees - actualDownPayment;
+    const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
+
+    // Update input value to reflect capped down payment
+    document.getElementById("emiDownPaymentInput").value = actualDownPayment.toFixed(2);
+    document.getElementById("emiDownPayment").textContent = formatCurrency(actualDownPayment);
+    document.getElementById("emiAmount").textContent = formatCurrency(emiAmount);
+    document.getElementById("emiTotalAmount").textContent = formatCurrency(remainingAmount);
+    document.getElementById("emiTotal").textContent = formatCurrency(totalFees + actualDownPayment); // Total payable includes down payment
+
+    // Update installment schedule if EMI payment is selected
+    if (selectedPaymentType === "emi") {
+      generatePaymentInstallmentSchedule("emi");
+    }
+  }
+
+  // Update full payment discount based on rupees input
+  function updateFullPaymentDiscount() {
+    const branch24 = document.getElementById("branch22").value;
+    const courseData = getCourseDataByLocation(branch24);
+    const totalFees = getTotalFees();
+
+    // Get discount rupees input value
+    const discountRupees = parseFloat(document.getElementById("fullDiscountRupees").value) || 0;
+
+    // Ensure discount doesn't exceed total fees
+    const actualDiscount = Math.min(discountRupees, totalFees);
+    const fullTotal = totalFees - actualDiscount;
+
+    // Calculate percentage (multiply by 100 to get percentage, divide by totalFees)
+    const discountPercent = totalFees > 0 ? ((actualDiscount / totalFees) * 100).toFixed(2) : 0;
+
+    // Update UI
+    document.getElementById("fullCourseFees").textContent = formatCurrency(totalFees);
+    document.getElementById("fullDiscountRupees").value = actualDiscount.toFixed(2); // Update input to reflect capped value
+    document.getElementById("fullDiscountPercent").textContent = discountPercent + "%";
+    document.getElementById("fullTotal").textContent = formatCurrency(fullTotal);
+
+    // Update installment schedule if full payment is selected
+    if (selectedPaymentType === "full") {
+      generatePaymentInstallmentSchedule("full");
+    }
   }
 
   // Calculate EMI based on selected tenure
@@ -194,22 +265,77 @@ function getCourseDataByLocation(branch) {
     document.getElementById(`${type}PaymentCard`).classList.add("selected");
     document.querySelector(`input[value="${type}"]`).checked = true;
 
-    // Show/hide installment plan
+    // Always show installment plan with appropriate schedule
     const installmentPlan = document.getElementById("installmentPlan");
-    if (type === "emi" || type === "partial") {
-      installmentPlan.classList.remove("hidden");
+    installmentPlan.classList.remove("hidden");
 
-      const totalFees = getTotalFees();
-      if (type === "emi") {
-        calculateEMI();
-      } else {
-        // Partial payment installment schedule
-        const initial = Math.ceil(totalFees * 0.5);
-        const emiAmount = Math.ceil((totalFees - initial) / 6);
-        generateInstallmentSchedule(totalFees, initial, emiAmount, 6);
+    // Generate installment schedule based on selected payment type
+    generatePaymentInstallmentSchedule(type);
+  }
+
+  // Generate installment schedule for all payment types
+  function generatePaymentInstallmentSchedule(paymentType) {
+    const table = document.getElementById("installmentTable");
+    table.innerHTML = "";
+    const totalFees = getTotalFees();
+
+    if (paymentType === "full") {
+      // Full payment - one immediate payment
+      const discountRupees = parseFloat(document.getElementById("fullDiscountRupees").value) || 0;
+      const discountAmount = Math.min(discountRupees, totalFees);
+      const fullAmount = totalFees - discountAmount;
+
+      addInstallmentRow(table, 0, "Today", fullAmount, "Full Payment (with discount)");
+    } else if (paymentType === "partial") {
+      // Partial payment - initial payment + installments
+      const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
+      const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
+      const remainingAmount = Math.max(0, totalFees - initialPayment);
+      const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
+
+      // Initial payment
+      if (initialPayment > 0) {
+        addInstallmentRow(table, 0, "Today", initialPayment, "Initial Payment");
       }
-    } else {
-      installmentPlan.classList.add("hidden");
+
+      // Installments
+      const today = new Date();
+      let remaining = totalFees - initialPayment;
+
+      for (let i = 1; i <= tenure; i++) {
+        const dueDate = new Date();
+        dueDate.setMonth(today.getMonth() + i);
+
+        const amount = i === tenure ? remaining : emiAmount;
+        remaining -= amount;
+
+        addInstallmentRow(table, i, formatDate(dueDate), amount, "EMI Installment");
+      }
+    } else if (paymentType === "emi") {
+      // EMI payment - down payment + installations
+      const downPayment = parseFloat(document.getElementById("emiDownPaymentInput").value) || 0;
+      const tenure = parseInt(document.getElementById("emiTenure").value) || 6;
+      const remainingAmount = totalFees - downPayment;
+      const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
+
+      // Down payment
+      if (downPayment > 0) {
+        addInstallmentRow(table, 0, "Today", downPayment, "Down Payment");
+      }
+
+      // Installments
+      const today = new Date();
+      let remaining = totalFees - downPayment;
+
+      for (let i = 1; i <= tenure; i++) {
+        const dueDate = new Date();
+        dueDate.setMonth(today.getMonth() + i);
+
+        const amount = i === tenure ? remaining : emiAmount;
+        remaining -= amount;
+
+        addInstallmentRow(table, i, formatDate(dueDate), amount, "EMI Installment");
+      }
     }
   }
 
@@ -370,7 +496,7 @@ function DInsReceipt(number,amount){
 
   // Helper function to format currency
   function formatCurrency(amount) {
-    return "₹" + amount.toLocaleString("en-IN");
+    return "₹" + Math.round(amount).toLocaleString("en-IN");
   }
 
   // Helper function to format date

@@ -433,24 +433,24 @@
           <div class="form-row">
             <div class="form-group">
               <label>Receipt No.</label>
-              <input type="text" id="receiptNo" name="receiptNo">
+              <input type="text" id="receiptNoAF" name="receiptNoAF">
             </div>
             <div class="form-group">
               <label>Date</label>
-              <input type="date" id="receiptDate" name="receiptDate">
+              <input type="date" id="receiptDateAF" name="receiptDateAF">
             </div>
-            <div class="photo-section" onclick="document.getElementById('photoInput').click()">
-              <div class="photo-placeholder" id="photoPlaceholder">
+            <div class="photo-section" onclick="document.getElementById('photoInputAF').click()">
+              <div class="photo-placeholder" id="photoPlaceholderAF">
                 Passport<br>Photo
               </div>
-              <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+              <input type="file" id="photoInputAF" accept="image/*" class="hidden" onchange="handlePhotoUploadAF(event)">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Student Name</label>
-              <input type="text" id="studentName" name="studentName" style="width: 100%">
+              <input type="text" id="studentNameAF" name="studentNameAF" style="width: 100%">
             </div>
           </div>
 
@@ -620,10 +620,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-  document.getElementById('receiptDate').valueAsDate = new Date();
+  document.getElementById('receiptDateAF').valueAsDate = new Date();
   document.getElementById('startDate').valueAsDate = new Date();
 
-  function handlePhotoUpload(event) {
+  function handlePhotoUploadAF(event) {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -702,7 +702,7 @@
     // Show the undertaking container for PDF generation
     undertakingClone.style.display = 'block';
     
-    const studentName = document.getElementById('studentName').value || 'receipt';
+    const studentName = document.getElementById('studentNameAF').value || 'receipt';
     const opt = {
       margin: 0,
       filename: `${studentName.replace(/\s+/g, '_')}_Admission_Receipt.pdf`,
@@ -804,19 +804,19 @@
       // 🔥 CRITICAL: Fill all required inputs from complete workflow data
       console.log("Prefilling admission receipt with complete data:", completeReceiptData);
 
-      // Basic info
-      document.getElementById("receiptNo").value = completeReceiptData.receiptNo || "";
+      // Basic info - Use unique IDs with AF suffix
+      document.getElementById("receiptNoAF").value = completeReceiptData.receiptNo || "";
       if (completeReceiptData.receiptDate) {
-        document.getElementById("receiptDate").value = completeReceiptData.receiptDate;
+        document.getElementById("receiptDateAF").value = completeReceiptData.receiptDate;
       } else {
         // Set current date if not provided
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
-        document.getElementById("receiptDate").value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById("receiptDateAF").value = `${yyyy}-${mm}-${dd}`;
       }
-      document.getElementById("studentName").value = completeReceiptData.studentName || "";
+      document.getElementById("studentNameAF").value = completeReceiptData.studentName || "";
       console.log("Prefilling data:", {
         receiptNo: completeReceiptData.receiptNo,
         receiptDate: completeReceiptData.receiptDate || "current date",
