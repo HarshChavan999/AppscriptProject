@@ -10,7 +10,7 @@
      style="width: 100%; max-width: 160px; height: auto; padding: 5px;"
        />
     </div>
-    <!-- <h1 class="text-2xl font-bold">STI SHELAR TRAINING INSTITUTE</h1>
+   <h1 class="text-2xl font-bold">STI SHELAR TRAINING INSTITUTE</h1>
     <p class="opacity-90">C/34, Bunglow, Near
                   Nandikeshwar Mandir, Kamgar Nagar, Kurla(E)
     </p> -->
@@ -73,6 +73,12 @@
               <div>
                <label for="std_Coursepayname" class="form-label"><i class="fas fa-user"></i>Student Name</label>
                <input type="text" id="std_Coursepayname" placeholder="Enter name" name="std_Coursepayname" required class="form-input">
+              </div>
+         </div>
+         <div class="form-row">
+              <div>
+               <label for="enrollmentId" class="form-label"><i class="fas fa-id-card"></i>Enrollment ID</label>
+               <input type="text" id="enrollmentId" placeholder="Enrollment ID" name="enrollmentId" readonly class="form-input">
               </div>
          </div>
       </div>
@@ -369,6 +375,7 @@
   const formData = {
     ID: document.getElementById("ID").value,
     Coursepayname: document.getElementById("std_Coursepayname").value,
+    enrollmentId: document.getElementById("enrollmentId").value,
     coursePaySelect: document.getElementById("coursePaySelect").value,
     courseDuration: document.getElementById("courseDuration").innerText,
     coursePayFees: document.getElementById("coursePayFees").innerText,

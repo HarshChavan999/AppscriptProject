@@ -69,10 +69,14 @@ function saveToSheet(formData) {
       formData.last_name
     ].filter(Boolean).join(" ");
 
+    // Generate enrollment ID
+    const enrollmentId = getNextEnrollmentNumber();
+
     // Prepare data in sheet column order
     const rowData = [
       new Date(), // Timestamp
       formData.receipt_number || "",
+      enrollmentId, // Enrollment ID
       formData.first_name || "",
       formData.middle_name || "",
       formData.last_name || "",
@@ -88,10 +92,26 @@ function saveToSheet(formData) {
     // Save to sheet
     sheet.appendRow(rowData);
     const lastRow = sheet.getLastRow();
-    
+
+    // Save enrollment data to Enrollments sheet
+    try {
+      const enrollmentResponse = saveEnrollment({
+        enrollmentID: enrollmentId,
+        studentName: fullName,
+        course: formData.courseSelect
+      });
+      if (!enrollmentResponse.success) {
+        console.warn("Warning: Failed to save enrollment data:", enrollmentResponse.message);
+        // Don't fail the whole submission for this
+      }
+    } catch (enrollmentError) {
+      console.error("Error saving enrollment:", enrollmentError);
+    }
+
     // Log successful submission
     createAuditLogEntry("Admission Form Submission", userIdForAudit, {
       receiptNumber: formData.receipt_number,
+      enrollmentId: enrollmentId,
       studentName: fullName,
       course: formData.courseSelect,
       fees: formData.totalCourseFees,
@@ -102,7 +122,8 @@ function saveToSheet(formData) {
       success: true,
       message: "Data saved successfully",
       row: lastRow,
-      studentName: fullName
+      studentName: fullName,
+      enrollmentId: enrollmentId
     };
     
   } catch (error) {

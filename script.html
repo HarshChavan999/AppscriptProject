@@ -81,11 +81,13 @@ function getCourseDataByLocation(branch) {
 
 
   // Update course details when selection changes
-  function updateCoursePayDetails() {
-    
-
-  const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+function updateCoursePayDetails() {
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
 
     const select = document.getElementById("coursePaySelect");
     selectedCourse = select.value;
@@ -114,9 +116,12 @@ function getCourseDataByLocation(branch) {
 
   // Update all payment options with the current total fees
   function updatePaymentOptions(totalFees) {
-
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
 
     // Full Payment
     const discount = totalFees * 0.05;
@@ -147,8 +152,12 @@ function getCourseDataByLocation(branch) {
 
   // Calculate EMI based on selected tenure
   function calculateEMI() {
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
 
     if (!selectedCourse) return;
 
@@ -170,8 +179,12 @@ function getCourseDataByLocation(branch) {
 
   // Get total fees for selected course
   function getTotalFees() {
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
     if (!selectedCourse) return 0;
 
     const course = courseData[selectedCourse];
@@ -523,37 +536,50 @@ function DInsReceipt(number,amount){
   }
 
   function copyAdmission(){
-    // Name
-     sessionStorage.setItem(
-      "first_name",
-      document.getElementById("first_name").value
-    );
-    sessionStorage.setItem(
-      "last_name",
-      document.getElementById("last_name").value
-    );
-    let firstName = sessionStorage.getItem('first_name');
-    let lastName = sessionStorage.getItem('last_name');
-    let fullName = firstName + ' ' + lastName;
-    document.getElementById("std_Coursepayname").value= fullName;
+    // Name - get from sessionStorage or form (in case of direct navigation)
+    let firstName = sessionStorage.getItem('first_name') || document.getElementById("first_name")?.value || '';
+    let lastName = sessionStorage.getItem('last_name') || document.getElementById("last_name")?.value || '';
+    let fullName = (firstName + ' ' + lastName).trim();
 
-    //ID
-            sessionStorage.setItem(
-      "tempText4",
-      document.getElementById("receipt_number").value
-    );
-    document.getElementById("ID").value=sessionStorage.getItem("tempText4");
+    // Only set to course payment if we have a name
+    if (fullName) {
+      document.getElementById("std_Coursepayname").value = fullName;
+    }
 
-    //Courseselect
-                sessionStorage.setItem(
-      "tempText5",
-      document.getElementById("courseSelect").value
-    );
-    document.getElementById("coursePaySelect").value=sessionStorage.getItem("tempText5");
+    //ID - get from sessionStorage or form
+    let receiptNumber = sessionStorage.getItem('tempText4') || document.getElementById("receipt_number")?.value || '';
+    if (receiptNumber) {
+      document.getElementById("ID").value = receiptNumber;
+    }
 
-    updateCoursePayDetails();
-    updatePaymentOptions();
+    // Enrollment ID - get from sessionStorage or form
+    let enrollmentId = sessionStorage.getItem("enrollmentId") || document.getElementById("enrollmentId")?.value || '';
+    if (enrollmentId) {
+      let enrollmentField = document.getElementById("enrollmentId");
+      if (enrollmentField) {
+        enrollmentField.value = enrollmentId;
+      }
+    }
 
+    // Course select - get from sessionStorage or form
+    let selectedCourse = sessionStorage.getItem('tempText5') || document.getElementById("courseSelect")?.value || '';
+    if (selectedCourse) {
+      let courseSelectField = document.getElementById("coursePaySelect");
+      if (courseSelectField) {
+        courseSelectField.value = selectedCourse;
+        updateCoursePayDetails();
+
+        // Call updatePaymentOptions after a short delay to ensure course details are loaded
+        setTimeout(() => {
+          const totalFeesElement = document.getElementById("totalFees");
+          if (totalFeesElement && totalFeesElement.textContent) {
+            const totalFeesText = totalFeesElement.textContent.replace(/₹|,/g, '');
+            const totalFees = parseFloat(totalFeesText) || 0;
+            updatePaymentOptions(totalFees);
+          }
+        }, 100);
+      }
+    }
   }
 
 function formatCurrency(amount) {
