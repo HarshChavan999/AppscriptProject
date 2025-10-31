@@ -1220,6 +1220,85 @@ function serverSideLogout() {
 }
 
 /************************************************
+ * RECEIPT NUMBER AUTO-GENERATION
+ ************************************************/
+
+/**
+ * Finds the highest numeric part of a receipt number (e.g., 23 from 'AR-0023')
+ * in a specified sheet. It checks the entire column to find the true maximum.
+ * @param {string} sheetName The name of the sheet to check.
+ * @returns {number} The highest receipt number found, or 0 if none are found.
+ */
+function findLastReceiptInSheet(sheetName) {
+  const receiptColumn = 2; // This corresponds to Column B
+  try {
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      console.log(`Sheet "${sheetName}" not found. Skipping.`);
+      return 0; // If sheet doesn't exist, it has no receipts.
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 1) {
+      return 0; // If sheet is empty, it has no receipts.
+    }
+
+    // Get all values in the receipt column to find the last valid entry.
+    const columnValues = sheet.getRange(1, receiptColumn, lastRow).getValues();
+    let lastNumericPart = 0;
+
+    // Loop through all values to find valid receipt numbers and get the maximum.
+    for (let i = 0; i < columnValues.length; i++) {
+      const cellValue = columnValues[i][0];
+      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('AR-')) {
+        const numericPart = parseInt(cellValue.substring(3), 10);
+        if (!isNaN(numericPart) && numericPart > lastNumericPart) {
+          lastNumericPart = numericPart;
+        }
+      }
+    }
+    return lastNumericPart;
+
+  } catch (e) {
+    console.error(`Error processing sheet "${sheetName}": ${e.message}`);
+    return 0; // Return 0 in case of an error.
+  }
+}
+
+/**
+ * Gets the next sequential receipt number by checking both 'ADMISSIONF' and 'DF' sheets.
+ * This is the function called by the client-side JavaScript.
+ * @returns {string} The new formatted receipt number (e.g., "AR-0025").
+ */
+function getNextReceiptNumber() {
+  try {
+    // Find the last receipt number from both sheets.
+    const lastNumAdmissions = findLastReceiptInSheet(CONFIG.ADMISSIONS_SHEET_NAME);
+    const lastNumDf = findLastReceiptInSheet(CONFIG.INQUIRY_SHEET_NAME);
+
+    console.log(`Last number in 'Admissions' sheet: ${lastNumAdmissions}`);
+    console.log(`Last number in 'Inquiry' sheet: ${lastNumDf}`);
+
+    // Determine the highest number between the two sheets.
+    const latestNum = Math.max(lastNumAdmissions, lastNumDf);
+    console.log(`Highest number found across all sheets: ${latestNum}`);
+
+    // Increment to get the new number.
+    const newNumericPart = latestNum + 1;
+
+    // Format the new receipt number with four digits (e.g., AR-0001, AR-0024, AR-0155).
+    const newReceiptNumber = "AR-" + ("000" + newNumericPart).slice(-4);
+
+    return newReceiptNumber;
+
+  } catch (e) {
+    console.error(`A critical error occurred in getNextReceiptNumber: ${e.message}`);
+    // Fallback in case of any unexpected error.
+    return "AR-0001";
+  }
+}
+
+/************************************************
  * FEE STRUCT ANALYTICS
  ************************************************/
 function getCourseList() {
@@ -1563,7 +1642,7 @@ function saveCoursePayment(data) {
                        "Anonymous";
 
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Feestructure");
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
     
     if (!sheet) {
       createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
@@ -1651,9 +1730,9 @@ function saveCoursePayment(data) {
  * @returns {Object} Operation result
  */
 function saveReceiptData(data) {
- const userIdForAudit = data.loggedInUserId || 
-                       PropertiesService.getUserProperties().getProperty("loggedInUser") || 
-                       "Anonymous";  
+   const userIdForAudit = data.loggedInUserId ||
+                       PropertiesService.getUserProperties().getProperty("loggedInUser") ||
+                       "Anonymous";
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName("EXAMRECEIPT");
@@ -1672,7 +1751,7 @@ function saveReceiptData(data) {
     // Validate required fields
     const requiredFields = ["receiptNumber", "studentName", "courseName", "totalAmount"];
     const missingFields = requiredFields.filter(field => !data[field]);
-    
+
     if (missingFields.length > 0) {
       createAuditLogEntry("Receipt Validation Failed", userIdForAudit, {
         reason: `Missing required fields: ${missingFields.join(", ")}`,
@@ -1715,9 +1794,9 @@ function saveReceiptData(data) {
       new Date(), // Timestamp of record creation
       userIdForAudit // Added user who created the receipt
     ]);
-    
+
     const lastRow = sheet.getLastRow();
-    
+
     // Log successful receipt creation
     createAuditLogEntry("Receipt Generated", userIdForAudit, {
       receiptNumber: data.receiptNumber,
@@ -1727,17 +1806,17 @@ function saveReceiptData(data) {
       paymentMode: data.paymentMode,
       row: lastRow
     });
-    
+
     return {
       success: true,
       message: "Receipt data saved successfully",
       row: lastRow,
       receiptNumber: data.receiptNumber
     };
-    
+
   } catch (error) {
     console.error("Error in saveReceiptData:", error);
-    
+
     createAuditLogEntry("Receipt Processing Error", userIdForAudit, {
       error: error.message,
       receiptDataSummary: {
@@ -1745,10 +1824,131 @@ function saveReceiptData(data) {
         studentName: data.studentName
       }
     });
-    
+
     return {
       success: false,
       message: error.message
+    };
+  }
+}
+
+/**
+ * Saves complete admission receipt data to AdmissionReceipts sheet
+ * @param {Object} data Complete workflow data
+ * @returns {Object} Operation result
+ */
+function saveAdmissionReceipt(data) {
+  const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // 🔥 CRITICAL: Create "AdmissionReceipts" sheet if it doesn't exist
+    let sheet = ss.getSheetByName("AdmissionReceipts");
+    if (!sheet) {
+      sheet = ss.insertSheet("AdmissionReceipts");
+
+      // Add headers for complete workflow data
+      sheet.appendRow([
+        "Timestamp",
+        "Receipt_Number",
+        "Student_Name",
+        "Course_Name",
+        "Total_Amount",
+        "Paid_Amount",
+        "Balance",
+        "Consent_Text",
+        "Guardian_Relation",
+        "Guardian_Name",
+        "Agree_Status",
+        "Full_Name_From_Inquiry",
+        "Address",
+        "Phone_No",
+        "WhatsApp_No",
+        "Parents_No",
+        "Email",
+        "Age",
+        "Gender",
+        "Qualification",
+        "Inquiry_Taken_By",
+        "Branch",
+        "Logged_In_User"
+      ]);
+    }
+
+    // Calculate balance
+    const totalAmount = isNaN(data.totalAmount) ? parseFloat(data.totalAmount || 0) : data.totalAmount;
+    const paidAmount = isNaN(data.paidAmount) ? parseFloat(data.paidAmount || 0) : data.paidAmount;
+    const balance = totalAmount - paidAmount;
+
+    // Combine name from admission data or inquiry
+    const fullName = data.studentName ||
+                    `${data.inquiryData?.firstName || ''} ${data.inquiryData?.middleName || ''} ${data.inquiryData?.lastName || ''}`.trim() ||
+                    data.admissionData?.studentName ||
+                    "N/A";
+
+    // Append complete workflow data
+    sheet.appendRow([
+      new Date(), // Timestamp
+      data.receiptNumber || "N/A",
+      fullName,
+      data.courseName || data.admissionData?.courseSelect || "N/A",
+      totalAmount,
+      paidAmount,
+      balance,
+      data.consentText || "I am the guardian of the student",
+      data.admissionData?.guardianRelation || "N/A",
+      data.admissionData?.guardianName || "N/A",
+      data.agree ? "Agreed" : "Not Agreed",
+      `${data.inquiryData?.firstName || ''} ${data.inquiryData?.middleName || ''} ${data.inquiryData?.lastName || ''}`.trim() || "N/A",
+      data.admissionData?.addressLine1 ? `${data.admissionData.addressLine1}${data.admissionData.addressLine2 ? ', ' + data.admissionData.addressLine2 : ''}${data.admissionData.addressLine3 ? ', ' + data.admissionData.addressLine3 : ''}${data.admissionData.pincode ? ', Pincode: ' + data.admissionData.pincode : ''}` : "N/A",
+      data.admissionData?.phoneNo || data.inquiryData?.phoneNo || "N/A",
+      data.admissionData?.whatsappNo || data.inquiryData?.whatsappNo || "N/A",
+      data.admissionData?.parentsNo || data.inquiryData?.parentsNo || "N/A",
+      data.admissionData?.email || data.inquiryData?.email || "N/A",
+      data.admissionData?.age || data.inquiryData?.age || "N/A",
+      data.admissionData?.gender || data.inquiryData?.gender || "N/A",
+      data.admissionData?.qualification || data.inquiryData?.qualification || "N/A",
+      data.inquiryData?.inquiryTakenBy || "N/A",
+      data.admissionData?.branch || data.inquiryData?.branch || "N/A",
+      userIdForAudit
+    ]);
+
+    const lastRow = sheet.getLastRow();
+
+    // Log successful complete workflow save
+    createAuditLogEntry("Complete Admission Receipt Saved", userIdForAudit, {
+      receiptNumber: data.receiptNumber,
+      studentName: fullName,
+      course: data.courseName,
+      totalAmount: totalAmount,
+      paidAmount: paidAmount,
+      balance: balance,
+      row: lastRow
+    });
+
+    console.log(`AdmissionReceipt saved successfully at row ${lastRow}`);
+    return {
+      success: true,
+      message: "Complete admission receipt saved successfully",
+      row: lastRow,
+      receiptNumber: data.receiptNumber
+    };
+
+  } catch (error) {
+    console.error("Error in saveAdmissionReceipt:", error);
+
+    createAuditLogEntry("Admission Receipt Save Error", userIdForAudit, {
+      error: error.message,
+      dataSummary: {
+        receiptNumber: data.receiptNumber,
+        studentName: data.studentName || data.admissionData?.studentName || "N/A"
+      }
+    });
+
+    return {
+      success: false,
+      message: `Failed to save complete admission receipt: ${error.message}`
     };
   }
 }

@@ -157,25 +157,36 @@
             />
             <h3 class="ml-2 font-semibold">Full Payment</h3>
           </div>
-          <p class="text-sm text-gray-600">
-            Pay the entire amount upfront and get 5% discount
-          </p>
-          <div id="fullPaymentDetails" class="mt-3 text-sm">
-            <div class="flex justify-between py-1">
-              <span>Course Fees:</span>
-              <span id="fullCourseFees">-</span>
-            </div>
-            <div class="flex justify-between py-1 font-semibold">
-              <span>Discount (5%):</span>
-              <span id="fullDiscount">-</span>
-            </div>
-            <div
-              class="flex justify-between py-1 border-t border-gray-200 mt-1"
-            >
-              <span class="font-bold">Total Payable:</span>
-              <span id="fullTotal" class="font-bold text-blue-600">-</span>
-            </div>
-          </div>
+  <p class="text-sm text-gray-600">
+    Pay the entire amount upfront
+  </p>
+  <div id="fullPaymentDetails" class="mt-3 text-sm">
+    <div class="flex justify-between py-1">
+      <span>Course Fees:</span>
+      <span id="fullCourseFees">-</span>
+    </div>
+    <div class="flex items-center justify-between py-1">
+      <label for="fullDiscountRupees" class="font-semibold">Discount (₹):</label>
+      <input
+        type="text"
+        id="fullDiscountRupees"
+        class="w-20 px-2 py-1 border border-gray-300 rounded text-right"
+        placeholder="0"
+        oninput="validateIntegerOnly(this)"
+        onchange="updateFullPaymentDiscount()"
+      />
+    </div>
+    <div class="flex justify-between py-1">
+      <span>Discount (%):</span>
+      <span id="fullDiscountPercent">-</span>
+    </div>
+    <div
+      class="flex justify-between py-1 border-t border-gray-200 mt-1"
+    >
+      <span class="font-bold">Total Payable:</span>
+      <span id="fullTotal" class="font-bold text-blue-600">-</span>
+    </div>
+  </div>
         </div>
 
         <!-- Partial Payment -->
@@ -193,19 +204,42 @@
             />
             <h3 class="ml-2 font-semibold">Partial Payment</h3>
           </div>
-          <p class="text-sm text-gray-600">Pay 50% now and the rest in EMIs</p>
-          <div id="partialPaymentDetails" class="mt-3 text-sm">
-            <div class="flex justify-between py-1">
-              <span>Initial Payment:</span>
-              <span id="partialInitial">-</span>
+          <p class="text-sm text-gray-600">Pay initial amount and the rest in EMIs</p>
+          <div id="partialPaymentDetails" class="mt-3 text-sm space-y-2">
+            <div class="flex items-center justify-between py-1">
+              <label class="font-semibold">Initial Payment (₹):</label>
+              <input
+                type="text"
+                id="partialInitialInput"
+                class="w-24 px-2 py-1 border border-gray-300 rounded text-right"
+                placeholder="0"
+                oninput="validateIntegerOnly(this)"
+                onchange="updatePartialPayment()"
+              />
+            </div>
+            <div class="flex items-center justify-between py-1">
+              <label class="font-semibold">EMI Tenure (months):</label>
+              <select
+                id="partialTenure"
+                class="border rounded px-2 py-1"
+                onchange="updatePartialPayment()"
+                style="width: 80px;"
+              >
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6" selected>6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+              </select>
             </div>
             <div class="flex justify-between py-1">
               <span>Remaining Amount:</span>
               <span id="partialRemaining">-</span>
-            </div>
-            <div class="flex justify-between py-1">
-              <span>EMI Tenure:</span>
-              <span>6 months</span>
             </div>
             <div
               class="flex justify-between py-1 border-t border-gray-200 mt-1"
@@ -233,31 +267,55 @@
             <h3 class="ml-2 font-semibold">EMI Plan</h3>
           </div>
           <p class="text-sm text-gray-600">Pay in easy monthly installments</p>
-          <div id="emiPaymentDetails" class="mt-3 text-sm">
-            <div class="flex justify-between py-1">
-              <span>Down Payment:</span>
-              <span id="emiDownPayment">-</span>
+          <div id="emiPaymentDetails" class="mt-3 text-sm space-y-2">
+            <div class="flex items-center justify-between py-1">
+              <label class="font-semibold">Down Payment (₹):</label>
+              <input
+                type="text"
+                id="emiDownPaymentInput"
+                class="w-24 px-2 py-1 border border-gray-300 rounded text-right"
+                placeholder="0"
+                oninput="validateIntegerOnly(this)"
+                onchange="updateEMIPayment()"
+              />
             </div>
-            <div class="flex justify-between py-1">
-              <span>EMI Tenure:</span>
+            <div class="flex items-center justify-between py-1">
+              <label class="font-semibold">EMI Tenure (months):</label>
               <select
                 id="emiTenure"
-                class="border rounded px-1"
-                onchange="calculateEMI()"
+                class="border rounded px-2 py-1"
+                onchange="updateEMIPayment()"
+                style="width: 80px;"
               >
-                <option value="6">6 months</option>
-                <option value="12">12 months</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="18">18</option>
+                <option value="24">24</option>
               </select>
             </div>
             <div class="flex justify-between py-1">
               <span>EMI Amount:</span>
               <span id="emiAmount" class="font-bold text-blue-600">-</span>
             </div>
+            <div class="flex justify-between py-1">
+              <span>Total Amount:</span>
+              <span id="emiTotalAmount" class="font-semibold">-</span>
+            </div>
             <div
               class="flex justify-between py-1 border-t border-gray-200 mt-1"
             >
-              <span>Total Payable:</span>
-              <span id="emiTotal" class="font-semibold">-</span>
+              <span class="font-bold">Total Payable:</span>
+              <span id="emiTotal" class="font-bold text-blue-600">-</span>
             </div>
           </div>
         </div>
@@ -364,13 +422,62 @@
 <button onclick="submitCoursePayment() "
  class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
       >Submit to sheet</button>
+&nbsp;&nbsp;
+<button onclick="proceedToAdmissionReceipt()"
+ class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
+      >Proceed to Admission Receipt</button>
  </div>
+<style>
+  /* Hide number input arrows (spinner buttons) */
+  input[type="number"].no-spinner::-webkit-outer-spin-button,
+  input[type="number"].no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"].no-spinner {
+    -moz-appearance: textfield;
+  }
+</style>
 <!-- Add this receipt container (if missing) -->
   </div>
   <div id="receiptContainer" class="hidden p-6 bg-white rounded-lg shadow-md"></div>
 
 </div>
 <script>
+  // Function to validate integer input - only allow whole numbers, no decimals
+  function validateIntegerInput(inputElement) {
+    // Remove any non-digit characters (excluding negative sign and decimal point initially)
+    let value = inputElement.value.replace(/[^\d]/g, '');
+
+    // Remove leading zeros unless the value is "0"
+    if (value.startsWith('0') && value.length > 1) {
+      value = value.replace(/^0+/, '');
+    }
+
+    // If empty, set to "0" or empty string based on placeholder
+    if (value === '') {
+      value = inputElement.placeholder === '0' ? '0' : '';
+    }
+
+    // Update the input value
+    inputElement.value = value;
+  }
+
+  // Simple integer validation function - immediate filtering for normal text input behavior
+  function validateIntegerOnly(inputElement) {
+    // Get current value after the input event
+    let currentValue = inputElement.value;
+
+    // Filter out non-digit characters immediately
+    let filteredValue = currentValue.replace(/[^\d]/g, '');
+
+    // Only update if the value actually changed
+    if (currentValue !== filteredValue) {
+      inputElement.value = filteredValue;
+    }
+  }
+
   function submitCoursePayment() {
   const formData = {
     ID: document.getElementById("ID").value,
@@ -395,6 +502,117 @@
       alert("Error saving payment: " + error);
     })
     .saveCoursePayment(formData); // Backend function
+}
+
+ function proceedToAdmissionReceipt() {
+  try {
+    // 🔥 CRITICAL: Store current course payment data along with combined workflow data
+    const coursePaymentData = {
+      receiptNo: document.getElementById("ID")?.value || "AR-" + Math.floor(1000 + Math.random() * 9000),
+      studentName: document.getElementById("std_Coursepayname")?.value || "",
+      courseName: document.getElementById("coursePaySelect")?.value || "",
+      courseDuration: document.getElementById("courseDuration")?.textContent || "",
+      totalFee: document.getElementById("totalFees")?.textContent ? parseFloat(document.getElementById("totalFees").textContent.replace(/[^0-9.]/g, '')) : 0,
+      paymentMethod: document.getElementById("pay-select")?.value || "Cash",
+      startDate: new Date().toISOString().split('T')[0], // Today's date as start date
+      courseYear: 1, // Default to 1st year
+      installmentCount: 12, // Default to 12 installments (monthly)
+      loggedInUser: document.getElementById("loggedInUserId")?.value || "Admin",
+      receiptDate: new Date().toISOString().split('T')[0]
+    };
+
+    // 🔥 CRITICAL: Retrieve and merge previous workflow data
+    const inquiryData = JSON.parse(sessionStorage.getItem('inquiryDataForAdmission') || '{}');
+    const admissionData = JSON.parse(sessionStorage.getItem('admissionData') || '{}');
+
+    console.log("Merging data for receipt:");
+    console.log("inquiryData:", inquiryData);
+    console.log("admissionData:", admissionData);
+    console.log("coursePaymentData:", coursePaymentData);
+
+    // Ensure studentName is properly built from admission data first (prioritize complete studentName), then build from parts, then inquiry data
+    let studentName = "";
+    if (admissionData.studentName && admissionData.studentName.trim() !== "") {
+      studentName = admissionData.studentName;
+    } else if (admissionData.firstName || admissionData.lastName) {
+      // Build from admission data individual name parts
+      const firstName = admissionData.firstName || "";
+      const middleName = admissionData.middleName || "";
+      const lastName = admissionData.lastName || "";
+      studentName = [firstName, middleName, lastName].filter(Boolean).join(" ");
+    } else if (inquiryData.firstName || inquiryData.lastName) {
+      // Fallback to inquiry data
+      const firstName = inquiryData.firstName || "";
+      const middleName = inquiryData.middleName || "";
+      const lastName = inquiryData.lastName || "";
+      studentName = [firstName, middleName, lastName].filter(Boolean).join(" ");
+    }
+    // Fallback to course payment form data
+    if (!studentName) {
+      studentName = coursePaymentData.studentName;
+    }
+
+    // 🔥 CRITICAL: Create complete admission receipt data by merging all sources
+    const completeReceiptData = {
+      // Basic Info
+      receiptNo: coursePaymentData.receiptNo,
+      receiptDate: coursePaymentData.receiptDate,
+      studentName: studentName,
+
+      // Course Info
+      courseName: coursePaymentData.courseName,
+      courseYear: coursePaymentData.courseYear,
+      courseDuration: coursePaymentData.courseDuration,
+
+      // Fee Details
+      totalFee: coursePaymentData.totalFee,
+      installmentCount: coursePaymentData.installmentCount,
+      startDate: coursePaymentData.startDate,
+
+      // Guardian Info (critical for agreement section) - FIXED: Use correct property names
+      guardianName: admissionData.guardianName || admissionData.guardian_name || admissionData.guardianName || "",
+      studentRelation: admissionData.studentRelation || admissionData.guardian_relation || admissionData.studentRelation || "",
+
+      // Additional fields from admission form
+      addressLine1: admissionData.addressLine1 || "",
+      addressLine2: admissionData.addressLine2 || "",
+      addressLine3: admissionData.addressLine3 || "",
+      pincode: admissionData.pincode || "",
+      phoneNo: admissionData.phoneNo || inquiryData.phoneNo || "",
+      whatsappNo: admissionData.whatsappNo || inquiryData.whatsappNo || "",
+      email: admissionData.email || inquiryData.email || "",
+      age: admissionData.age || inquiryData.age || "",
+      gender: admissionData.gender || "",
+      qualification: admissionData.qualification || inquiryData.qualification || "",
+      parentsNo: admissionData.parentsNo || "",
+
+      // Workflow metadata
+      loggedInUser: coursePaymentData.loggedInUser,
+      inquiryTakenBy: inquiryData.inquiryTakenBy || "",
+      branch: admissionData.branch || inquiryData.branch22 || "",
+      interestedCourse: admissionData.interestedCourse || inquiryData.interestedCourse || coursePaymentData.courseName,
+
+      // Consent status - FIXED: Generate consentText if not present
+      agree: admissionData.agree || false,
+      consentText: admissionData.consentText || (admissionData.guardian_name && admissionData.guardian_relation
+        ? `I am ${admissionData.guardian_relation} of ${admissionData.guardian_name}`
+        : admissionData.guardianName && admissionData.studentRelation
+        ? `I am ${admissionData.studentRelation} of ${admissionData.guardianName}`
+        : "")
+    };
+
+    // 🔥 CRITICAL: Store complete workflow data in sessionStorage
+    sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
+
+    console.log("Complete receipt data prepared:", completeReceiptData);
+
+    // 🔥 CRITICAL: Use the same function as sidebar instead of navigating to new page
+    openreceiptFormSection();
+
+  } catch (error) {
+    console.error("Error in proceedToAdmissionReceipt:", error);
+    alert("Error preparing admission receipt. Please check console for details.");
+  }
 }
 
 </script>

@@ -1,6 +1,6 @@
 
 /**
- * Finds the highest numeric part of a receipt number (e.g., 23 from 'R-0023')
+ * Finds the highest numeric part of a receipt number (e.g., 23 from 'AR-0023')
  * in a specified sheet. It checks the entire column to find the true maximum.
  * @param {string} sheetName The name of the sheet to check.
  * @returns {number} The highest receipt number found, or 0 if none are found.

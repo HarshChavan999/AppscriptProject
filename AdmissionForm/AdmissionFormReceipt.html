@@ -433,24 +433,24 @@
           <div class="form-row">
             <div class="form-group">
               <label>Receipt No.</label>
-              <input type="text" id="receiptNo" name="receiptNo">
+              <input type="text" id="receiptNoAF" name="receiptNoAF">
             </div>
             <div class="form-group">
               <label>Date</label>
-              <input type="date" id="receiptDate" name="receiptDate">
+              <input type="date" id="receiptDateAF" name="receiptDateAF">
             </div>
-            <div class="photo-section" onclick="document.getElementById('photoInput').click()">
-              <div class="photo-placeholder" id="photoPlaceholder">
+            <div class="photo-section" onclick="document.getElementById('photoInputAF').click()">
+              <div class="photo-placeholder" id="photoPlaceholderAF">
                 Passport<br>Photo
               </div>
-              <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+              <input type="file" id="photoInputAF" accept="image/*" class="hidden" onchange="handlePhotoUploadAF(event)">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Student Name</label>
-              <input type="text" id="studentName" name="studentName" style="width: 100%">
+              <input type="text" id="studentNameAF" name="studentNameAF" style="width: 100%">
             </div>
           </div>
 
@@ -620,10 +620,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-  document.getElementById('receiptDate').valueAsDate = new Date();
+  document.getElementById('receiptDateAF').valueAsDate = new Date();
   document.getElementById('startDate').valueAsDate = new Date();
 
-  function handlePhotoUpload(event) {
+  function handlePhotoUploadAF(event) {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -702,7 +702,7 @@
     // Show the undertaking container for PDF generation
     undertakingClone.style.display = 'block';
     
-    const studentName = document.getElementById('studentName').value || 'receipt';
+    const studentName = document.getElementById('studentNameAF').value || 'receipt';
     const opt = {
       margin: 0,
       filename: `${studentName.replace(/\s+/g, '_')}_Admission_Receipt.pdf`,
@@ -747,39 +747,113 @@
     }
     section.classList.remove("hidden");
 
-    // DOM references
-    const courseSelect = document.getElementById("courseName");
-    const feeInput = document.getElementById("totalFee");
-    const durationInput = document.getElementById("courseDuration");
+    console.log("Opening receipt form section");
 
-    // Course mapping
-    const courseData = {
-      anm_nursing: { duration: "1 year", fees: 55000 },
-      gnm_nursing: { duration: "3 years", fees: 270000 },
-      dmlt: { duration: "1 year", fees: 30000 },
-      ot_technician: { duration: "1 year", fees: 30000 },
-      general_nursing: { duration: "1 year", fees: 30000 },
-    };
+    // 🔥 CRITICAL: Check if coming from CoursePayment workflow vs. direct access
+    const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
 
-    // Pre-fill if coming from session
-    const storedCourse = sessionStorage.getItem("STUD_Course");
-    if (storedCourse && courseData[storedCourse]) {
-      courseSelect.value = storedCourse;
-      durationInput.value = courseData[storedCourse].duration;
-      feeInput.value = courseData[storedCourse].fees;
+    console.log("Retrieved completeReceiptData:", completeReceiptData);
+
+    if (Object.keys(completeReceiptData).length > 0) {
+      console.log("Prefilling from complete workflow data:", completeReceiptData);
+      // Delay prefill to ensure DOM is ready
+      setTimeout(() => {
+        prefillAdmissionReceipt(completeReceiptData);
+      }, 100);
+    } else {
+      console.log("No completeReceiptData found, using fallback behavior");
+      // Fallback to old behavior for direct access
+      // DOM references
+      const courseSelect = document.getElementById("courseName");
+      const feeInput = document.getElementById("totalFee");
+      const durationInput = document.getElementById("courseDuration");
+
+      // Course mapping
+      const courseData = {
+        anm_nursing: { duration: "1 year", fees: 55000 },
+        gnm_nursing: { duration: "3 years", fees: 270000 },
+        dmlt: { duration: "1 year", fees: 30000 },
+        ot_technician: { duration: "1 year", fees: 30000 },
+        general_nursing: { duration: "1 year", fees: 30000 },
+      };
+
+      // Pre-fill if coming from session
+      const storedCourse = sessionStorage.getItem("STUD_Course");
+      if (storedCourse && courseData[storedCourse]) {
+        courseSelect.value = storedCourse;
+        durationInput.value = courseData[storedCourse].duration;
+        feeInput.value = courseData[storedCourse].fees;
+      }
+
+      // Set dynamic update on change
+      courseSelect.addEventListener('change', function () {
+        const selected = courseSelect.value;
+        if (courseData[selected]) {
+          durationInput.value = courseData[selected].duration;
+          feeInput.value = courseData[selected].fees;
+          generateInstallmentTables(); // refresh table
+        }
+      });
     }
 
-    // Set dynamic update on change
-    courseSelect.addEventListener('change', function () {
-      const selected = courseSelect.value;
-      if (courseData[selected]) {
-        durationInput.value = courseData[selected].duration;
-        feeInput.value = courseData[selected].fees;
-        generateInstallmentTables(); // refresh table
-      }
-    });
-
     generateInstallmentTables();
+  }
+
+  function prefillAdmissionReceipt(completeReceiptData) {
+    try {
+      // 🔥 CRITICAL: Fill all required inputs from complete workflow data
+      console.log("Prefilling admission receipt with complete data:", completeReceiptData);
+
+      // Basic info - Use unique IDs with AF suffix
+      document.getElementById("receiptNoAF").value = completeReceiptData.receiptNo || "";
+      if (completeReceiptData.receiptDate) {
+        document.getElementById("receiptDateAF").value = completeReceiptData.receiptDate;
+      } else {
+        // Set current date if not provided
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById("receiptDateAF").value = `${yyyy}-${mm}-${dd}`;
+      }
+      document.getElementById("studentNameAF").value = completeReceiptData.studentName || "";
+      console.log("Prefilling data:", {
+        receiptNo: completeReceiptData.receiptNo,
+        receiptDate: completeReceiptData.receiptDate || "current date",
+        studentName: completeReceiptData.studentName
+      });
+
+      // Course info
+      document.getElementById("courseName").value = completeReceiptData.courseName || "";
+      document.getElementById("courseYear").value = completeReceiptData.courseYear || "1";
+      document.getElementById("courseDuration").value = completeReceiptData.courseDuration || "";
+
+      // Fee details
+      document.getElementById("totalFee").value = completeReceiptData.totalFee || "";
+      document.getElementById("installmentCount").value = completeReceiptData.installmentCount || "12";
+      document.getElementById("startDate").value = completeReceiptData.startDate || "";
+
+      // Critical: Guardian agreement section - FIXED property names
+      const guardianNameField = document.getElementById("guardianName");
+      const studentRelationField = document.getElementById("studentRelation");
+
+      if (guardianNameField && studentRelationField) {
+        // Use guardianName and studentRelation from completeReceiptData
+        guardianNameField.value = completeReceiptData.guardianName || "";
+        studentRelationField.value = completeReceiptData.studentRelation || "";
+        console.log("Prefilled guardian fields:", completeReceiptData.guardianName, completeReceiptData.studentRelation);
+      } else {
+        console.warn("Guardian fields not found in form.");
+      }
+
+      console.log("Admission receipt prefill completed successfully");
+
+      // 🔥 CRITICAL: Add custom prefill logic for any additional fields if needed
+      // Use completeReceiptData object for any custom requirements
+
+    } catch (error) {
+      console.error("Error in prefillAdmissionReceipt:", error);
+    }
   }
 
   function AdmissionHandle(event) {
