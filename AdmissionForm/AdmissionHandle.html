@@ -618,37 +618,43 @@ function previewPhoto(event) {
 // }
 function generateAndSaveEnrollment() {
   try {
-    // Generate enrollment ID
-    const enrollmentID = 'EN' + Math.floor(100000 + Math.random() * 900000).toString();
-    
     // Get student details
     const studentName = [
       document.getElementById('first_name').value,
       document.getElementById('middle_name').value,
       document.getElementById('last_name').value
     ].filter(Boolean).join(" ");
-    
+
     const course = document.getElementById('courseSelect').options[
       document.getElementById('courseSelect').selectedIndex
     ].text;
-    
-    // First show receipt
-    loadReceipt(enrollmentID, studentName, course);
-    
-    // After receipt is shown, save data (this will happen after print dialog)
-    setTimeout(() => {
-      google.script.run
-        .withFailureHandler((error) => {
-          console.error("Save failed:", error);
-        })
-        .saveEnrollment({
-          enrollmentID: enrollmentID,
-          studentName: studentName,
-          course: course,
-          date: new Date().toLocaleDateString()
-        });
-    }, 1000);
-    
+
+    // Generate proper enrollment ID using server-side function
+    google.script.run
+      .withSuccessHandler((enrollmentID) => {
+        // Show receipt with the proper enrollment ID
+        loadReceipt(enrollmentID, studentName, course);
+
+        // Save enrollment data after receipt is shown
+        setTimeout(() => {
+          google.script.run
+            .withFailureHandler((error) => {
+              console.error("Save failed:", error);
+            })
+            .saveEnrollment({
+              enrollmentID: enrollmentID,
+              studentName: studentName,
+              course: course,
+              date: new Date().toLocaleDateString()
+            });
+        }, 1000);
+      })
+      .withFailureHandler((error) => {
+        console.error("Failed to generate enrollment ID:", error);
+        loadReceipt("Not Available");
+      })
+      .getNextEnrollmentNumber();
+
   } catch (error) {
     console.error("Error:", error);
     loadReceipt("Not Available");
@@ -657,8 +663,8 @@ function generateAndSaveEnrollment() {
 
 function loadReceipt(enrollmentID, studentName, course) {
     try {
-        // Generate receipt number and date
-        const receiptNo = document.getElementById('receipt_number').value || "AR-" + Math.floor(1000 + Math.random() * 9000);
+        // Get receipt number from form field (already generated sequentially)
+        const receiptNo = document.getElementById('receipt_number').value || "AR-0001";
         const date = new Date().toLocaleDateString('en-GB');
 
         // Get student name from form fields
@@ -1118,9 +1124,21 @@ function AdmissionHandle(event) {
       console.log("Server response:", response);
       submitButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Submit';
       submitButton.disabled = false;
-      
+
       if (response.success) {
-        alert("Submission successful!");
+        // Store enrollment ID for transfer to course payment
+        if (response.enrollmentId) {
+          sessionStorage.setItem("enrollmentId", response.enrollmentId);
+        }
+
+        // Store form data before resetting for course payment transfer
+        sessionStorage.setItem("first_name", document.getElementById('first_name').value);
+        sessionStorage.setItem("middle_name", document.getElementById('middle_name').value);
+        sessionStorage.setItem("last_name", document.getElementById('last_name').value);
+        sessionStorage.setItem("tempText4", document.getElementById('receipt_number').value);
+        sessionStorage.setItem("tempText5", document.getElementById('courseSelect').value);
+
+        alert("Submission successful!\nEnrollment ID: " + (response.enrollmentId || "Not generated"));
         event.target.reset();
       } else {
         alert("Error: " + response.message);

@@ -74,6 +74,47 @@ function getNextReceiptNumber() {
   }
 }
 
+function getNextEnrollmentNumber() {
+  const enrollmentColumn = 3; // Column C in ADMISSIONF sheet
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ADMISSIONS_SHEET_NAME);
+    if (!sheet) {
+      console.log(`Sheet "${CONFIG.ADMISSIONS_SHEET_NAME}" not found for enrollment numbers.`);
+      return "E-0001";
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 1) {
+      return "E-0001";
+    }
+
+    // Get all values in the enrollment column
+    const columnValues = sheet.getRange(1, enrollmentColumn, lastRow).getValues();
+    let lastNumericPart = 0;
+
+    // Loop through all values to find valid enrollment numbers and get the maximum
+    for (let i = 0; i < columnValues.length; i++) {
+      const cellValue = columnValues[i][0];
+      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('E-')) {
+        const numericPart = parseInt(cellValue.substring(2), 10);
+        if (!isNaN(numericPart) && numericPart > lastNumericPart) {
+          lastNumericPart = numericPart;
+        }
+      }
+    }
+
+    // Increment to get the new number
+    const newNumericPart = lastNumericPart + 1;
+    const newEnrollmentNumber = "E-" + ("000" + newNumericPart).slice(-4);
+
+    return newEnrollmentNumber;
+
+  } catch (e) {
+    console.error(`Error processing enrollment numbers: ${e.message}`);
+    return "E-0001";
+  }
+}
+
 function getNextReceiptNumberEF() {
   try {
     // Find the last receipt number from both sheets.
@@ -91,7 +132,7 @@ function getNextReceiptNumberEF() {
 
     // Format the new receipt number with four digits (e.g., R-0001, R-0024, R-0155).
     const newReceiptNumber = "ER-" + ("000" + newNumericPart).slice(-4);
-    
+
     return newReceiptNumber;
 
   } catch (e) {

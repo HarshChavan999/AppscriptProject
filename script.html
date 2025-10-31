@@ -81,11 +81,13 @@ function getCourseDataByLocation(branch) {
 
 
   // Update course details when selection changes
-  function updateCoursePayDetails() {
-    
-
-  const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+function updateCoursePayDetails() {
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
 
     const select = document.getElementById("coursePaySelect");
     selectedCourse = select.value;
@@ -114,9 +116,12 @@ function getCourseDataByLocation(branch) {
 
   // Update all payment options with the current total fees
   function updatePaymentOptions(totalFees) {
-
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
 
     // Full Payment
     updateFullPaymentDiscount();
@@ -218,8 +223,12 @@ function getCourseDataByLocation(branch) {
 
   // Calculate EMI based on selected tenure
   function calculateEMI() {
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
 
     if (!selectedCourse) return;
 
@@ -241,8 +250,12 @@ function getCourseDataByLocation(branch) {
 
   // Get total fees for selected course
   function getTotalFees() {
-        const branch24 = document.getElementById("branch22").value;
-  const courseData = getCourseDataByLocation(branch24);
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
     if (!selectedCourse) return 0;
 
     const course = courseData[selectedCourse];
@@ -658,101 +671,46 @@ function openCoursePayment() {
   }
 
   function copyAdmission(){
-    // Name - include middle name
+    // Name
      sessionStorage.setItem(
       "first_name",
-      document.getElementById("first_name")?.value || ""
-    );
-     sessionStorage.setItem(
-      "middle_name",
-      document.getElementById("middle_name")?.value || ""
+      document.getElementById("first_name").value
     );
     sessionStorage.setItem(
       "last_name",
-      document.getElementById("last_name")?.value || ""
+      document.getElementById("last_name").value
     );
     let firstName = sessionStorage.getItem('first_name');
-    let middleName = sessionStorage.getItem('middle_name');
     let lastName = sessionStorage.getItem('last_name');
-    let fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
-    let nameElement = document.getElementById("std_Coursepayname");
-    if (nameElement) {
-      nameElement.value = fullName.trim();
+    let fullName = firstName + ' ' + lastName;
+    document.getElementById("std_Coursepayname").value= fullName;
+
+
+
+    let receiptNumber = sessionStorage.getItem('tempText4') || document.getElementById("receipt_number")?.value || '';
+    if (receiptNumber) {
+      document.getElementById("ID").value = receiptNumber;
     }
 
-    //ID
-    let receiptElement = document.getElementById("receipt_number");
-    if (receiptElement) {
-      sessionStorage.setItem(
-        "tempText4",
-        receiptElement.value
-      );
-    }
-    let idElement = document.getElementById("ID");
-    if (idElement) {
-      idElement.value = sessionStorage.getItem("tempText4") || "";
-    }
-
-    // 🔥 CRITICAL FIX: Also transfer branch information for proper course data
-    sessionStorage.setItem(
-      "tempText6",
-      document.getElementById("branch22")?.value || ""
-    );
-    let branchElement = document.getElementById("branch22_course");
-    if (branchElement) {
-      branchElement.value = sessionStorage.getItem("tempText6");
-    }
-
-    //Courseselect - 🔥 CRITICAL FIX: Set value and TRIGGER change event to auto-update details
-    let courseSelectElement = document.getElementById("courseSelect");
-    if (courseSelectElement) {
-      sessionStorage.setItem(
-        "tempText5",
-        courseSelectElement.value
-      );
-      const coursePaySelect = document.getElementById("coursePaySelect");
-      if (coursePaySelect) {
-        coursePaySelect.value = sessionStorage.getItem("tempText5");
-        // 🔥 Dispatch change event to automatically update course details, fees, and payment options
-        const changeEvent = new Event('change', { bubbles: true });
-        coursePaySelect.dispatchEvent(changeEvent);
+    // Enrollment ID - get from sessionStorage or form
+    let enrollmentId = sessionStorage.getItem("enrollmentId") || document.getElementById("enrollmentId")?.value || '';
+    if (enrollmentId) {
+      let enrollmentField = document.getElementById("enrollmentId");
+      if (enrollmentField) {
+        enrollmentField.value = enrollmentId;
       }
     }
 
-    // 🔥 CRITICAL: Store complete admission data for receipt including guardian info
-    const admissionData = {
-      firstName: document.getElementById("first_name")?.value || "",
-      middleName: document.getElementById("middle_name")?.value || "",
-      lastName: document.getElementById("last_name")?.value || "",
-      receiptNumber: document.getElementById("receipt_number")?.value || "",
-      courseSelect: document.getElementById("courseSelect")?.value || "",
-      courseDurationText: document.getElementById("courseDurationText")?.textContent || "",
-      totalCourseFees: document.getElementById("totalCourseFees")?.textContent || "",
-      guardianRelation: document.getElementById("guardian_relation")?.value || "",
-      guardianName: document.getElementById("guardian_name")?.value || "",
-      agree: document.getElementById('agree')?.checked || false,
-      consentText: `I am ${document.getElementById("guardian_relation")?.value || ""} of ${document.getElementById("guardian_name")?.value || ""}`,
-      studentName: fullName.trim(),
-      addressLine1: document.getElementById("addressLine1")?.value || '',
-      addressLine2: document.getElementById("addressLine2")?.value || '',
-      addressLine3: document.getElementById("addressLine3")?.value || '',
-      pincode: document.getElementById("pincode")?.value || '',
-      qualification: document.getElementById("qualification")?.value || '',
-      phoneNo: document.getElementById("phoneNo")?.value || '',
-      whatsappNo: document.getElementById("whatsappNo")?.value || '',
-      parentsNo: document.getElementById("parentsNo")?.value || '',
-      email: document.getElementById("email")?.value || '',
-      age: document.getElementById("age")?.value || '',
-      gender: document.getElementById("gender")?.value || '',
-      interestedCourse: document.getElementById("courseSelect")?.value || ""
-    };
-    sessionStorage.setItem('admissionData', JSON.stringify(admissionData));
 
-    console.log("Admission data copied:", admissionData);
+    //Courseselect
+                sessionStorage.setItem(
+      "tempText5",
+      document.getElementById("courseSelect").value
+    );
+    document.getElementById("coursePaySelect").value=sessionStorage.getItem("tempText5");
 
-    // No need to call updateCoursePayDetails() twice anymore - change event handles it
-    // updateCoursePayDetails();
-    // updatePaymentOptions(); // This will be called by updateCoursePayDetails() through the normal flow
+    updateCoursePayDetails();
+    updatePaymentOptions();
 
   }
 

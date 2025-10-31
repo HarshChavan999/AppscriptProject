@@ -1,158 +1,461 @@
-<div id="feeStructureSection"
-     class="hidden bg-white rounded-xl shadow-lg p-6 border border-gray-200 mt-6">
+<div id="feeStructureSection" class="hidden bg-white rounded-xl shadow-sm p-6 border border-gray-200 mt-6">
   <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Fee Structure</h2>
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900">Fee Structure</h2>
+      <p class="text-gray-600 mt-1">Track and analyze all student fee payments</p>
+    </div>
     <button onclick="closeFeeStructure()"
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center gap-2">
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 transition-colors">
       <i class="fas fa-arrow-left"></i><span>Back</span>
     </button>
   </div>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-    <div class="bg-blue-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Total Records</p>
-      <p id="fsTotalRecords" class="text-xl font-bold text-blue-900">0</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-list text-blue-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Total Records</p>
+      </div>
+      <p id="fsTotalRecords" class="text-xl font-bold text-gray-900">0</p>
     </div>
-    <div class="bg-green-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Total Fees</p>
-      <p id="fsTotalFees" class="text-xl font-bold text-green-900">0</p>
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-rupee-sign text-green-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Total Fees Collected</p>
+      </div>
+      <p id="fsTotalFees" class="text-xl font-bold text-gray-900">0</p>
     </div>
-    <div class="bg-purple-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Average Fee</p>
-      <p id="fsAverageFees" class="text-xl font-bold text-purple-900">0</p>
-    </div>
-    <div class="bg-yellow-50 p-4 rounded flex flex-col items-center">
-      <p class="text-sm text-gray-700">Top Payment Mode</p>
-      <p id="fsTopPaymentMode" class="text-xl font-bold text-yellow-900">-</p>
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col items-center">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+          <i class="fas fa-calculator text-purple-600 text-sm"></i>
+        </div>
+        <p class="text-sm font-medium text-gray-700">Average Fee</p>
+      </div>
+      <p id="fsAverageFees" class="text-xl font-bold text-gray-900">0</p>
     </div>
   </div>
 
-  <!-- Filter / Export Buttons -->
-  <div class="flex flex-wrap items-center gap-2 mb-4">
-    <select id="fsPaymentModeSelect"
-            class="px-4 py-2 border rounded-lg border-gray-300"
-            onchange="filterFeeStructure()">
-      <option value="">All Payment Modes</option>
-      <option value="Bank">Bank</option>
-      <option value="UPI">UPI</option>
-      <option value="Cash">Cash</option>
-      <option value="Cheque">Cheque</option>
-    </select>
-    <button onclick="copyTable('fsTableContainer')"
-            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Copy</button>
-    <button onclick="exportCSV('fsTableContainer','fee_structure.csv')"
-            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">CSV</button>
-    <button onclick="exportTablePDF('fsTableContainer','FeeStructure')"
-            class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">PDF</button>
+  <!-- Enhanced Filter Section -->
+  <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-gray-800">Filter & Search</h3>
+      <button onclick="resetFilters()"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded text-sm border border-gray-300 transition-colors">
+        Reset Filters
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Payment Mode Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
+        <select id="fsPaymentModeSelect"
+                onchange="filterFeeStructure()"
+                class="w-full px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">All Payment Modes</option>
+          <option value="Bank">Bank</option>
+          <option value="UPI">UPI</option>
+          <option value="Cash">Cash</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+
+      <!-- Course Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+        <select id="fsCourseSelect"
+                class="w-full px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">All Courses</option>
+        </select>
+      </div>
+
+      <!-- Search by Name/ID -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name/ID</label>
+        <div class="flex gap-2">
+          <input type="text" id="fsSearchInput"
+                 class="flex-1 px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 placeholder="Enter name or admission ID">
+          <button onclick="handleSearch()"
+                  class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg flex items-center gap-2 transition-colors">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="fsTableContainer" class="overflow-x-auto"></div>
+  <!-- Table Controls -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-700">Show:</span>
+      <select id="fsPageSize" onchange="changePageSize()" class="px-2 py-1.5 border rounded border-gray-300 bg-white">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+      <span class="text-sm text-gray-700">entries per page</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button onclick="copyTable('fsTableContainer')"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm transition-colors flex items-center gap-1">
+        <i class="fas fa-copy text-xs"></i> Copy
+      </button>
+      <button onclick="exportCSV('fsTableContainer','fee_structure.csv')"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm transition-colors flex items-center gap-1">
+        <i class="fas fa-file-csv text-xs"></i> CSV
+      </button>
+      <button onclick="exportTablePDF('fsTableContainer','FeeStructure')"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm transition-colors flex items-center gap-1">
+        <i class="fas fa-file-pdf text-xs"></i> PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div id="fsTableContainer" class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <div class="min-w-full">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pay Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Mode</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr>
+            <td colspan="7" class="px-4 py-4 text-center text-gray-500">Loading fee structure data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="flex flex-col md:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200">
+    <div id="fsPageInfo" class="text-sm text-gray-700 mb-3 md:mb-0"></div>
+
+    <div id="fsPagination" class="flex items-center gap-1">
+      <button id="fsFirstPage" onclick="changePage(1)"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+      <button id="fsPrevPage" onclick="changePage(currentPage - 1)"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-left"></i>
+      </button>
+
+      <div id="fsPageNumbers" class="flex mx-1">
+        <!-- Page numbers will be generated here -->
+      </div>
+
+      <button id="fsNextPage" onclick="changePage(currentPage + 1)"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-right"></i>
+      </button>
+      <button id="fsLastPage" onclick="changePage(totalPages)"
+              class="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
+    </div>
+  </div>
 </div>
 <script>
-  // let feeStructureData = []; // Global
+let feeStructureData = [];
+let filteredData = [];
+let currentPage = 1;
+let pageSize = 50;
+let totalPages = 1;
 
 function loadFeeStructure() {
   console.log("loadFeeStructure() CALLED");
-  const selectedCourse = document.getElementById("feeStructureCourseSelect")?.value || "";
 
+  // Initialize pagination variables
+  feeStructureData = [];
+  filteredData = [];
+  currentPage = 1;
+
+  // Load course list for filter dropdown (optional, no blocking)
+  google.script.run
+    .withSuccessHandler(function (courseList) {
+      const sel = document.getElementById("fsCourseSelect");
+      if (sel) {
+        sel.innerHTML = `<option value="">All Courses</option>`;
+
+        // Check if courseList is valid
+        if (Array.isArray(courseList) && courseList.length > 0 && !courseList[0].includes('Error')) {
+          courseList.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            sel.appendChild(opt);
+          });
+        } else {
+          console.log("No courses found or error:", courseList);
+        }
+      }
+    })
+    .getCourseListFromAdmissions();
+
+  // Load fee structure data
   google.script.run
     .withSuccessHandler(function (response) {
-      console.log("Received data:", response);
+      console.log("Received fee structure data:", response);
 
       if (response.error) {
-        document.getElementById("fsTableContainer").textContent = "Error loading fee structure.";
-        console.log(response.error);
+        const tableContainer = document.getElementById("fsTableContainer");
+        tableContainer.innerHTML =
+          `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center border border-red-200">
+            <i class="fas fa-exclamation-triangle mr-2"></i>${response.error}
+          </div>`;
+        return;
+      }
+
+      // Check if data exists
+      if (!response.data || response.data.length === 0) {
+        const tableContainer = document.getElementById("fsTableContainer");
+        tableContainer.innerHTML =
+          `<div class="bg-gray-50 p-6 rounded-lg text-center border border-gray-200">
+            <i class="fas fa-info-circle text-gray-500 mr-2"></i>No fee structure data found
+          </div>`;
         return;
       }
 
       // Store global data for filtering
       feeStructureData = response.data;
+      filteredData = [...feeStructureData];
+
+      // Initialize pagination
+      currentPage = 1;
+      updatePagination();
 
       // Populate summary cards
-      document.getElementById("fsTotalRecords").textContent = response.summary.totalRecords;
-      document.getElementById("fsTotalFees").textContent = "₹" + response.summary.totalFees.toLocaleString();
-      document.getElementById("fsAverageFees").textContent = "₹" + response.summary.averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
-      document.getElementById("fsTopPaymentMode").textContent = response.summary.mostCommonPaymentMode || "-";
-
-      // Render table
-      renderFeeStructureTable(feeStructureData);
+      updateFsSummaryCards(filteredData);
+    })
+    .withFailureHandler(function(error) {
+      console.error("Error loading fee structure:", error);
+      const tableContainer = document.getElementById("fsTableContainer");
+      tableContainer.innerHTML =
+        `<div class="bg-red-50 p-4 rounded-lg text-red-700 text-center border border-red-200">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Error loading fee structure: ${error.message}
+        </div>`;
     })
     .getFeeStructureData("admin");
 }
 
+// Handle search button click
+function handleSearch() {
+  filterFeeStructure();
+}
+
+// Allow Enter key to trigger search
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('fsSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+    });
+  }
+});
+
 function filterFeeStructure() {
   const paymentMode = document.getElementById("fsPaymentModeSelect").value.toLowerCase();
+  const selectedCourse = document.getElementById("fsCourseSelect").value;
+  const searchTerm = document.getElementById("fsSearchInput").value.trim();
 
-  // Filter the global dataset (this will hold the original fetched data)
-  const filtered = feeStructureData.filter(d => {
-    if (!paymentMode) return true;
-    return d.payMode.toLowerCase() === paymentMode;
+  // Filter the global dataset
+  filteredData = feeStructureData.filter(d => {
+    // Payment mode filter
+    if (paymentMode && d.payMode.toLowerCase() !== paymentMode) {
+      return false;
+    }
+
+    // Course filter
+    if (selectedCourse && d.course !== selectedCourse) {
+      return false;
+    }
+
+    // Search filter (by name or ID)
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const nameMatch = d.name && d.name.toLowerCase().includes(searchLower);
+      const idMatch = d.id && d.id.toString().toLowerCase().includes(searchLower);
+
+      if (!nameMatch && !idMatch) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   // Update summary cards based on filtered data
-  const totalRecords = filtered.length;
-  const totalFees = filtered.reduce((sum, item) => sum + item.totalFees, 0);
+  updateFsSummaryCards(filteredData);
+
+  // Reset to first page after filtering
+  currentPage = 1;
+  updatePagination();
+}
+
+function resetFilters() {
+  document.getElementById("fsPaymentModeSelect").value = "";
+  document.getElementById("fsCourseSelect").value = "";
+  document.getElementById("fsSearchInput").value = "";
+
+  filteredData = [...feeStructureData];
+  currentPage = 1;
+  updatePagination();
+  updateFsSummaryCards(filteredData);
+}
+
+function updateFsSummaryCards(data) {
+  const totalRecords = data.length;
+  const totalFees = data.reduce((sum, item) => sum + (item.totalFees || 0), 0);
   const averageFees = totalRecords > 0 ? totalFees / totalRecords : 0;
 
-  // Find most common payment mode in filtered set
-  const paymentModeCounts = {};
-  let topMode = "-";
-  let maxCount = 0;
-  filtered.forEach(item => {
-    if (item.payMode) {
-      paymentModeCounts[item.payMode] = (paymentModeCounts[item.payMode] || 0) + 1;
-      if (paymentModeCounts[item.payMode] > maxCount) {
-        maxCount = paymentModeCounts[item.payMode];
-        topMode = item.payMode;
-      }
-    }
-  });
-
-  document.getElementById("fsTotalRecords").textContent = totalRecords;
+  document.getElementById("fsTotalRecords").textContent = totalRecords.toLocaleString();
   document.getElementById("fsTotalFees").textContent = "₹" + totalFees.toLocaleString();
   document.getElementById("fsAverageFees").textContent = "₹" + averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  document.getElementById("fsTopPaymentMode").textContent = topMode;
+}
 
-  // Update table
-  renderFeeStructureTable(filtered);
+function updatePagination() {
+  totalPages = Math.ceil(filteredData.length / pageSize);
+
+  // Show/hide pagination controls
+  const paginationEl = document.getElementById("fsPagination");
+  if (totalPages > 1) {
+    paginationEl.classList.remove("hidden");
+  } else {
+    paginationEl.classList.add("hidden");
+  }
+
+  // Update page number buttons
+  const pageNumbersEl = document.getElementById("fsPageNumbers");
+  pageNumbersEl.innerHTML = "";
+
+  // Determine which page numbers to show
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, startPage + 4);
+
+  // Adjust if we're near the end
+  if (endPage - startPage < 4 && startPage > 1) {
+    startPage = Math.max(1, endPage - 4);
+  }
+
+  // Create page number buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement("button");
+    pageBtn.textContent = i;
+    pageBtn.className = `px-3 py-1.5 mx-0.5 rounded text-sm border transition-colors ${i === currentPage ? 'bg-gray-800 text-white border-gray-800' : 'bg-white hover:bg-gray-100 border-gray-300 text-gray-700'}`;
+    pageBtn.onclick = () => changePage(i);
+    pageNumbersEl.appendChild(pageBtn);
+  }
+
+  // Update navigation button states
+  document.getElementById("fsFirstPage").disabled = currentPage === 1;
+  document.getElementById("fsPrevPage").disabled = currentPage === 1;
+  document.getElementById("fsNextPage").disabled = currentPage === totalPages;
+  document.getElementById("fsLastPage").disabled = currentPage === totalPages;
+
+  // Render the current page
+  renderCurrentPage();
+}
+
+function changePage(page) {
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  updatePagination();
+}
+
+function changePageSize() {
+  pageSize = parseInt(document.getElementById("fsPageSize").value);
+  currentPage = 1;
+  updatePagination();
+}
+
+function renderCurrentPage() {
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+  const pageData = filteredData.slice(startIndex, endIndex);
+
+  renderFeeStructureTable(pageData);
+
+  // Update page info
+  const pageInfo = document.getElementById("fsPageInfo");
+  if (pageInfo) {
+    pageInfo.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${filteredData.length} entries`;
+  }
+}
+
+function renderFeeStructureTable(dataArray) {
+  const tableContainer = document.getElementById("fsTableContainer");
+
+  if (!dataArray || dataArray.length === 0) {
+    tableContainer.innerHTML =
+      `<div class="bg-gray-50 p-6 rounded-lg text-center border border-gray-200">
+        <i class="fas fa-info-circle text-gray-500 mr-2"></i>
+        No fee structure data found matching your search criteria
+      </div>`;
+    return;
+  }
+
+  let h = `
+    <div class="min-w-full">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pay Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Mode</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+  `;
+
+  dataArray.forEach(d => {
+    h += `
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.id || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${d.name || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.course || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.duration || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.payFees || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">₹${(d.totalFees || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.payMode || ''}</td>
+      </tr>
+    `;
+  });
+
+  h += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  tableContainer.innerHTML = h;
 }
 
 function closeFeeStructure() {
   hideAllSections();
   document.getElementById("ifId").classList.remove("hidden");
 }
-
-function renderFeeStructureTable(dataArray) {
-  let h = `<table class='min-w-full'>
-      <thead class='bg-gray-50'>
-        <tr>
-          <th class='px-4 py-2 text-left'>ID</th>
-          <th class='px-4 py-2 text-left'>Name</th>
-          <th class='px-4 py-2 text-left'>Course</th>
-          <th class='px-4 py-2 text-left'>Duration</th>
-          <th class='px-4 py-2 text-left'>Pay Fees</th>
-          <th class='px-4 py-2 text-left'>Total Fees</th>
-          <th class='px-4 py-2 text-left'>Payment Mode</th>
-        </tr>
-      </thead><tbody>`;
-  dataArray.forEach(d => {
-    h += `<tr class='border-b'>
-      <td class='px-4 py-2'>${d.id}</td>
-      <td class='px-4 py-2'>${d.name}</td>
-      <td class='px-4 py-2'>${d.course}</td>
-      <td class='px-4 py-2'>${d.duration}</td>
-      <td class='px-4 py-2'>₹${d.payFees.toLocaleString()}</td>
-      <td class='px-4 py-2'>₹${d.totalFees.toLocaleString()}</td>
-      <td class='px-4 py-2'>${d.payMode}</td>
-    </tr>`;
-  });
-  h += "</tbody></table>";
-  document.getElementById("fsTableContainer").innerHTML = h;
-}
-google.script.run.withSuccessHandler(response => {
-  console.log("Received data:", response);
-  renderFeeStructureTable(response.data);
-}).getFeeStructureData("admin");
-
 </script>

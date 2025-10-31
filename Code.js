@@ -1677,6 +1677,7 @@ function saveCoursePayment(data) {
     sheet.appendRow([
       data.ID,
       data.Coursepayname,
+      data.enrollmentId,
       data.coursePaySelect,
       data.courseDuration,
       data.coursePayFees,
