@@ -1,7 +1,8 @@
 on:
   push:
     branches:
-      - hitanshu  # or change to your desired branch
+      - test
+      - main
 
 jobs:
   deploy:
@@ -10,7 +11,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Clasp Action
+      - name: Deploy to Test Environment
+        if: github.ref == 'refs/heads/test'
+        uses: daikikatsuragawa/clasp-action@v1.1.0
+        with:
+          accessToken: ${{ secrets.CLASP_ACCESS_TOKEN_TEST }}
+          idToken: ""  # leave blank unless needed
+          refreshToken: ${{ secrets.CLASP_REFRESH_TOKEN_TEST }}
+          clientId: ${{ secrets.CLASP_CLIENT_ID_TEST }}
+          clientSecret: ${{ secrets.CLASP_CLIENT_SECRET_TEST }}
+          scriptId: ${{ secrets.CLASP_SCRIPT_ID_TEST }}
+          command: "push"
+          rootDir: ""  # set to your source dir
+
+      - name: Deploy to Production Environment
+        if: github.ref == 'refs/heads/main'
         uses: daikikatsuragawa/clasp-action@v1.1.0
         with:
           accessToken: ${{ secrets.CLASP_ACCESS_TOKEN }}
