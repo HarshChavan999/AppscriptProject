@@ -1129,6 +1129,9 @@ function AdmissionHandle(event) {
         // Store enrollment ID for transfer to course payment
         if (response.enrollmentId) {
           sessionStorage.setItem("enrollmentId", response.enrollmentId);
+          console.log("Enrollment ID stored in sessionStorage:", response.enrollmentId);
+          // Also store in a more persistent way
+          localStorage.setItem("admission_enrollmentId", response.enrollmentId);
         }
 
         // Store form data before resetting for course payment transfer
@@ -1151,6 +1154,46 @@ function AdmissionHandle(event) {
       submitButton.disabled = false;
     })
     .saveToSheet(formObject);
+}
+
+function generateReceiptAndNavigate() {
+  console.log("NEXT button clicked - generating receipt and navigating to course payment");
+
+  // Prevent form submission if this is triggered from a button click
+  event?.preventDefault();
+
+  // Generate enrollment ID and show receipt (similar to generateAndSaveEnrollment)
+  google.script.run
+    .withSuccessHandler((enrollmentID) => {
+      console.log("Enrollment ID generated:", enrollmentID);
+
+      // Store enrollment ID in both sessionStorage and localStorage
+      if (enrollmentID) {
+        sessionStorage.setItem("enrollmentId", enrollmentID);
+        localStorage.setItem("admission_enrollmentId", enrollmentID);
+        console.log("Enrollment ID stored for course payment transfer:", enrollmentID);
+      }
+
+      // Show receipt with the proper enrollment ID
+      try {
+        loadReceipt(enrollmentID);
+      } catch (receiptError) {
+        console.error("Error showing receipt:", receiptError);
+        // Continue with navigation even if receipt fails
+      }
+
+      // After a short delay to allow receipt to process, navigate to course payment
+      setTimeout(() => {
+        console.log("Navigating to course payment form");
+        openCoursePayment();
+      }, 1500); // Reduced delay since we're not waiting for receipt
+
+    })
+    .withFailureHandler((error) => {
+      console.error("Failed to generate enrollment ID:", error);
+      alert("Failed to generate enrollment ID. Please try again.");
+    })
+    .getNextEnrollmentNumber();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

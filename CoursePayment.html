@@ -484,7 +484,7 @@
     Coursepayname: document.getElementById("std_Coursepayname").value,
     enrollmentId: document.getElementById("enrollmentId").value,
     coursePaySelect: document.getElementById("coursePaySelect").value,
-    courseDuration: document.getElementById("courseDuration").innerText,
+    courseDuration: document.getElementById("courseDuration")?.textContent || "",
     coursePayFees: document.getElementById("coursePayFees").innerText,
     totalFees: document.getElementById("totalFees").innerText,
     paySelect: document.getElementById("pay-select").value
@@ -507,11 +507,49 @@
  function proceedToAdmissionReceipt() {
   try {
     // 🔥 CRITICAL: Store current course payment data along with combined workflow data
+    const courseDurationElement = document.getElementById("courseDuration");
+    let courseDuration = courseDurationElement?.textContent?.trim() || "";
+
+    // 🔥 DEBUG: Force update course details before proceeding
+    const courseSelect = document.getElementById("coursePaySelect");
+    if (courseSelect && courseSelect.value) {
+      // Manually trigger updateCoursePayDetails to ensure duration is current
+      if (typeof updateCoursePayDetails === 'function') {
+        updateCoursePayDetails();
+        // Re-get the duration after update
+        const updatedDuration = courseDurationElement?.textContent?.trim() || "";
+        if (updatedDuration && updatedDuration !== courseDuration && updatedDuration !== "-") {
+          courseDuration = updatedDuration;
+          console.log("Updated course duration from", courseDuration, "to", updatedDuration);
+        }
+      }
+    }
+
+    // 🔥 FALLBACK: If duration is still empty or "-", try to get it from course data
+    if (!courseDuration || courseDuration === "-") {
+      const selectedCourse = courseSelect?.value;
+      if (selectedCourse && typeof getCourseDataByLocation === 'function') {
+        let branch24 = document.getElementById("branch22")?.value;
+        if (!branch24) {
+          branch24 = sessionStorage.getItem("userBranch") || "kurla";
+        }
+        const courseData = getCourseDataByLocation(branch24);
+        if (courseData[selectedCourse]) {
+          courseDuration = courseData[selectedCourse].duration;
+          console.log("Using fallback course duration:", courseDuration);
+        }
+      }
+    }
+
+    console.log("Course duration element:", courseDurationElement);
+    console.log("Course duration textContent:", courseDurationElement?.textContent);
+    console.log("Final course duration:", courseDuration);
+
     const coursePaymentData = {
       receiptNo: document.getElementById("ID")?.value || "AR-" + Math.floor(1000 + Math.random() * 9000),
       studentName: document.getElementById("std_Coursepayname")?.value || "",
       courseName: document.getElementById("coursePaySelect")?.value || "",
-      courseDuration: document.getElementById("courseDuration")?.textContent || "",
+      courseDuration: courseDuration,
       totalFee: document.getElementById("totalFees")?.textContent ? parseFloat(document.getElementById("totalFees").textContent.replace(/[^0-9.]/g, '')) : 0,
       paymentMethod: document.getElementById("pay-select")?.value || "Cash",
       startDate: new Date().toISOString().split('T')[0], // Today's date as start date

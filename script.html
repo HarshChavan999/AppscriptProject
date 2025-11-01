@@ -92,8 +92,15 @@ function updateCoursePayDetails() {
     const select = document.getElementById("coursePaySelect");
     selectedCourse = select.value;
 
+    console.log("updateCoursePayDetails called:");
+    console.log("Branch:", branch24);
+    console.log("Selected course:", selectedCourse);
+    console.log("Course data for branch:", courseData);
+
     if (selectedCourse && courseData[selectedCourse]) {
       const course = courseData[selectedCourse];
+
+      console.log("Course found:", course);
 
       // Update displayed information
       document.getElementById("courseDuration").textContent = course.duration;
@@ -109,8 +116,13 @@ function updateCoursePayDetails() {
       document.getElementById("totalFees").textContent =
         formatCurrency(totalFees);
 
+      console.log("Updated course duration to:", course.duration);
+      console.log("Updated total fees to:", formatCurrency(totalFees));
+
       // Update all payment options
       updatePaymentOptions(totalFees);
+    } else {
+      console.log("Course not found or not selected");
     }
   }
 
@@ -172,8 +184,16 @@ function updateCoursePayDetails() {
   // Update EMI payment calculations
   function updateEMIPayment() {
     const totalFees = getTotalFees();
-    const downPayment = parseFloat(document.getElementById("emiDownPaymentInput").value) || 0;
-    const tenure = parseInt(document.getElementById("emiTenure").value) || 6;
+    const downPaymentInput = document.getElementById("emiDownPaymentInput");
+    const tenureSelect = document.getElementById("emiTenure");
+
+    if (!downPaymentInput || !tenureSelect) {
+      // Elements don't exist on this page, skip update
+      return;
+    }
+
+    const downPayment = parseFloat(downPaymentInput.value) || 0;
+    const tenure = parseInt(tenureSelect.value) || 6;
 
     // Ensure down payment doesn't exceed total fees
     const actualDownPayment = Math.min(downPayment, totalFees);
@@ -181,11 +201,23 @@ function updateCoursePayDetails() {
     const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
 
     // Update input value to reflect capped down payment
-    document.getElementById("emiDownPaymentInput").value = actualDownPayment.toFixed(2);
-    document.getElementById("emiDownPayment").textContent = formatCurrency(actualDownPayment);
-    document.getElementById("emiAmount").textContent = formatCurrency(emiAmount);
-    document.getElementById("emiTotalAmount").textContent = formatCurrency(remainingAmount);
-    document.getElementById("emiTotal").textContent = formatCurrency(totalFees + actualDownPayment); // Total payable includes down payment
+    downPaymentInput.value = actualDownPayment.toFixed(2);
+
+    // Update display elements (only update elements that exist)
+    const emiAmountEl = document.getElementById("emiAmount");
+    if (emiAmountEl) {
+      emiAmountEl.textContent = formatCurrency(emiAmount);
+    }
+
+    const emiTotalAmountEl = document.getElementById("emiTotalAmount");
+    if (emiTotalAmountEl) {
+      emiTotalAmountEl.textContent = formatCurrency(remainingAmount);
+    }
+
+    const emiTotalEl = document.getElementById("emiTotal");
+    if (emiTotalEl) {
+      emiTotalEl.textContent = formatCurrency(totalFees + actualDownPayment); // Total payable includes down payment
+    }
 
     // Update installment schedule if EMI payment is selected
     if (selectedPaymentType === "emi") {
@@ -533,7 +565,7 @@ function openCoursePayment() {
     // Populate fields from admission data after section is shown
     setTimeout(() => {
         copyAdmission();
-    }, 100); // Small delay to ensure DOM is updated
+    }, 500); // Increased delay to ensure DOM is fully loaded
 }
 
   /******************************************
@@ -671,46 +703,76 @@ function openCoursePayment() {
   }
 
   function copyAdmission(){
+    console.log("copyAdmission() called - copying data to course payment form");
+
     // Name
      sessionStorage.setItem(
       "first_name",
-      document.getElementById("first_name").value
+      document.getElementById("first_name")?.value || ""
     );
     sessionStorage.setItem(
       "last_name",
-      document.getElementById("last_name").value
+      document.getElementById("last_name")?.value || ""
     );
     let firstName = sessionStorage.getItem('first_name');
     let lastName = sessionStorage.getItem('last_name');
     let fullName = firstName + ' ' + lastName;
-    document.getElementById("std_Coursepayname").value= fullName;
 
-
-
-    let receiptNumber = sessionStorage.getItem('tempText4') || document.getElementById("receipt_number")?.value || '';
-    if (receiptNumber) {
-      document.getElementById("ID").value = receiptNumber;
+    // Only update if element exists
+    const nameField = document.getElementById("std_Coursepayname");
+    if (nameField) {
+      nameField.value = fullName;
     }
 
-    // Enrollment ID - get from sessionStorage or form
-    let enrollmentId = sessionStorage.getItem("enrollmentId") || document.getElementById("enrollmentId")?.value || '';
+    let receiptNumber = sessionStorage.getItem('tempText4') || document.getElementById("receipt_number")?.value || '';
+    const idField = document.getElementById("ID");
+    if (receiptNumber && idField) {
+      idField.value = receiptNumber;
+    }
+
+    // Enrollment ID - get from sessionStorage, localStorage, or form
+    let enrollmentId = sessionStorage.getItem("enrollmentId") ||
+                      localStorage.getItem("admission_enrollmentId") ||
+                      document.getElementById("enrollmentId")?.value || '';
+    console.log("Enrollment ID from sessionStorage:", sessionStorage.getItem("enrollmentId"));
+    console.log("Enrollment ID from localStorage:", localStorage.getItem("admission_enrollmentId"));
+    console.log("Enrollment ID being set:", enrollmentId);
+
     if (enrollmentId) {
       let enrollmentField = document.getElementById("enrollmentId");
       if (enrollmentField) {
         enrollmentField.value = enrollmentId;
+        console.log("Enrollment ID set in course payment form:", enrollmentId);
+      } else {
+        console.log("Enrollment ID field not found in course payment form");
       }
+    } else {
+      console.log("No enrollment ID found to copy");
     }
 
+    // Course select - only update if element exists
+    const courseSelectField = document.getElementById("coursePaySelect");
+    if (courseSelectField) {
+      sessionStorage.setItem("tempText5", document.getElementById("courseSelect")?.value || "");
+      courseSelectField.value = sessionStorage.getItem("tempText5");
 
-    //Courseselect
-                sessionStorage.setItem(
-      "tempText5",
-      document.getElementById("courseSelect").value
-    );
-    document.getElementById("coursePaySelect").value=sessionStorage.getItem("tempText5");
+      // Only call update functions if elements exist
+      if (typeof updateCoursePayDetails === 'function') {
+        try {
+          updateCoursePayDetails();
+        } catch (error) {
+          console.error("Error in updateCoursePayDetails:", error);
+        }
+      }
 
-    updateCoursePayDetails();
-    updatePaymentOptions();
+      if (typeof updatePaymentOptions === 'function') {
+        try {
+          updatePaymentOptions();
+        } catch (error) {
+          console.error("Error in updatePaymentOptions:", error);
+        }
+      }
+    }
 
   }
 

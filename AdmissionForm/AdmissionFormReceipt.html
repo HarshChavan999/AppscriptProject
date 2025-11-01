@@ -476,7 +476,7 @@
             </div>
             <div class="form-group">
               <label>Duration</label>
-              <input type="text" id="courseDuration" name="courseDuration">
+              <input type="text" id="receiptCourseDuration" name="courseDuration">
             </div>
           </div>
 
@@ -620,8 +620,39 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
+  // Course data mapping - global scope for all functions
+  const courseData = {
+    anm_nursing: { duration: "1 year", fees: 55000 },
+    gnm_nursing: { duration: "3 years", fees: 270000 },
+    dmlt: { duration: "1 year", fees: 30000 },
+    ot_technician: { duration: "1 year", fees: 30000 },
+    general_nursing: { duration: "1 year", fees: 30000 },
+  };
+
   document.getElementById('receiptDateAF').valueAsDate = new Date();
   document.getElementById('startDate').valueAsDate = new Date();
+
+  // Add course change event listener to update fee and duration dynamically
+  document.getElementById('courseName').addEventListener('change', function () {
+    const selected = this.value;
+    if (courseData[selected]) {
+      // Only update duration if it wasn't set from course payment workflow
+      const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
+      console.log('Course change event - completeReceiptData:', completeReceiptData);
+      console.log('Course change event - courseDuration from workflow:', completeReceiptData.courseDuration);
+
+      if (!completeReceiptData.courseDuration || completeReceiptData.courseDuration.trim() === '') {
+        document.getElementById('receiptCourseDuration').value = courseData[selected].duration;
+        console.log('Updated duration from courseData:', courseData[selected].duration);
+      } else {
+        // If we have workflow data, preserve the workflow duration but update fee
+        console.log('Preserving workflow duration:', completeReceiptData.courseDuration);
+        document.getElementById('receiptCourseDuration').value = completeReceiptData.courseDuration;
+      }
+      document.getElementById('totalFee').value = courseData[selected].fees;
+      generateInstallmentTables(); // refresh table
+    }
+  });
 
   function handlePhotoUploadAF(event) {
     const file = event.target.files[0];
@@ -640,13 +671,17 @@
     const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
     const startDate = new Date(document.getElementById('startDate').value);
     const selectedYear = parseInt(document.getElementById('courseYear').value);
+    const courseDuration = document.getElementById('receiptCourseDuration').value;
 
     if (!startDate || totalFee <= 0) return;
 
     const container = document.getElementById('installmentTablesContainer');
     container.innerHTML = '';
 
-    const yearFee = totalFee;
+    // Calculate number of years from course duration (e.g., "3 years" -> 3)
+    const numberOfYears = courseDuration ? parseInt(courseDuration.split(' ')[0]) || 1 : 1;
+    const yearFee = totalFee / numberOfYears;
+
     const tableHTML = generateVerticalInstallmentTable(selectedYear, installmentCount, yearFee, startDate);
     container.innerHTML = tableHTML;
 
@@ -670,9 +705,13 @@
         </thead>
         <tbody>`;
 
+    // Adjust start date based on the selected year (year 1 = 0 years, year 2 = 1 year, year 3 = 2 years)
+    const yearAdjustedStartDate = new Date(startDate);
+    yearAdjustedStartDate.setFullYear(startDate.getFullYear() + (year - 1));
+
     for (let i = 0; i < installmentCount; i++) {
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(startDate.getMonth() + i);
+      const dueDate = new Date(yearAdjustedStartDate);
+      dueDate.setMonth(yearAdjustedStartDate.getMonth() + i);
       const formattedDate = dueDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
       const amount = (i === installmentCount - 1) ? yearFee - (installmentAmount * (installmentCount - 1)) : installmentAmount;
 
@@ -763,37 +802,14 @@
     } else {
       console.log("No completeReceiptData found, using fallback behavior");
       // Fallback to old behavior for direct access
-      // DOM references
-      const courseSelect = document.getElementById("courseName");
-      const feeInput = document.getElementById("totalFee");
-      const durationInput = document.getElementById("courseDuration");
-
-      // Course mapping
-      const courseData = {
-        anm_nursing: { duration: "1 year", fees: 55000 },
-        gnm_nursing: { duration: "3 years", fees: 270000 },
-        dmlt: { duration: "1 year", fees: 30000 },
-        ot_technician: { duration: "1 year", fees: 30000 },
-        general_nursing: { duration: "1 year", fees: 30000 },
-      };
 
       // Pre-fill if coming from session
       const storedCourse = sessionStorage.getItem("STUD_Course");
       if (storedCourse && courseData[storedCourse]) {
-        courseSelect.value = storedCourse;
-        durationInput.value = courseData[storedCourse].duration;
-        feeInput.value = courseData[storedCourse].fees;
+        document.getElementById("courseName").value = storedCourse;
+        document.getElementById("receiptCourseDuration").value = courseData[storedCourse].duration;
+        document.getElementById("totalFee").value = courseData[storedCourse].fees;
       }
-
-      // Set dynamic update on change
-      courseSelect.addEventListener('change', function () {
-        const selected = courseSelect.value;
-        if (courseData[selected]) {
-          durationInput.value = courseData[selected].duration;
-          feeInput.value = courseData[selected].fees;
-          generateInstallmentTables(); // refresh table
-        }
-      });
     }
 
     generateInstallmentTables();
@@ -803,6 +819,7 @@
     try {
       // 🔥 CRITICAL: Fill all required inputs from complete workflow data
       console.log("Prefilling admission receipt with complete data:", completeReceiptData);
+      console.log("Course duration from completeReceiptData:", completeReceiptData.courseDuration);
 
       // Basic info - Use unique IDs with AF suffix
       document.getElementById("receiptNoAF").value = completeReceiptData.receiptNo || "";
@@ -823,10 +840,17 @@
         studentName: completeReceiptData.studentName
       });
 
-      // Course info
+      // Course info - Temporarily remove change listener to prevent interference
+      const courseSelect = document.getElementById("courseName");
+      const originalChangeHandler = courseSelect.onchange;
+      courseSelect.onchange = null; // Temporarily disable
+
       document.getElementById("courseName").value = completeReceiptData.courseName || "";
       document.getElementById("courseYear").value = completeReceiptData.courseYear || "1";
-      document.getElementById("courseDuration").value = completeReceiptData.courseDuration || "";
+      document.getElementById("receiptCourseDuration").value = completeReceiptData.courseDuration || "";
+
+      // Re-enable the change listener
+      courseSelect.onchange = originalChangeHandler;
 
       // Fee details
       document.getElementById("totalFee").value = completeReceiptData.totalFee || "";
@@ -846,7 +870,10 @@
         console.warn("Guardian fields not found in form.");
       }
 
-      console.log("Admission receipt prefill completed successfully");
+      console.log("Admission receipt prefill completed successfully - duration set to:", document.getElementById("receiptCourseDuration").value);
+
+      // 🔥 CRITICAL: Generate installment table after prefill since onchange events don't fire for programmatic value setting
+      generateInstallmentTables();
 
       // 🔥 CRITICAL: Add custom prefill logic for any additional fields if needed
       // Use completeReceiptData object for any custom requirements
