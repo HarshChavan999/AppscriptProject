@@ -29,7 +29,7 @@ function include(filename) {
 //   try {
    
    
-//     var sheet = ss.getSheetByName("LOGIN");
+//     var sheet = ss.getSheetByName(CONFIG.LOGIN_SHEET_NAME);
 //     if (!sheet) return { success: false, error: "LOGIN sheet not found." };
 
 //     var data = sheet.getDataRange().getValues();
@@ -178,7 +178,7 @@ function getInquiryAnalyticsData() {
 function getDropdownData() {
   try {
     
-    var sheet = ss.getSheetByName("DROPDOWN");
+    var sheet = ss.getSheetByName(CONFIG.DROPDOWN_SHEET_NAME);
     if (!sheet) return { error: "DROPDOWN sheet not found." };
 
     var data = sheet.getDataRange().getValues();
@@ -219,7 +219,7 @@ function getDropdownData() {
 function getNextStudentId() {
   // We'll parse the STUDENT DATA sheet, find the highest ID that matches ST###, increment
   
-  var sheet = ss.getSheetByName("STUDENT DATA");
+  var sheet = ss.getSheetByName(CONFIG.STUDENT_DATA_SHEET_NAME);
   if (!sheet) return { error: "STUDENT DATA sheet not found." };
 
   var data = sheet.getDataRange().getValues();
@@ -244,8 +244,8 @@ function getNextStudentId() {
  * AUTO-INCREMENT TRANSACTION ID
  ************************************************/
 function getNextTransactionId() {
-  
-  var sheet = ss.getSheetByName("FEES");
+
+  var sheet = ss.getSheetByName(CONFIG.FEES_SHEET_NAME);
   if (!sheet) return { error: "FEES sheet not found." };
 
   var data = sheet.getDataRange().getValues();
@@ -269,8 +269,8 @@ function getNextTransactionId() {
  ************************************************/
 function submitData(formData) {
   try {
-    
-    var sheet = ss.getSheetByName("FEES");
+
+    var sheet = ss.getSheetByName(CONFIG.FEES_SHEET_NAME);
     if (!sheet) return "Error: FEES sheet not found.";
 
     var data = sheet.getDataRange().getValues();
@@ -329,7 +329,7 @@ function submitInquiryData(formData2) {
   try {
 
     var sheet = ss.getSheetByName("INQUIRY FORM");
-    if (!sheet) return "Error: DF sheet not found.";
+    if (!sheet) return "Error: Inquiries sheet not found.";
 
     var data = sheet.getDataRange().getValues();
     var phoneNo = formData2.phoneNo.trim();
@@ -343,7 +343,7 @@ function submitInquiryData(formData2) {
     }
 
     // Prepare row data
-    // DF columns:
+    // Inquiries columns:
     // A->Timestamp, B->Date, C->FullName, D->Qualification, E->PhoneNo,
     // F->WhatsAppNo, G->ParentsNo, H->Email, I->Age, J->Address,
     // K->InterestedCourse, L->InquiryTakenBy, M->Status, N->FollowUpDate,
@@ -384,8 +384,8 @@ function updateData(formData, userRole) {
     return "Error: You don't have permission to update fee data.";
   }
   try {
-    
-    var sheet = ss.getSheetByName("FEES");
+
+    var sheet = ss.getSheetByName(CONFIG.FEES_SHEET_NAME);
     if (!sheet) return "Error: FEES sheet not found.";
 
     var rowNumber = parseInt(formData.recordRowNumber, 10);
@@ -438,8 +438,8 @@ function updateData(formData, userRole) {
 
 function getStudentSession(studentId) {
   try {
-    
-    var sheet = ss.getSheetByName("STUDENT DATA");
+
+    var sheet = ss.getSheetByName(CONFIG.STUDENT_DATA_SHEET_NAME);
     if (!sheet) return { error: "STUDENT DATA sheet not found." };
 
     var data = sheet.getDataRange().getValues();
@@ -470,8 +470,8 @@ function getStudentSession(studentId) {
 
 function getOldFees(studentId) {
   try {
-    
-    var sheet = ss.getSheetByName("FEES");
+
+    var sheet = ss.getSheetByName(CONFIG.FEES_SHEET_NAME);
     if (!sheet) return { error: "FEES sheet not found." };
 
     var data = sheet.getDataRange().getValues();
@@ -1266,7 +1266,7 @@ function findLastReceiptInSheet(sheetName) {
 }
 
 /**
- * Gets the next sequential receipt number by checking both 'ADMISSIONF' and 'DF' sheets.
+ * Gets the next sequential receipt number by checking both 'ADMISSIONF' and 'Inquiries' sheets.
  * This is the function called by the client-side JavaScript.
  * @returns {string} The new formatted receipt number (e.g., "AR-0025").
  */
@@ -1411,35 +1411,67 @@ function getAdmissionAnalyticsData(userRole) {
   if (!sheet) return { error: "ADMISSIONF sheet not found." };
 
   const data = sheet.getDataRange().getValues();
+  if (data.length === 0) return { error: "No data in ADMISSIONF sheet." };
+
+  const headers = data[0];
   let results = [];
   let totalFees = 0;
   let courseCounts = {};
 
+  // Find column indices
+  const receiptNumberIdx = headers.indexOf("Receipt Number");
+  const enrollmentIdIdx = headers.indexOf("Enrollment ID");
+  const firstNameIdx = headers.indexOf("First Name");
+  const middleNameIdx = headers.indexOf("Middle Name");
+  const lastNameIdx = headers.indexOf("Last Name");
+  const courseNameIdx = headers.indexOf("Course Name");
+  const courseDurationIdx = headers.indexOf("Course Duration");
+  const totalCourseFeesIdx = headers.indexOf("Total Course Fees");
+  const guardianRelationIdx = headers.indexOf("Guardian Relation");
+  const guardianNameIdx = headers.indexOf("Guardian Name");
+  const agreementIdx = headers.indexOf("Agreement");
+  const userIdx = headers.indexOf("User");
+
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const receipt = row[1] || "";
-    const name = `${row[2] || ""} ${row[3] || ""} ${row[4] || ""}`.trim();
-    const course = row[5] || "";
-    const duration = row[6] || "";
-    const totalCourseFees = parseFloat(String(row[7]).replace(/[^\d.-]/g, "")) || 0;
-    const guardianRelation = row[8] || "";
-    const agreement = row[10] || "";
+    const receiptNumber = row[receiptNumberIdx] || "";
+    const enrollmentId = row[enrollmentIdIdx] || "";
+    const firstName = row[firstNameIdx] || "";
+    const middleName = row[middleNameIdx] || "";
+    const lastName = row[lastNameIdx] || "";
+    const courseName = row[courseNameIdx] || "";
+    const courseDuration = row[courseDurationIdx] || "";
+    const totalCourseFees = parseFloat(String(row[totalCourseFeesIdx]).replace(/[^\d.-]/g, "")) || 0;
+    const guardianRelation = row[guardianRelationIdx] || "";
+    const guardianName = row[guardianNameIdx] || "";
+    const agreement = row[agreementIdx] || "";
+    const user = row[userIdx] || "";
 
     results.push({
-      receipt: receipt,
-      name: name,
-      course: course,
-      duration: duration,
-      totalFees: totalCourseFees,
+      receiptNumber: receiptNumber,
+      enrollmentId: enrollmentId,
+      firstName: firstName,
+      middleName: middleName,
+      lastName: lastName,
+      courseName: courseName,
+      courseDuration: courseDuration,
+      totalCourseFees: totalCourseFees,
       guardianRelation: guardianRelation,
-      agreement: agreement
+      guardianName: guardianName,
+      agreement: agreement,
+      user: user
     });
 
     totalFees += totalCourseFees;
-    courseCounts[course] = (courseCounts[course] || 0) + 1;
+    if (courseName) {
+      courseCounts[courseName] = (courseCounts[courseName] || 0) + 1;
+    }
   }
 
-  let topCourse = Object.keys(courseCounts).reduce((a, b) => courseCounts[a] > courseCounts[b] ? a : b, "");
+  let topCourse = "";
+  if (Object.keys(courseCounts).length > 0) {
+    topCourse = Object.keys(courseCounts).reduce((a, b) => courseCounts[a] > courseCounts[b] ? a : b);
+  }
 
   return {
     data: results,
@@ -1456,7 +1488,7 @@ function getAdmissionAnalyticsData(userRole) {
  * INQUIRY STRUCT ANALYTICS
  ************************************************/
 /**
- * Gets course list from inquiry sheet (DF)
+ * Gets course list from inquiry sheet (Inquiries)
  */
 function getInquiryAnalyticsData(userRole) {
   try {
@@ -1466,7 +1498,7 @@ function getInquiryAnalyticsData(userRole) {
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("DF");
+    const sheet = ss.getSheetByName("Inquiries");
     
     if (!sheet) {
       return { error: "Inquiries sheet not found." };
@@ -1572,7 +1604,7 @@ function getInquiryAnalyticsData(userRole) {
 
 function getCourseListFromInquiries() {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DF");
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Inquiries");
     if (!sheet) return ["Error: Inquiries sheet not found"];
     
     const lastRow = sheet.getLastRow();
