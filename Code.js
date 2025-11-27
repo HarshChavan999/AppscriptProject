@@ -1315,8 +1315,21 @@ function getFeeStructureData(userRole) {
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("FeeStructure");
+
+  // If sheet doesn't exist, create it with headers
   if (!sheet) {
-    return { error: "FeeStructure sheet not found." };
+    const newSheet = ss.insertSheet("FeeStructure");
+    newSheet.appendRow(["ID", "Name", "Enrollment ID", "Course", "Duration", "Pay Fees", "Total Fees", "Payment Mode", "Timestamp", "User ID"]);
+
+    return {
+      data: [],
+      summary: {
+        totalRecords: 0,
+        totalFees: 0,
+        averageFees: 0,
+        mostCommonPaymentMode: "",
+      },
+    };
   }
 
   const data = sheet.getDataRange().getValues();
@@ -1328,15 +1341,17 @@ function getFeeStructureData(userRole) {
     const row = data[i];
     const id = String(row[0] || "").trim();
     const name = String(row[1] || "").trim();
-    const course = String(row[2] || "").trim();
-    const duration = String(row[3] || "").trim();
-    const payFees = parseFloat(String(row[4]).replace(/[^\d.-]/g, "")) || 0;
-    const totalFees = parseFloat(String(row[5]).replace(/[^\d.-]/g, "")) || 0;
-    const payMode = String(row[6] || "").trim();
+    const enrollmentId = String(row[2] || "").trim();
+    const course = String(row[3] || "").trim();
+    const duration = String(row[4] || "").trim();
+    const payFees = parseFloat(String(row[5]).replace(/[^\d.-]/g, "")) || 0;
+    const totalFees = parseFloat(String(row[6]).replace(/[^\d.-]/g, "")) || 0;
+    const payMode = String(row[7] || "").trim();
 
     results.push({
       id: id,
       name: name,
+      enrollmentId: enrollmentId,
       course: course,
       duration: duration,
       payFees: payFees,

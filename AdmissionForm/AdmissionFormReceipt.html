@@ -139,15 +139,15 @@
 
   #receiptFormSection .receipt-container {
     width: 210mm;
-    min-height: auto;
+    height: 297mm;
     margin: 0 auto;
     padding: 0;
     background: white;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
-
-    
+    display: flex;
+    flex-direction: column;
   }
 
   #receiptFormSection .receipt-header {
@@ -213,6 +213,7 @@
   }
 
   #receiptFormSection .form-content {
+    flex: 1;
     padding-bottom: 8px;
   }
 
@@ -448,6 +449,13 @@
           </div>
 
           <div class="form-row">
+            <div class="form-group">
+              <label>Enrollment No.</label>
+              <input type="text" id="enrollmentNoAF" name="enrollmentNoAF">
+            </div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Student Name</label>
               <input type="text" id="studentNameAF" name="studentNameAF" style="width: 100%">
@@ -506,28 +514,28 @@
             </div>
             <div id="installmentTablesContainer"></div>
           </div>
+        </div>
 
-          <div class="agreement-section">
-            <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 120px; border: none; border-bottom: 1px solid #ccc;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 120px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
+        <div class="agreement-section">
+          <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 120px; border: none; border-bottom: 1px solid #ccc;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 120px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
+        </div>
+
+        <div class="signature-section">
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Parent Signature</p>
           </div>
-
-          <div class="signature-section">
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <p>Parent Signature</p>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <p>Student Signature</p>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <p>Manager Signature</p>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line"></div>
-              <p>Director Signature</p>
-            </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Student Signature</p>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Manager Signature</p>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Director Signature</p>
           </div>
         </div>
       </div>
@@ -667,23 +675,51 @@
   }
 
   function generateInstallmentTables() {
-    const installmentCount = parseInt(document.getElementById('installmentCount').value);
+    const installmentCount = document.getElementById('installmentCount').value;
     const totalFee = parseFloat(document.getElementById('totalFee').value) || 0;
     const startDate = new Date(document.getElementById('startDate').value);
     const selectedYear = parseInt(document.getElementById('courseYear').value);
     const courseDuration = document.getElementById('receiptCourseDuration').value;
 
-    if (!startDate || totalFee <= 0) return;
-
     const container = document.getElementById('installmentTablesContainer');
     container.innerHTML = '';
 
-    // Calculate number of years from course duration (e.g., "3 years" -> 3)
-    const numberOfYears = courseDuration ? parseInt(courseDuration.split(' ')[0]) || 1 : 1;
-    const yearFee = totalFee / numberOfYears;
+    // Check if this is a full payment
+    const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
+    if (completeReceiptData.paymentType === "full" || installmentCount === "-") {
+      // Generate single row table for full payment
+      const tableHTML = `
+        <table class="installment-table">
+          <thead>
+            <tr>
+              <th>Installment</th>
+              <th>Due Date</th>
+              <th>Amount (₹)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-</td>
+              <td>-</td>
+              <td>₹${totalFee.toLocaleString()}</td>
+              <td>Full Paid</td>
+            </tr>
+          </tbody>
+        </table>`;
+      container.innerHTML = tableHTML;
+    } else {
+      // Normal installment table generation
+      const installmentCountNum = parseInt(installmentCount);
+      if (!startDate || totalFee <= 0) return;
 
-    const tableHTML = generateVerticalInstallmentTable(selectedYear, installmentCount, yearFee, startDate);
-    container.innerHTML = tableHTML;
+      // Calculate number of years from course duration (e.g., "3 years" -> 3)
+      const numberOfYears = courseDuration ? parseInt(courseDuration.split(' ')[0]) || 1 : 1;
+      const yearFee = totalFee / numberOfYears;
+
+      const tableHTML = generateVerticalInstallmentTable(selectedYear, installmentCountNum, yearFee, startDate);
+      container.innerHTML = tableHTML;
+    }
 
     const totalSection = document.createElement('div');
     totalSection.className = 'total-section';
@@ -833,6 +869,7 @@
         const dd = String(today.getDate()).padStart(2, '0');
         document.getElementById("receiptDateAF").value = `${yyyy}-${mm}-${dd}`;
       }
+      document.getElementById("enrollmentNoAF").value = completeReceiptData.enrollmentNo || "";
       document.getElementById("studentNameAF").value = completeReceiptData.studentName || "";
       console.log("Prefilling data:", {
         receiptNo: completeReceiptData.receiptNo,
@@ -854,7 +891,11 @@
 
       // Fee details
       document.getElementById("totalFee").value = completeReceiptData.totalFee || "";
-      document.getElementById("installmentCount").value = completeReceiptData.installmentCount || "12";
+      if (completeReceiptData.paymentType === "full") {
+        document.getElementById("installmentCount").value = "";
+      } else {
+        document.getElementById("installmentCount").value = completeReceiptData.installmentCount || "12";
+      }
       document.getElementById("startDate").value = completeReceiptData.startDate || "";
 
       // Critical: Guardian agreement section - FIXED property names

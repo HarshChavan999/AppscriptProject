@@ -596,6 +596,7 @@
       receiptNo: coursePaymentData.receiptNo,
       receiptDate: coursePaymentData.receiptDate,
       studentName: studentName,
+      enrollmentNo: document.getElementById("enrollmentId")?.value || "",
 
       // Course Info
       courseName: coursePaymentData.courseName,
@@ -604,6 +605,7 @@
 
       // Fee Details
       totalFee: coursePaymentData.totalFee,
+      paymentType: document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full",
       installmentCount: coursePaymentData.installmentCount,
       startDate: coursePaymentData.startDate,
 

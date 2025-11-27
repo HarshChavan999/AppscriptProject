@@ -80,12 +80,12 @@ function getNextEnrollmentNumber() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ADMISSIONS_SHEET_NAME);
     if (!sheet) {
       console.log(`Sheet "${CONFIG.ADMISSIONS_SHEET_NAME}" not found for enrollment numbers.`);
-      return "E-0001";
+      return "EN0000001";
     }
 
     const lastRow = sheet.getLastRow();
     if (lastRow < 1) {
-      return "E-0001";
+      return "EN0000001";
     }
 
     // Get all values in the enrollment column
@@ -95,7 +95,7 @@ function getNextEnrollmentNumber() {
     // Loop through all values to find valid enrollment numbers and get the maximum
     for (let i = 0; i < columnValues.length; i++) {
       const cellValue = columnValues[i][0];
-      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('E-')) {
+      if (cellValue && typeof cellValue === 'string' && (cellValue.startsWith('E-') || cellValue.startsWith('EN'))) {
         const numericPart = parseInt(cellValue.substring(2), 10);
         if (!isNaN(numericPart) && numericPart > lastNumericPart) {
           lastNumericPart = numericPart;
@@ -105,13 +105,13 @@ function getNextEnrollmentNumber() {
 
     // Increment to get the new number
     const newNumericPart = lastNumericPart + 1;
-    const newEnrollmentNumber = "E-" + ("000" + newNumericPart).slice(-4);
+    const newEnrollmentNumber = "EN" + ("0000000" + newNumericPart).slice(-7);
 
     return newEnrollmentNumber;
 
   } catch (e) {
     console.error(`Error processing enrollment numbers: ${e.message}`);
-    return "E-0001";
+    return "EN0000001";
   }
 }
 
