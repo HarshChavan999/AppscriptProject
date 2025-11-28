@@ -123,7 +123,6 @@ function getInquiryAnalyticsData() {
     var interestedCourseIdx = headers.indexOf("Interested Course");
     var inquiryTakenByIdx = headers.indexOf("Inquiry Taken By");
     var branchIdx = headers.indexOf("Branch");
-    var admissionStatusIdx = headers.indexOf("Admission Status");
 
     // Process data rows (start from row 1, but remember row numbers start from 1 in sheets)
     for (var i = 1; i < data.length; i++) {
@@ -148,8 +147,7 @@ function getInquiryAnalyticsData() {
         address: row[addressIdx] || "",
         interestedCourse: course,
         inquiryTakenBy: row[inquiryTakenByIdx] || "",
-        branch: row[branchIdx] || "",
-        admissionStatus: row[admissionStatusIdx] || ""
+        branch: row[branchIdx] || ""
       };
       
       resultData.push(rowData);
