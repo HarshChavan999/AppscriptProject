@@ -519,10 +519,16 @@ function renderInquiryTable(dataArray) {
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.inquiryTakenBy || ''}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.branch || ''}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm">
-          <button onclick="openAdmissionFormFromInquiry(${JSON.stringify(d).replace(/"/g, '&quot;')})" 
-                  class="px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white rounded text-sm flex items-center gap-1 transition-colors">
-            <i class="fas fa-user-plus text-xs"></i> Take Admission
-          </button>
+          ${d.admissionStatus === "Admitted" ?
+            `<button onclick="viewCoursePaymentFromInquiry(${JSON.stringify(d).replace(/"/g, '"')})"
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm flex items-center gap-1 transition-colors">
+              <i class="fas fa-eye text-xs"></i> View Details
+            </button>` :
+            `<button onclick="openAdmissionFormFromInquiry(${JSON.stringify(d).replace(/"/g, '"')})"
+                    class="px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white rounded text-sm flex items-center gap-1 transition-colors">
+              <i class="fas fa-user-plus text-xs"></i> Take Admission
+            </button>`
+          }
         </td>
       </tr>
     `;
@@ -609,15 +615,85 @@ function generateReceiptNumber() {
   }
 }
 
+function viewCoursePaymentFromInquiry(data) {
+  // Close analytics and open course payment form
+  closeInquiryAnalytics();
+  document.getElementById("coursePaymentSection").classList.remove("hidden");
+
+  // Pre-fill the course payment form with inquiry data
+  prefillCoursePaymentFromInquiry(data);
+}
+
+function prefillCoursePaymentFromInquiry(data) {
+  // Pre-fill student name
+  if (document.getElementById('std_Coursepayname')) {
+    document.getElementById('std_Coursepayname').value = data.fullName || '';
+  }
+
+  // Pre-fill course selection
+  const interestedCourse = data.interestedCourse || "";
+  if (interestedCourse && document.getElementById('coursePaySelect')) {
+    const courseSelect = document.getElementById('coursePaySelect');
+    const searchTerm = interestedCourse.toLowerCase().trim();
+    let found = false;
+
+    // First try exact match
+    for (let i = 0; i < courseSelect.options.length; i++) {
+        if (courseSelect.options[i].value.toLowerCase() === searchTerm ||
+            courseSelect.options[i].text.toLowerCase() === searchTerm) {
+            courseSelect.selectedIndex = i;
+            found = true;
+            break;
+        }
+    }
+
+    // If not found, try partial match
+    if (!found) {
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].text.toLowerCase().includes(searchTerm) ||
+                courseSelect.options[i].value.toLowerCase().includes(searchTerm)) {
+                courseSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+    }
+
+    // If still not found, try matching course codes like "gnm", "enn"
+    if (!found) {
+        const courseCode = searchTerm.split('_')[0]; // Get "gnm" from "gnm_unsing"
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].value.toLowerCase().includes(courseCode) ||
+                courseSelect.options[i].text.toLowerCase().includes(courseCode)) {
+                courseSelect.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+    }
+
+    // Update course details if function exists
+    if (typeof updateCourseDetails === 'function') {
+      updateCourseDetails();
+    }
+  }
+
+  // Store inquiry data for later use
+  sessionStorage.setItem('inquiryDataForPayment', JSON.stringify(data));
+}
+
 function prefillAdmissionFormFromInquiry(data) {
   // Split name into parts if possible
   const fullName = data.fullName || "";
   const nameParts = fullName ? fullName.split(' ') : ['', '', ''];
-  
+
   // Pre-fill basic information
   if (document.getElementById('receipt_number')) {
       const receiptNumber = data.rowNumber || data.serialNumber || '';
     document.getElementById('receipt_number').value = receiptNumber;
+  }
+  if (document.getElementById('aadharNumber')) {
+    document.getElementById('aadharNumber').value = data.aadhaar || '';
   }
   if (document.getElementById('first_name')) {
     document.getElementById('first_name').value = nameParts[0] || '';
@@ -625,10 +701,13 @@ function prefillAdmissionFormFromInquiry(data) {
   if (document.getElementById('last_name')) {
     document.getElementById('last_name').value = nameParts[nameParts.length - 1] || '';
   }
-  
+
   // Middle name if applicable
   if (nameParts.length > 2 && document.getElementById('middle_name')) {
     document.getElementById('middle_name').value = nameParts.slice(1, -1).join(' ') || '';
+  }
+  if (document.getElementById('phoneNo')) {
+    document.getElementById('phoneNo').value = data.phone || '';
   }
   // Pre-fill course information
   const interestedCourse = data.interestedCourse || "";
@@ -674,20 +753,20 @@ function prefillAdmissionFormFromInquiry(data) {
 
     // Note: Course details update is now handled after this pre-filling in openAdmissionFormFromInquiry
   }
-  
+
   // Pre-fill contact information if available
   const phone = data.phone || "";
   if (phone) {
     const phoneInput = document.querySelector('input[name="phone"]');
     if (phoneInput) phoneInput.value = phone;
   }
-  
+
   const email = data.email || "";
   if (email) {
     const emailInput = document.querySelector('input[name="email"]');
     if (emailInput) emailInput.value = email;
   }
-  
+
   const address = data.address || "";
   if (address) {
     const addressInput = document.querySelector('input[name="address"], textarea[name="address"]');

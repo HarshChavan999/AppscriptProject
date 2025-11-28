@@ -108,6 +108,14 @@ function saveToSheet(formData) {
       console.error("Error saving enrollment:", enrollmentError);
     }
 
+    // Update inquiry status to "Admitted" if we can identify the inquiry
+    try {
+      updateInquiryAdmissionStatus(formData, userIdForAudit);
+    } catch (inquiryUpdateError) {
+      console.error("Warning: Failed to update inquiry status:", inquiryUpdateError);
+      // Don't fail the admission for this
+    }
+
     // Log successful submission
     createAuditLogEntry("Admission Form Submission", userIdForAudit, {
       receiptNumber: formData.receipt_number,
@@ -117,7 +125,7 @@ function saveToSheet(formData) {
       fees: formData.totalCourseFees,
       row: lastRow
     });
-    
+
     return {
       success: true,
       message: "Data saved successfully",
@@ -128,7 +136,7 @@ function saveToSheet(formData) {
     
   } catch (error) {
     console.error("Error in saveToSheet:", error);
-    
+
     // Log error
     createAuditLogEntry("Admission Form Error", userIdForAudit, {
       error: error.message,
@@ -137,10 +145,104 @@ function saveToSheet(formData) {
         studentName: `${formData.first_name} ${formData.last_name}`
       }
     });
-    
+
     return {
       success: false,
       message: error.message
     };
+  }
+}
+
+/**
+ * Updates the admission status in the inquiry sheet when admission is completed
+ * @param {Object} formData The admission form data
+ * @param {string} userIdForAudit The user ID for auditing
+ */
+function updateInquiryAdmissionStatus(formData, userIdForAudit) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const inquirySheet = ss.getSheetByName("INQUIRY FORM");
+
+    if (!inquirySheet) {
+      console.warn("INQUIRY FORM sheet not found, cannot update admission status");
+      return;
+    }
+
+    const inquiryData = inquirySheet.getDataRange().getValues();
+    if (inquiryData.length <= 1) {
+      console.warn("No inquiry data found");
+      return;
+    }
+
+    // Get headers to find column indices
+    const headers = inquiryData[0];
+    const phoneIdx = headers.indexOf("Phone");
+    const aadhaarIdx = headers.indexOf("Aadhaar");
+    const fullNameIdx = headers.indexOf("Full Name");
+    const admissionStatusIdx = headers.indexOf("Admission Status");
+    const admissionDateIdx = headers.indexOf("Admission Date");
+
+    if (admissionStatusIdx === -1) {
+      console.warn("Admission Status column not found in inquiry sheet");
+      return;
+    }
+
+    // Get form data for matching
+    const admissionPhone = formData.phoneNo || "";
+    const admissionAadhaar = formData.aadhaarNumber || "";
+    const admissionFullName = [
+      formData.first_name,
+      formData.middle_name,
+      formData.last_name
+    ].filter(Boolean).join(" ");
+
+    // Find matching inquiry row
+    for (let i = 1; i < inquiryData.length; i++) {
+      const row = inquiryData[i];
+      const inquiryPhone = String(row[phoneIdx] || "").trim();
+      const inquiryAadhaar = String(row[aadhaarIdx] || "").trim();
+      const inquiryFullName = String(row[fullNameIdx] || "").trim();
+
+      // Match by phone number first (most reliable), then Aadhaar, then name
+      let isMatch = false;
+
+      if (admissionPhone && inquiryPhone === admissionPhone) {
+        isMatch = true;
+      } else if (admissionAadhaar && inquiryAadhaar === admissionAadhaar) {
+        isMatch = true;
+      } else if (admissionFullName && inquiryFullName === admissionFullName) {
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        // Update admission status and date
+        const rowNumber = i + 1; // +1 because sheet rows are 1-indexed
+
+        inquirySheet.getRange(rowNumber, admissionStatusIdx + 1).setValue("Admitted");
+
+        if (admissionDateIdx !== -1) {
+          inquirySheet.getRange(rowNumber, admissionDateIdx + 1).setValue(new Date());
+        }
+
+        // Log the update
+        createAuditLogEntry("Inquiry Status Updated", userIdForAudit, {
+          inquiryRow: rowNumber,
+          studentName: admissionFullName,
+          newStatus: "Admitted",
+          matchedBy: admissionPhone ? "phone" : admissionAadhaar ? "aadhaar" : "name"
+        });
+
+        console.log(`Updated inquiry status to Admitted for row ${rowNumber}`);
+        break; // Update only the first match
+      }
+    }
+
+  } catch (error) {
+    console.error("Error updating inquiry admission status:", error);
+    // Log the error but don't throw - admission should still succeed
+    createAuditLogEntry("Inquiry Status Update Error", userIdForAudit, {
+      error: error.message,
+      studentName: `${formData.first_name} ${formData.last_name}`
+    });
   }
 }
