@@ -1852,6 +1852,171 @@ function saveReceiptData(data) {
  * @param {Object} data Complete workflow data
  * @returns {Object} Operation result
  */
+function getInstallmentPaymentsForStudent(receiptNo) {
+  console.log("=== getInstallmentPaymentsForStudent START ===");
+  console.log("Input receiptNo:", receiptNo);
+
+  try {
+    // Get spreadsheet
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    console.log("Spreadsheet name:", ss.getName());
+
+    // Get or create sheet
+    let sheet = ss.getSheetByName("InstallmentPayments");
+    if (!sheet) {
+      console.log("Creating InstallmentPayments sheet");
+      sheet = ss.insertSheet("InstallmentPayments");
+      sheet.appendRow([
+        "Timestamp",
+        "Receipt_No",
+        "Student_Name",
+        "Enrollment_ID",
+        "Course_Name",
+        "Installment_Number",
+        "Installment_Amount",
+        "Payment_Method",
+        "Payment_Date",
+        "Logged_In_User"
+      ]);
+    }
+
+    const data = sheet.getDataRange().getValues();
+    console.log("Sheet has", data.length, "rows of data");
+
+    const payments = [];
+    const searchReceipt = String(receiptNo || "").trim();
+    console.log("Searching for receipt:", searchReceipt);
+
+    // Process each row
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowReceipt = String(row[1] || "").trim();
+
+      if (rowReceipt === searchReceipt) {
+        const payment = {
+          timestamp: row[0],
+          receiptNo: rowReceipt,
+          studentName: String(row[2] || ""),
+          enrollmentId: String(row[3] || ""),
+          courseName: String(row[4] || ""),
+          installmentNumber: parseInt(row[5]) || 0,
+          installmentAmount: parseFloat(row[6]) || 0,
+          paymentMethod: String(row[7] || ""),
+          paymentDate: row[8],
+          loggedInUser: String(row[9] || "")
+        };
+        payments.push(payment);
+        console.log("Found payment:", payment);
+      }
+    }
+
+    console.log("Total payments found:", payments.length);
+    console.log("=== getInstallmentPaymentsForStudent END ===");
+
+    return payments;
+
+  } catch (error) {
+    console.error("CRITICAL ERROR in getInstallmentPaymentsForStudent:", error);
+    console.error("Error details:", error.message);
+    console.error("Stack trace:", error.stack);
+
+    // Return empty array on error
+    return [];
+  }
+}
+
+function saveInstallmentPayment(data) {
+  const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") ||
+                       data.loggedInUser ||
+                       "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Create "InstallmentPayments" sheet if it doesn't exist
+    let sheet = ss.getSheetByName("InstallmentPayments");
+    if (!sheet) {
+      sheet = ss.insertSheet("InstallmentPayments");
+
+      // Add headers
+      sheet.appendRow([
+        "Timestamp",
+        "Receipt_No",
+        "Student_Name",
+        "Enrollment_ID",
+        "Course_Name",
+        "Installment_Number",
+        "Installment_Amount",
+        "Payment_Method",
+        "Payment_Date",
+        "Logged_In_User"
+      ]);
+    }
+
+    // Check if this installment is already paid for this student
+    const existingPayments = getInstallmentPaymentsForStudent(data.receiptNo);
+    console.log("Save attempt - ReceiptNo:", data.receiptNo, "Installment:", data.installmentNumber, "Student:", data.studentName);
+    console.log("Existing payments for this receipt:", existingPayments);
+    const alreadyPaid = existingPayments.some(payment =>
+      payment.installmentNumber === parseInt(data.installmentNumber) &&
+      payment.studentName === data.studentName
+    );
+
+    if (alreadyPaid) {
+      return {
+        success: false,
+        message: "This installment has already been paid"
+      };
+    }
+
+    // Save installment payment data
+    sheet.appendRow([
+      new Date(),
+      data.receiptNo,
+      data.studentName,
+      data.enrollmentId,
+      data.courseName,
+      data.installmentNumber,
+      data.installmentAmount,
+      data.paymentMethod,
+      data.paymentDate,
+      userIdForAudit
+    ]);
+
+    const lastRow = sheet.getLastRow();
+
+    // Log successful installment payment
+    createAuditLogEntry("Installment Payment Recorded", userIdForAudit, {
+      receiptNo: data.receiptNo,
+      studentName: data.studentName,
+      courseName: data.courseName,
+      installmentNumber: data.installmentNumber,
+      amount: data.installmentAmount,
+      row: lastRow
+    });
+
+    return {
+      success: true,
+      message: "Installment payment saved successfully",
+      row: lastRow
+    };
+
+  } catch (error) {
+    console.error("Error in saveInstallmentPayment:", error);
+
+    createAuditLogEntry("Installment Payment Save Error", userIdForAudit, {
+      error: error.message,
+      receiptNo: data.receiptNo,
+      studentName: data.studentName
+    });
+
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+}
+
 function saveAdmissionReceipt(data) {
   const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
 

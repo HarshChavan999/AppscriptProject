@@ -487,16 +487,37 @@ function updateCoursePayDetails() {
   const receiptButton = document.getElementById(receiptBtnId);
 
   if (checkbox.checked) {
-    statusSpan.textContent = "Paid";
-    statusSpan.className = "px-2 py-1 text-xs rounded-full bg-green-100 text-green-800";
-    receiptButton.classList.remove("hidden");
+    // Show confirmation popup
+    Swal.fire({
+      title: 'Confirm Payment',
+      text: 'Are you sure the payment is completed?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes',
+      cancelButtonText: 'No'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Update status to Paid
+        statusSpan.textContent = "Paid";
+        statusSpan.className = "px-2 py-1 text-xs rounded-full bg-green-100 text-green-800";
+
+        // Hide the receipt button since we'll generate receipt automatically
+        receiptButton.classList.add("hidden");
+
+        // Automatically generate and show receipt
+        generateInstallmentReceipt(number, amount);
+      } else {
+        // If cancelled, uncheck the checkbox
+        checkbox.checked = false;
+      }
+    });
   } else {
     statusSpan.textContent = "Pending";
     statusSpan.className = "px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-800";
     receiptButton.classList.add("hidden");
   }
-
-
 }
 function DInsReceipt(number,amount){
   console.log("Installment Receipt buttojn clicked");
@@ -562,10 +583,70 @@ function DInsReceipt(number,amount){
 function openCoursePayment() {
     hideAllSections();
     document.getElementById("coursePaymentSection").classList.remove("hidden");
-    // Populate fields from admission data after section is shown
-    setTimeout(() => {
-        copyAdmission();
-    }, 500); // Increased delay to ensure DOM is fully loaded
+
+    // Check if user came from admission structure (only show installment schedule)
+    const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+    if (admissionData && admissionData.name && admissionData.receipt) {
+        // User came from admission structure - show only installment schedule
+        document.getElementById("paymentOptionsSection").classList.add("hidden");
+        document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+        // Populate with admission data
+        setTimeout(() => {
+            copyAdmission();
+        }, 500);
+    } else {
+        // Normal access - show both payment options and installment schedule
+        document.getElementById("paymentOptionsSection").classList.remove("hidden");
+        document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+        // Populate data from admission form (if any)
+        setTimeout(() => {
+            copyAdmission();
+        }, 500);
+    }
+}
+
+// Function to reset Course Payment form and show payment options for normal users
+function resetCoursePaymentForm() {
+    console.log("resetCoursePaymentForm() called - resetting to payment options view");
+
+    // Clear all form fields
+    const fieldsToClear = [
+        "ID", "std_Coursepayname", "enrollmentId", "coursePaySelect",
+        "courseDuration", "coursePayFees", "totalFees", "pay-select"
+    ];
+
+    fieldsToClear.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            if (field.tagName === "SELECT") {
+                field.selectedIndex = 0; // Reset select to first option
+            } else {
+                field.value = ""; // Clear input values
+            }
+        }
+    });
+
+    // Clear installment table if it exists
+    const installmentTable = document.getElementById("installmentTable");
+    if (installmentTable) {
+        installmentTable.innerHTML = "";
+    }
+
+    // Show payment options section and hide installment schedule
+    document.getElementById("paymentOptionsSection").classList.remove("hidden");
+    document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+    // Clear all sessionStorage keys that copyAdmission() might use
+    sessionStorage.removeItem('admissionDataForPayment');
+    sessionStorage.removeItem('first_name');
+    sessionStorage.removeItem('last_name');
+    sessionStorage.removeItem('tempText4');
+    sessionStorage.removeItem('tempText5');
+    sessionStorage.removeItem('enrollmentId');
+
+    console.log("Course Payment form reset to show payment options");
 }
 
   /******************************************
@@ -585,7 +666,13 @@ function openCoursePayment() {
     document.getElementById("admissionAnalyticsSection").classList.add("hidden");
     document.getElementById("ifId").classList.add("hidden");
     document.getElementById("admissionFormSection").classList.add("hidden");
-    document.getElementById("coursePaymentSection").classList.add("hidden");
+
+    // Hide the course payment section (but don't clear data)
+    const coursePaymentSection = document.getElementById("coursePaymentSection");
+    if (coursePaymentSection) {
+      coursePaymentSection.classList.add("hidden");
+    }
+
     // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
     document.getElementById("feeStructureSection").classList.add("hidden");
     document.getElementById("receiptFormSection").classList.add("hidden");
@@ -781,42 +868,45 @@ function formatCurrency(amount) {
 }
 function generateInstallmentReceipt(number,amount){
     try {
+        console.log("generateInstallmentReceipt called with number:", number, "amount:", amount);
+
         const receiptNo = "REC" + Math.floor(1000 + Math.random() * 9000);
         const date = new Date().toLocaleDateString('en-GB');
         const installmentno = number; // From the parameter
-        const Amount= amount;
+        const Amount = parseFloat(amount); // Ensure amount is a number
 
-        const studentName = document.getElementById('std_Coursepayname')?.value || "N/A";
-        const courseSelect = document.getElementById('coursePaySelect');
-        const courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
-        const totalAmountText = document.getElementById('totalFees')?.textContent || "₹0";
-        const totalAmount = parseFloat(totalAmountText.replace(/[^0-9.]/g, ''));
+        // Check if coming from admission structure (no payment options visible)
+        const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+        let studentName, courseName, totalAmount;
+
+        if (admissionData && admissionData.name && admissionData.receipt) {
+            // Coming from admission structure - use admission data
+            console.log("Using admission data for receipt:", admissionData);
+            studentName = admissionData.name || admissionData.studentName || "N/A";
+            courseName = admissionData.course || admissionData.courseSelect || "N/A";
+            totalAmount = parseFloat(admissionData.totalFees || admissionData.fees || "0");
+        } else {
+            // Normal course payment - use form data
+            console.log("Using form data for receipt");
+            studentName = document.getElementById('std_Coursepayname')?.value || "N/A";
+            const courseSelect = document.getElementById('coursePaySelect');
+            courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
+            const totalAmountText = document.getElementById('totalFees')?.textContent || "₹0";
+            totalAmount = parseFloat(totalAmountText.replace(/[^0-9.]/g, ''));
+        }
+
+        console.log("Receipt data - Student:", studentName, "Course:", courseName, "Total:", totalAmount, "Installment Amount:", Amount);
 
         const paymentTypeEl = document.querySelector('input[name="Coursepayment_type"]:checked');
         const paymentType = paymentTypeEl?.value || "full";
 
-        let paidAmount = 0;
-        let balanceAmount = 0;
+        let paidAmount = Amount; // For installment, paid amount is the installment amount
+        let balanceAmount = totalAmount - paidAmount;
 
-        if (paymentType === 'full') {
-            const fullTotalText = document.getElementById('fullTotal')?.textContent || totalAmountText;
-            paidAmount = parseFloat(fullTotalText.replace(/[^0-9.]/g, ''));
-        } else if (paymentType === 'partial') {
-            const partialInitialText = document.getElementById('partialInitial')?.textContent || (totalAmount * 0.5).toString();
-            paidAmount = parseFloat(partialInitialText.replace(/[^0-9.]/g, ''));
-        } else if (paymentType === 'emi') {
-            const emiDownPaymentText = document.getElementById('emiDownPayment')?.textContent || (totalAmount * 0.1).toString();
-            paidAmount = parseFloat(emiDownPaymentText.replace(/[^0-9.]/g, ''));
-        }
-
-        balanceAmount = totalAmount - paidAmount;
-        // The paymentMethod field is not explicitly used in the new HTML structure, but kept for completeness if needed elsewhere.
-        // const paymentMethod = document.getElementById('pay-select')?.value || "Cash";
-        
         // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
-        const loggedInUser = sessionStorage.getItem("loggedInUser") || 
-                            document.getElementById("loggedInUserId")?.value || 
-                            document.getElementById("userName")?.value || 
+        const loggedInUser = sessionStorage.getItem("loggedInUser") ||
+                            document.getElementById("loggedInUserId")?.value ||
+                            document.getElementById("userName")?.value ||
                             "Admin";
 
         // Prepare data for the new HTML structure
@@ -831,6 +921,8 @@ function generateInstallmentReceipt(number,amount){
             examFees: "-", // Hardcoded as per the provided HTML
             receivedBy: loggedInUser // Hardcoded as per the provided HTML
         };
+
+        console.log("Generated receipt data:", receiptData);
 
         // The entire HTML structure for the receipt, including internal CSS
         const receiptPageHTML = `

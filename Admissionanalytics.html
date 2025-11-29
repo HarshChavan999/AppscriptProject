@@ -476,7 +476,8 @@ function renderAdmissionTable(dataArray) {
         <tbody class="bg-white divide-y divide-gray-200">
   `;
   
-  dataArray.forEach(d => {
+  dataArray.forEach((d, index) => {
+    const dataId = `admission-data-${index}`;
     h += `
       <tr class="hover:bg-gray-50 transition-colors">
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.receipt || ''}</td>
@@ -491,9 +492,11 @@ function renderAdmissionTable(dataArray) {
           </span>
         </td>
         <td class="px-4 py-3 whitespace-nowrap text-sm">
-          <button onclick="viewAdmissionDetails(${JSON.stringify(d).replace(/"/g, '&quot;')})" 
+          <button onclick="redirectToCoursePaymentFromTable('${dataId}')"
+                  data-admission='${JSON.stringify(d).replace(/'/g, "\\'")}'
+                  id="${dataId}"
                   class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm flex items-center gap-1 transition-colors">
-            <i class="fas fa-eye text-xs"></i> View Details
+            <i class="fas fa-credit-card text-xs"></i> Course Payment
           </button>
         </td>
       </tr>
@@ -513,6 +516,79 @@ function closeAdmissionAnalytics() {
   hideAllSections();
   document.getElementById("ifId").classList.remove("hidden");
 }
+
+function redirectToCoursePaymentFromTable(buttonId) {
+  console.log("redirectToCoursePaymentFromTable called with buttonId:", buttonId);
+
+  const button = document.getElementById(buttonId);
+  if (!button) {
+    console.error("Button not found:", buttonId);
+    return;
+  }
+
+  const dataString = button.getAttribute('data-admission');
+  if (!dataString) {
+    console.error("No data-admission attribute found on button");
+    return;
+  }
+
+  try {
+    const data = JSON.parse(dataString);
+    console.log("Parsed data:", data);
+    redirectToCoursePayment(data);
+  } catch (error) {
+    console.error("Error parsing data-admission:", error);
+  }
+}
+
+function redirectToCoursePayment(data) {
+  console.log("redirectToCoursePayment called with data:", data);
+
+  // Store admission data in sessionStorage for Course Payment page
+  sessionStorage.setItem('admissionDataForPayment', JSON.stringify(data));
+  console.log("Data stored in sessionStorage");
+
+  // Try to navigate using the global functions
+  try {
+    // Check if hideAllSections exists in global scope
+    if (typeof window.hideAllSections === 'function') {
+      console.log("Calling hideAllSections");
+      window.hideAllSections();
+    } else {
+      console.log("hideAllSections not found, trying direct navigation");
+      // Fallback: manually hide sections
+      const sections = document.querySelectorAll('[id$="Section"]');
+      sections.forEach(section => {
+        if (section.id !== 'coursePaymentSection') {
+          section.classList.add('hidden');
+        }
+      });
+    }
+
+    const coursePaymentSection = document.getElementById("coursePaymentSection");
+    if (coursePaymentSection) {
+      console.log("Showing coursePaymentSection");
+      coursePaymentSection.classList.remove("hidden");
+
+      // Try to populate form data if function is available
+      setTimeout(() => {
+        if (typeof window.populateCoursePaymentFromAdmission === 'function') {
+          console.log("Calling populateCoursePaymentFromAdmission");
+          window.populateCoursePaymentFromAdmission(data);
+        } else {
+          console.log("populateCoursePaymentFromAdmission function not found");
+        }
+      }, 200);
+    } else {
+      console.error("Course Payment section not found in DOM");
+      alert("Error: Course Payment section not available. Please refresh the page and try again.");
+    }
+  } catch (error) {
+    console.error("Error in redirectToCoursePayment:", error);
+    alert("Navigation error: " + error.message);
+  }
+}
+
 function viewAdmissionDetails(data) {
   // Implement view admission details functionality
   console.log("View admission details:", data);
