@@ -2164,3 +2164,122 @@ function saveAdmissionReceipt(data) {
     };
   }
 }
+
+/**
+ * Saves installment data to InstallmentPayments sheet when receipt is generated
+ * @param {Object} data Receipt data for generating installments
+ * @returns {Object} Operation result
+ */
+function saveInstallmentDataOnReceiptGeneration(data) {
+  const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Get or create "InstallmentPayments" sheet
+    let sheet = ss.getSheetByName(CONFIG.INSTALLMENT_PAYMENTS_SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(CONFIG.INSTALLMENT_PAYMENTS_SHEET_NAME);
+
+      // Add headers matching the column indices
+      sheet.appendRow([
+        "Timestamp",
+        "Enrollment_ID",
+        "Student_Name",
+        "Course_Name",
+        "Payement_Option",
+        "Total_Fees_Due",
+        "Installment_Number",
+        "Amount_Paid",
+        "Payment_Method",
+        "Payment_Date",
+        "Logged_In_User"
+      ]);
+    }
+
+    // Get installment details from the receipt data
+    const enrollmentId = data.enrollmentNo || "";
+    const studentName = data.studentName || "";
+    const courseName = data.courseName || "";
+    const paymentOption = data.paymentType || "full";
+    const totalFeesDue = parseFloat(data.totalFee) || 0;
+    const installmentCount = parseInt(data.installmentCount) || 1;
+    const paymentMethod = data.paymentMethod || "Cash";
+    const paymentDate = new Date().toISOString().split('T')[0]; // Today's date
+
+    // Check if installment data already exists for this enrollment ID
+    const existingData = sheet.getDataRange().getValues();
+    const hasExistingData = existingData.some(row =>
+      row[CONFIG.INSTALLMENT_PAYMENTS_LOOKUP.ENROLLMENT_ID_COL] === enrollmentId &&
+      row[CONFIG.INSTALLMENT_PAYMENTS_LOOKUP.STUDENT_NAME_COL] === studentName
+    );
+
+    if (hasExistingData) {
+      // Data already exists, don't create duplicates
+      createAuditLogEntry("Installment Data Skipped - Already Exists", userIdForAudit, {
+        enrollmentId: enrollmentId,
+        studentName: studentName,
+        reason: "Installment data already exists for this enrollment"
+      });
+
+      return {
+        success: true,
+        message: "Installment data already exists, skipping creation",
+        rows: []
+      };
+    }
+
+    // Always create a single entry per receipt generation
+    const installmentAmount = installmentCount > 1 ? Math.round(totalFeesDue / installmentCount) : totalFeesDue;
+
+    sheet.appendRow([
+      new Date(), // Timestamp
+      enrollmentId,
+      studentName,
+      courseName,
+      paymentOption,
+      totalFeesDue,
+      installmentCount, // Installment_Number (count for installments, 1 for full)
+      installmentAmount, // Amount_Paid (installment amount or full amount)
+      paymentMethod,
+      paymentDate,
+      userIdForAudit
+    ]);
+
+    const lastRow = sheet.getLastRow();
+
+    // Log successful installment data save
+    createAuditLogEntry("Installment Data Saved on Receipt Generation", userIdForAudit, {
+      enrollmentId: enrollmentId,
+      studentName: studentName,
+      courseName: courseName,
+      paymentOption: paymentOption,
+      totalFeesDue: totalFeesDue,
+      installmentCount: installmentCount,
+      installmentAmount: installmentAmount,
+      row: lastRow
+    });
+
+    return {
+      success: true,
+      message: `Installment data saved successfully`,
+      rows: [lastRow]
+    };
+
+  } catch (error) {
+    console.error("Error in saveInstallmentDataOnReceiptGeneration:", error);
+
+    createAuditLogEntry("Installment Data Save Error on Receipt Generation", userIdForAudit, {
+      error: error.message,
+      dataSummary: {
+        enrollmentId: data.enrollmentNo,
+        studentName: data.studentName
+      }
+    });
+
+    return {
+      success: false,
+      message: `Failed to save installment data: ${error.message}`
+    };
+  }
+}

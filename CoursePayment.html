@@ -1117,14 +1117,30 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
   // Function to populate form from admission data
   function populateCoursePaymentFromAdmission(admissionData) {
     if (admissionData) {
-      document.getElementById("ID").value = admissionData.receipt || "";
-      document.getElementById("std_Coursepayname").value = admissionData.name || "";
-      document.getElementById("enrollmentId").value = admissionData.enrollmentNo || "";
+      // Map admission analytics data structure to course payment fields
+      document.getElementById("ID").value = admissionData.receiptNumber || "";
+      document.getElementById("enrollmentId").value = admissionData.enrollmentId || "";
 
-      // Set course selection
+      // Build full name from first, middle, last name
+      const fullName = [admissionData.firstName, admissionData.middleName, admissionData.lastName]
+        .filter(name => name && name.trim())
+        .join(" ");
+      document.getElementById("std_Coursepayname").value = fullName || "";
+
+      // Set course selection - map courseName to course value
       const courseSelect = document.getElementById("coursePaySelect");
-      if (admissionData.course) {
-        courseSelect.value = admissionData.course;
+      if (admissionData.courseName) {
+        // Convert course name to course value (e.g., "ANM Nursing Diploma" -> "anm_nursing")
+        const courseValueMap = {
+          "ANM Nursing Diploma": "anm_nursing",
+          "GNM Nursing Diploma": "gnm_nursing",
+          "DMLT Diploma": "dmlt",
+          "OT Technician": "ot_technician",
+          "General Nursing Assistant": "general_nursing"
+        };
+        const courseValue = courseValueMap[admissionData.courseName] || admissionData.courseName;
+        courseSelect.value = courseValue;
+
         // Trigger course details update
         if (typeof updateCoursePayDetails === 'function') {
           updateCoursePayDetails();
@@ -1161,7 +1177,7 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     // Check if there's admission data from sessionStorage (coming from admission analytics)
     const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
 
-    if (admissionData && admissionData.name && admissionData.receipt) {
+    if (admissionData && (admissionData.firstName || admissionData.lastName) && admissionData.receiptNumber) {
       // User came from admission analytics - hide payment options, show installment schedule
       populateCoursePaymentFromAdmission(admissionData);
 

@@ -515,7 +515,9 @@ function renderAdmissionTable(dataArray) {
         </td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.user || ''}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm">
-          <button onclick="viewAdmissionDetails(${JSON.stringify(d).replace(/"/g, '"')})"
+          <button id="course-payment-btn-${index}"
+                  data-admission='${JSON.stringify(d).replace(/'/g, "\\'")}'
+                  onclick="redirectToCoursePaymentFromTable('course-payment-btn-${index}')"
                   class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm flex items-center gap-1 transition-colors">
             <i class="fas fa-credit-card text-xs"></i> Course Payment
           </button>

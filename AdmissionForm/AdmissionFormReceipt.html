@@ -768,15 +768,15 @@
     // Clone the containers to avoid modifying the original ones
     const receiptClone = document.getElementById('receiptContainer').cloneNode(true);
     const undertakingClone = document.getElementById('undertakingContainer').cloneNode(true);
-    
+
     // Create a temporary container to hold both elements
     const tempContainer = document.createElement('div');
     tempContainer.appendChild(receiptClone);
     tempContainer.appendChild(undertakingClone);
-    
+
     // Show the undertaking container for PDF generation
     undertakingClone.style.display = 'block';
-    
+
     const studentName = document.getElementById('studentNameAF').value || 'receipt';
     const opt = {
       margin: 0,
@@ -785,26 +785,64 @@
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    
+
     html2pdf().from(tempContainer).set(opt).save();
-    
+
     // Clean up
     tempContainer.remove();
   }
 
+
+
   function prepareForPrint() {
+    // First, save installment data to the sheet
+    const receiptData = {
+      enrollmentNo: document.getElementById('enrollmentNoAF').value,
+      studentName: document.getElementById('studentNameAF').value,
+      courseName: document.getElementById('courseName').value,
+      paymentType: document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full",
+      totalFee: parseFloat(document.getElementById('totalFee').value) || 0,
+      installmentCount: parseInt(document.getElementById('installmentCount').value) || 1,
+      startDate: document.getElementById('startDate').value,
+      courseYear: parseInt(document.getElementById('courseYear').value) || 1,
+      paymentMethod: document.getElementById('pay-select').value || "Cash"
+    };
+
+    // Save installment data
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) {
+          console.log("Installment data saved:", result.message);
+          // Now proceed with printing
+          proceedWithPrinting();
+        } else {
+          alert("Error saving installment data: " + result.message);
+          // Still proceed with printing even if saving fails
+          proceedWithPrinting();
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error("Error saving installment data:", error);
+        alert("Error saving installment data. Proceeding with printing.");
+        // Still proceed with printing
+        proceedWithPrinting();
+      })
+      .saveInstallmentDataOnReceiptGeneration(receiptData);
+  }
+
+  function proceedWithPrinting() {
     const installmentCount = parseInt(document.getElementById('installmentCount').value);
-    
+
     // Enable compact mode if many installments
     if (installmentCount >= 6) {
       document.getElementById('receiptContainer').classList.add('compact-mode');
     }
-    
+
     // Show undertaking container
     document.getElementById('undertakingContainer').classList.remove('hidden');
-    
+
     window.print();
-    
+
     // Reset after printing
     setTimeout(() => {
       document.getElementById('receiptContainer').classList.remove('compact-mode');

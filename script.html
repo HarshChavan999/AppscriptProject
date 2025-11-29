@@ -75,6 +75,17 @@ function getCourseDataByLocation(branch) {
       .getElementById("coursePaySelect")
       .addEventListener("change", updateCoursePayDetails);
     selectPayment("full");
+
+    // Add click event listeners to payment option cards
+    document.querySelectorAll('.payment-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const radioInput = this.querySelector('input[type="radio"]');
+        if (radioInput) {
+          const paymentType = radioInput.value;
+          selectPayment(paymentType);
+        }
+      });
+    });
   });
 
   
@@ -310,9 +321,11 @@ function updateCoursePayDetails() {
     document.getElementById(`${type}PaymentCard`).classList.add("selected");
     document.querySelector(`input[value="${type}"]`).checked = true;
 
-    // Always show installment plan with appropriate schedule
-    const installmentPlan = document.getElementById("installmentPlan");
-    installmentPlan.classList.remove("hidden");
+    // Always show installment schedule section with appropriate schedule
+    const installmentScheduleSection = document.getElementById("installmentScheduleSection");
+    if (installmentScheduleSection) {
+      installmentScheduleSection.classList.remove("hidden");
+    }
 
     // Generate installment schedule based on selected payment type
     generatePaymentInstallmentSchedule(type);
