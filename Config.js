@@ -6,7 +6,7 @@ const CONFIG = {
 
   // Sheet Names
   ADMISSIONS_SHEET_NAME: 'ADMISSIONF',
-  INQUIRY_SHEET_NAME: 'DF', // Your main inquiry sheet
+  INQUIRY_SHEET_NAME: 'Inquiries', // Your main inquiry sheet
   STUDENT_DATA_SHEET_NAME: 'STUDENT DATA',
   FEES_SHEET_NAME: 'FEES',
   LOGIN_SHEET_NAME: 'LOGIN',
@@ -22,8 +22,8 @@ const CONFIG = {
     ADMIN: 'admin'
   },
 
-  // --- Column Mappings for INQUIRY_SHEET_NAME ('DF') ---
-  // These indices (0-based) must match the column order in your 'DF' Google Sheet precisely,
+  // --- Column Mappings for INQUIRY_SHEET_NAME ('Inquiries') ---
+  // These indices (0-based) must match the column order in your 'Inquiries' Google Sheet precisely,
   // assuming Column A is an auto-generated timestamp.
   //
   // Your sheet columns are effectively:
@@ -78,8 +78,8 @@ const CONFIG = {
     GENDER: 19
   },
 
-  // --- Column Mappings for Aadhar Lookup (within INQUIRY_SHEET_NAME 'DF') ---
-  // These indices (0-based) must match the column order in your 'DF' Google Sheet precisely,
+  // --- Column Mappings for Aadhar Lookup (within INQUIRY_SHEET_NAME 'Inquiries') ---
+  // These indices (0-based) must match the column order in your 'Inquiries' Google Sheet precisely,
   // when you use `getDataRange().getValues()`. This method includes ALL columns,
   // including the auto-generated Timestamp in Column A.
   //
@@ -92,7 +92,7 @@ const CONFIG = {
   // if column A is Timestamp.
 
   AADHAAR_LOOKUP: {
-    SHEET_NAME: 'DF', // The sheet where Aadhar records are stored for lookup
+    SHEET_NAME: 'Inquiries', // The sheet where Aadhar records are stored for lookup
     // These indices are 0-based from the `getValues()` array
     TIMESTAMP_COL: 0,            // Column A
     DATE_FORM_COL: 1,            // Column B

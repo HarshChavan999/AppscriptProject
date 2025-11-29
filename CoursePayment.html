@@ -581,6 +581,9 @@
       guardianName: admissionData.guardianName || admissionData.guardian_name || admissionData.guardianName || "",
       studentRelation: admissionData.studentRelation || admissionData.guardian_relation || admissionData.studentRelation || "",
 
+      // Student Photo from admission form (check both sessionStorage and localStorage)
+      studentPhoto: sessionStorage.getItem('studentPhoto') || localStorage.getItem('admission_studentPhoto') || "",
+
       // Additional fields from admission form
       addressLine1: admissionData.addressLine1 || "",
       addressLine2: admissionData.addressLine2 || "",
@@ -608,6 +611,11 @@
         ? `I am ${admissionData.studentRelation} of ${admissionData.guardianName}`
         : "")
     };
+
+    console.log("CoursePayment - Photo retrieval:");
+    console.log("sessionStorage studentPhoto:", sessionStorage.getItem('studentPhoto') ? "EXISTS (length: " + sessionStorage.getItem('studentPhoto').length + ")" : "NOT FOUND");
+    console.log("localStorage admission_studentPhoto:", localStorage.getItem('admission_studentPhoto') ? "EXISTS (length: " + localStorage.getItem('admission_studentPhoto').length + ")" : "NOT FOUND");
+    console.log("Final studentPhoto in completeReceiptData:", completeReceiptData.studentPhoto ? "EXISTS (length: " + completeReceiptData.studentPhoto.length + ")" : "NOT FOUND");
 
     // 🔥 CRITICAL: Store complete workflow data in sessionStorage
     sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));

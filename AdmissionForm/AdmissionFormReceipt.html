@@ -916,6 +916,50 @@
       // 🔥 CRITICAL: Generate installment table after prefill since onchange events don't fire for programmatic value setting
       generateInstallmentTables();
 
+      // 🔥 CRITICAL: Handle student photo display
+      const studentPhoto = completeReceiptData.studentPhoto ||
+                          sessionStorage.getItem('studentPhoto') ||
+                          localStorage.getItem('admission_studentPhoto');
+
+      console.log("AdmissionReceipt - Photo display attempt:");
+      console.log("completeReceiptData.studentPhoto:", completeReceiptData.studentPhoto ? "EXISTS (length: " + completeReceiptData.studentPhoto.length + ")" : "NOT FOUND");
+      console.log("sessionStorage studentPhoto:", sessionStorage.getItem('studentPhoto') ? "EXISTS (length: " + sessionStorage.getItem('studentPhoto').length + ")" : "NOT FOUND");
+      console.log("localStorage admission_studentPhoto:", localStorage.getItem('admission_studentPhoto') ? "EXISTS (length: " + localStorage.getItem('admission_studentPhoto').length + ")" : "NOT FOUND");
+      console.log("Final selected studentPhoto:", studentPhoto ? "EXISTS (length: " + studentPhoto.length + ")" : "NOT FOUND");
+
+      if (studentPhoto) {
+        const photoSection = document.querySelector('#receiptFormSection .photo-section');
+        const photoPlaceholder = document.getElementById('photoPlaceholderAF');
+
+        console.log("Photo section found:", !!photoSection);
+        console.log("Photo placeholder found:", !!photoPlaceholder);
+
+        if (photoSection && photoPlaceholder) {
+          // Hide the placeholder text and show the image
+          photoPlaceholder.style.display = 'none';
+
+          // Create and add the image element while preserving the file input
+          const imgElement = document.createElement('img');
+          imgElement.src = studentPhoto;
+          imgElement.alt = 'Student Photo';
+          imgElement.style.cssText = 'width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 2;';
+
+          // Make sure the photo section has relative positioning
+          photoSection.style.position = 'relative';
+
+          photoSection.appendChild(imgElement);
+          console.log("Student photo displayed in receipt - image element created and added");
+
+          // Verify the image loaded
+          imgElement.onload = () => console.log("Photo image loaded successfully");
+          imgElement.onerror = () => console.error("Photo image failed to load");
+        } else {
+          console.error("Photo section or placeholder not found in DOM");
+        }
+      } else {
+        console.log("No student photo available to display");
+      }
+
       // 🔥 CRITICAL: Add custom prefill logic for any additional fields if needed
       // Use completeReceiptData object for any custom requirements
 
