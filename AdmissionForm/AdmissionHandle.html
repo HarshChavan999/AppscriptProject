@@ -463,10 +463,8 @@ function loadReceipt(enrollmentID, studentName, course) {
             </html>
         `;
 
-        // Open a new tab and write the receipt
-        const printWindow = window.open('', '_blank', 'width=800,height=1000');
-        printWindow.document.write(receiptPageHTML);
-        printWindow.document.close();
+        // Show receipt in a modal instead of opening new window
+        showReceiptModal(receiptPageHTML);
 
     } catch (error) {
         console.error("Error generating receipt:", error);
@@ -570,8 +568,15 @@ async function AdmissionHandle(event) {
           sessionStorage.setItem("tempText5", document.getElementById('courseSelect').value);
 
           generateAndSaveEnrollment();
+
+          // Navigate to course payment after receipt is shown
+          setTimeout(() => {
+            console.log("Navigating to course payment form after admission submission");
+            openCoursePayment();
+          }, 1500);
+
           alert("Submission successful!\nEnrollment ID: " + (response.enrollmentId || "Not generated"));
-          event.target.reset();
+          // Note: Form reset moved after navigation to allow data transfer
         } else {
           alert("Error: " + response.message);
         }
@@ -633,6 +638,88 @@ function readFileAsDataURL(file) {
     reader.onerror = (e) => reject(e);
     reader.readAsDataURL(file);
   });
+}
+
+function showReceiptModal(receiptHTML) {
+  // Create modal overlay
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  `;
+
+  // Create modal content
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  `;
+
+  // Create close button
+  const closeButton = document.createElement('button');
+  closeButton.innerHTML = '×';
+  closeButton.style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+
+  // Create iframe for receipt content
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = `
+    width: 100%;
+    height: 600px;
+    border: none;
+    border-radius: 8px;
+  `;
+
+  // Set receipt content in iframe
+  iframe.srcdoc = receiptHTML;
+
+  // Add close functionality
+  closeButton.onclick = () => {
+    document.body.removeChild(modal);
+  };
+
+  // Close on overlay click
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  };
+
+  // Assemble modal
+  modalContent.appendChild(closeButton);
+  modalContent.appendChild(iframe);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

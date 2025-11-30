@@ -1028,23 +1028,37 @@ function getClassMonthDashboard(selectedClass, selectedMonth, userRole) {
 function saveEnrollment(data) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("Enrollments");
-    
+    let sheet = ss.getSheetByName(CONFIG.ENROLLMENTS_SHEET_NAME);
+
+    // Create sheet if it doesn't exist
+    if (!sheet) {
+      sheet = ss.insertSheet(CONFIG.ENROLLMENTS_SHEET_NAME);
+      // Add headers
+      sheet.appendRow([
+        "Enrollment ID",
+        "Student Name",
+        "Course",
+        "Date",
+        "Status"
+      ]);
+    }
+
     // Validate data
     if (!data.enrollmentID || !data.studentName) {
       throw new Error("Missing required enrollment data");
     }
-    
+
     // Check for duplicate enrollment ID
-    const existingIds = sheet.getRange(2, 1, sheet.getLastRow()-1, 1).getValues().flat();
+    const existingData = sheet.getDataRange().getValues();
+    const existingIds = existingData.slice(1).map(row => row[0]); // Skip header row
     if (existingIds.includes(data.enrollmentID)) {
       throw new Error("Enrollment ID already exists: " + data.enrollmentID);
     }
-    
+
     // Format date as dd/mm/yyyy
     const today = new Date();
     const formattedDate = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
-    
+
     // Append to sheet
     sheet.appendRow([
       data.enrollmentID,
@@ -1053,14 +1067,14 @@ function saveEnrollment(data) {
       formattedDate,
       "Active"
     ]);
-    
+
     // Return success with the enrollment ID
     return {
       success: true,
       message: "Enrollment saved successfully",
       enrollmentID: data.enrollmentID
     };
-    
+
   } catch (e) {
     console.error("Save enrollment error:", e);
     throw new Error("Failed to save enrollment: " + e.message);
@@ -1419,6 +1433,9 @@ function getAdmissionAnalyticsData(userRole) {
   let courseCounts = {};
 
   // Find column indices
+  const dateIdx = headers.indexOf("Date") !== -1 ? headers.indexOf("Date") :
+                  headers.indexOf("Admission Date") !== -1 ? headers.indexOf("Admission Date") :
+                  headers.indexOf("Timestamp") !== -1 ? headers.indexOf("Timestamp") : -1;
   const receiptNumberIdx = headers.indexOf("Receipt Number");
   const enrollmentIdIdx = headers.indexOf("Enrollment ID");
   const firstNameIdx = headers.indexOf("First Name");
@@ -1447,7 +1464,18 @@ function getAdmissionAnalyticsData(userRole) {
     const agreement = row[agreementIdx] || "";
     const user = row[userIdx] || "";
 
+    // Format date if available
+    let formattedDate = "";
+    if (dateIdx !== -1 && row[dateIdx]) {
+      if (row[dateIdx] instanceof Date) {
+        formattedDate = Utilities.formatDate(row[dateIdx], Session.getScriptTimeZone(), "yyyy-MM-dd");
+      } else {
+        formattedDate = row[dateIdx].toString();
+      }
+    }
+
     results.push({
+      date: formattedDate,
       receiptNumber: receiptNumber,
       enrollmentId: enrollmentId,
       firstName: firstName,

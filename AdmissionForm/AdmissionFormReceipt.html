@@ -493,15 +493,20 @@
           <div class="installment-section">
             <div class="form-row">
               <div class="form-group">
-                <label>Installments (per year)</label>
-                <select id="installmentCount" name="installmentCount" onchange="generateInstallmentTables()">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="6">6</option>
-                  <option value="12">12</option>
-                </select>
+                <label id="installmentLabel">Installments (per year)</label>
+                <div id="installmentInputContainer">
+                  <select id="installmentCount" name="installmentCount" onchange="generateInstallmentTables()">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="12">12</option>
+                  </select>
+                </div>
+                <div id="totalInstallmentsDisplay" style="display: none; margin-top: 5px; font-size: 9pt; color: #2C3E50; font-weight: bold;">
+                  Total installments: <span id="totalInstallmentsCount"></span>
+                </div>
               </div>
               <div class="form-group">
                 <label>Total Course Fee</label>
@@ -845,16 +850,28 @@
 
   function prepareForPrint() {
     // First, save installment data to the sheet
+    const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
+    const installmentCountValue = document.getElementById('installmentCount').value;
+    const totalInstallmentsDisplay = document.getElementById('totalInstallmentsDisplay');
+
+    // Determine installment count - use total installments display if visible, otherwise use select value
+    let installmentCount = 1;
+    if (totalInstallmentsDisplay && totalInstallmentsDisplay.style.display !== 'none') {
+      installmentCount = parseInt(document.getElementById('totalInstallmentsCount').textContent) || 1;
+    } else {
+      installmentCount = parseInt(installmentCountValue) || 1;
+    }
+
     const receiptData = {
       enrollmentNo: document.getElementById('enrollmentNoAF').value,
       studentName: document.getElementById('studentNameAF').value,
       courseName: document.getElementById('courseName').value,
-      paymentType: document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full",
+      paymentType: completeReceiptData.paymentType || document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full",
       totalFee: parseFloat(document.getElementById('totalFee').value) || 0,
-      installmentCount: parseInt(document.getElementById('installmentCount').value) || 1,
+      installmentCount: installmentCount,
       startDate: document.getElementById('startDate').value,
       courseYear: parseInt(document.getElementById('courseYear').value) || 1,
-      paymentMethod: document.getElementById('pay-select').value || "Cash"
+      paymentMethod: document.getElementById('pay-select')?.value || "Cash"
     };
 
     // Save installment data
@@ -880,7 +897,14 @@
   }
 
   function proceedWithPrinting() {
-    const installmentCount = parseInt(document.getElementById('installmentCount').value);
+    // Determine installment count - use total installments display if visible, otherwise use select value
+    let installmentCount = 1;
+    const totalInstallmentsDisplay = document.getElementById('totalInstallmentsDisplay');
+    if (totalInstallmentsDisplay && totalInstallmentsDisplay.style.display !== 'none') {
+      installmentCount = parseInt(document.getElementById('totalInstallmentsCount').textContent) || 1;
+    } else {
+      installmentCount = parseInt(document.getElementById('installmentCount').value) || 1;
+    }
 
     // Enable compact mode if many installments
     if (installmentCount >= 6) {
@@ -978,11 +1002,28 @@
 
       // Fee details
       document.getElementById("totalFee").value = completeReceiptData.totalFee || "";
-      if (completeReceiptData.paymentType === "full") {
+
+      // Handle installment display based on payment type and schedule
+      if (completeReceiptData.installmentSchedule && completeReceiptData.installmentSchedule.length > 0) {
+        // Coming from course payment with custom schedule - show total installments
+        const totalInstallments = completeReceiptData.installmentSchedule.length;
+        document.getElementById("installmentLabel").textContent = "Installments";
+        document.getElementById("installmentInputContainer").style.display = "none";
+        document.getElementById("totalInstallmentsDisplay").style.display = "block";
+        document.getElementById("totalInstallmentsCount").textContent = totalInstallments;
+        // Don't set installmentCount select value since it's hidden
+      } else if (completeReceiptData.paymentType === "full") {
         document.getElementById("installmentCount").value = "";
+        document.getElementById("installmentLabel").textContent = "Installments (per year)";
+        document.getElementById("installmentInputContainer").style.display = "block";
+        document.getElementById("totalInstallmentsDisplay").style.display = "none";
       } else {
         document.getElementById("installmentCount").value = completeReceiptData.installmentCount || "12";
+        document.getElementById("installmentLabel").textContent = "Installments (per year)";
+        document.getElementById("installmentInputContainer").style.display = "block";
+        document.getElementById("totalInstallmentsDisplay").style.display = "none";
       }
+
       document.getElementById("startDate").value = completeReceiptData.startDate || "";
 
       // Critical: Guardian agreement section - FIXED property names

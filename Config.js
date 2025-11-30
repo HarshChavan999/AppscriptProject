@@ -6,6 +6,7 @@ const CONFIG = {
 
   // Sheet Names
   ADMISSIONS_SHEET_NAME: 'ADMISSIONF',
+  ENROLLMENTS_SHEET_NAME: 'Enrollments',
   INQUIRY_SHEET_NAME: 'Inquiries', // Your main inquiry sheet
   STUDENT_DATA_SHEET_NAME: 'STUDENT DATA',
   FEES_SHEET_NAME: 'FEES',
