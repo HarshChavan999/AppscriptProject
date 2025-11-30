@@ -261,7 +261,6 @@
               type="radio"
               name="Coursepayment_type"
               value="emi"
-              checked
               class="h-5 w-5 text-blue-500"
             />
             <h3 class="ml-2 font-semibold">EMI Plan</h3>
@@ -472,6 +471,89 @@
     .saveCoursePayment(formData); // Backend function
 }
 
+  // Function to generate installment schedule based on payment type
+  function generateInstallmentScheduleForPaymentType(paymentType, totalFee) {
+    const schedule = [];
+    const startDate = new Date();
+
+    if (paymentType === "full") {
+      // Full payment: single installment
+      schedule.push({
+        installmentNumber: 1,
+        amount: totalFee,
+        dueDate: startDate.toISOString().split('T')[0],
+        status: "Full Paid"
+      });
+    } else if (paymentType === "partial") {
+      // Partial payment: initial payment + EMIs
+      const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
+      const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
+      const remainingAmount = totalFee - initialPayment;
+      const emiAmount = Math.ceil(remainingAmount / tenure);
+
+      // Initial payment
+      if (initialPayment > 0) {
+        schedule.push({
+          installmentNumber: 1,
+          amount: initialPayment,
+          dueDate: startDate.toISOString().split('T')[0],
+          status: "Pending",
+          type: "Initial Payment"
+        });
+      }
+
+      // EMI installments
+      for (let i = 1; i <= tenure; i++) {
+        const installmentNumber = initialPayment > 0 ? i + 1 : i;
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(startDate.getMonth() + i);
+
+        schedule.push({
+          installmentNumber: installmentNumber,
+          amount: emiAmount,
+          dueDate: dueDate.toISOString().split('T')[0],
+          status: "Pending",
+          type: "EMI"
+        });
+      }
+    } else if (paymentType === "emi") {
+      // EMI payment: down payment + EMIs
+      const downPayment = parseFloat(document.getElementById("emiDownPaymentInput").value) || 0;
+      const tenure = parseInt(document.getElementById("emiTenure").value) || 12;
+      const remainingAmount = totalFee - downPayment;
+      const emiAmount = Math.ceil(remainingAmount / tenure);
+
+      // Down payment
+      if (downPayment > 0) {
+        schedule.push({
+          installmentNumber: 1,
+          amount: downPayment,
+          dueDate: startDate.toISOString().split('T')[0],
+          status: "Pending",
+          type: "Down Payment"
+        });
+      }
+
+      // EMI installments
+      for (let i = 1; i <= tenure; i++) {
+        const installmentNumber = downPayment > 0 ? i + 1 : i;
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(startDate.getMonth() + i);
+
+        schedule.push({
+          installmentNumber: installmentNumber,
+          amount: emiAmount,
+          dueDate: dueDate.toISOString().split('T')[0],
+          status: "Pending",
+          type: "EMI"
+        });
+      }
+    }
+
+    console.log("Generated installment schedule:", schedule);
+    return schedule;
+  }
+
  function proceedToAdmissionReceipt() {
   try {
     // 🔥 CRITICAL: Store current course payment data along with combined workflow data
@@ -513,18 +595,25 @@
     console.log("Course duration textContent:", courseDurationElement?.textContent);
     console.log("Final course duration:", courseDuration);
 
+    // Get selected payment type and generate installment schedule
+    const paymentType = document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full";
+    const totalFee = document.getElementById("totalFees")?.textContent ? parseFloat(document.getElementById("totalFees").textContent.replace(/[^0-9.]/g, '')) : 0;
+    const installmentSchedule = generateInstallmentScheduleForPaymentType(paymentType, totalFee);
+
     const coursePaymentData = {
       receiptNo: document.getElementById("ID")?.value || "AR-" + Math.floor(1000 + Math.random() * 9000),
       studentName: document.getElementById("std_Coursepayname")?.value || "",
       courseName: document.getElementById("coursePaySelect")?.value || "",
       courseDuration: courseDuration,
-      totalFee: document.getElementById("totalFees")?.textContent ? parseFloat(document.getElementById("totalFees").textContent.replace(/[^0-9.]/g, '')) : 0,
+      totalFee: totalFee,
       paymentMethod: document.getElementById("pay-select")?.value || "Cash",
       startDate: new Date().toISOString().split('T')[0], // Today's date as start date
       courseYear: 1, // Default to 1st year
-      installmentCount: 12, // Default to 12 installments (monthly)
+      installmentCount: installmentSchedule.length, // Use actual installment count
       loggedInUser: document.getElementById("loggedInUserId")?.value || "Admin",
-      receiptDate: new Date().toISOString().split('T')[0]
+      receiptDate: new Date().toISOString().split('T')[0],
+      paymentType: paymentType,
+      installmentSchedule: installmentSchedule // Add the detailed schedule
     };
 
     // 🔥 CRITICAL: Retrieve and merge previous workflow data
@@ -573,9 +662,10 @@
 
       // Fee Details
       totalFee: coursePaymentData.totalFee,
-      paymentType: document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full",
+      paymentType: coursePaymentData.paymentType,
       installmentCount: coursePaymentData.installmentCount,
       startDate: coursePaymentData.startDate,
+      installmentSchedule: coursePaymentData.installmentSchedule, // Add the installment schedule
 
       // Guardian Info (critical for agreement section) - FIXED: Use correct property names
       guardianName: admissionData.guardianName || admissionData.guardian_name || admissionData.guardianName || "",
