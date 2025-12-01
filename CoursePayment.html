@@ -707,13 +707,38 @@
     console.log("localStorage admission_studentPhoto:", localStorage.getItem('admission_studentPhoto') ? "EXISTS (length: " + localStorage.getItem('admission_studentPhoto').length + ")" : "NOT FOUND");
     console.log("Final studentPhoto in completeReceiptData:", completeReceiptData.studentPhoto ? "EXISTS (length: " + completeReceiptData.studentPhoto.length + ")" : "NOT FOUND");
 
-    // 🔥 CRITICAL: Store complete workflow data in sessionStorage
-    sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
+    // 🔥 CRITICAL: Save installment schedule to persist exact schedule
+    google.script.run
+      .withSuccessHandler((scheduleResult) => {
+        if (scheduleResult.success) {
+          console.log("Installment schedule saved successfully");
+        } else {
+          console.error("Failed to save installment schedule:", scheduleResult.message);
+        }
 
-    console.log("Complete receipt data prepared:", completeReceiptData);
+        // 🔥 CRITICAL: Store complete workflow data in sessionStorage
+        sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
 
-    // 🔥 CRITICAL: Use the same function as sidebar instead of navigating to new page
-    openreceiptFormSection();
+        console.log("Complete receipt data prepared:", completeReceiptData);
+
+        // 🔥 CRITICAL: Use the same function as sidebar instead of navigating to new page
+        openreceiptFormSection();
+      })
+      .withFailureHandler((error) => {
+        console.error("Error saving installment schedule:", error);
+        // Continue with receipt generation even if schedule save fails
+        sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
+        openreceiptFormSection();
+      })
+      .saveInstallmentSchedule({
+        receiptNo: coursePaymentData.receiptNo,
+        studentName: coursePaymentData.studentName,
+        enrollmentNo: coursePaymentData.enrollmentId,
+        courseName: coursePaymentData.courseName,
+        paymentType: coursePaymentData.paymentType,
+        totalFee: coursePaymentData.totalFee,
+        installmentSchedule: coursePaymentData.installmentSchedule
+      });
 
   } catch (error) {
     console.error("Error in proceedToAdmissionReceipt:", error);
@@ -723,6 +748,110 @@
 
   // Function to populate installment schedule
   function populateInstallmentSchedule() {
+    const receiptNo = document.getElementById("ID").value;
+
+    if (!receiptNo || receiptNo.trim() === "") {
+      console.log("No receipt number found, cannot load installment schedule");
+      return;
+    }
+
+    const tableBody = document.getElementById("installmentTable");
+    tableBody.innerHTML = "";
+
+    // Load local payments first for immediate UI updates
+    let localPayments = loadLocalPayments(receiptNo);
+    console.log("Loaded local payments:", localPayments);
+
+    // Try to load saved installment schedule first
+    google.script.run
+      .withSuccessHandler((savedSchedule) => {
+        console.log("Loaded saved installment schedule:", savedSchedule);
+
+        if (savedSchedule && savedSchedule.length > 0) {
+          // Use the saved schedule
+          generateInstallmentTableRowsFromSchedule(savedSchedule, localPayments);
+        } else {
+          // Fallback to generating default schedule if no saved schedule
+          console.log("No saved schedule found, generating default schedule");
+          generateDefaultInstallmentSchedule(localPayments);
+        }
+
+        // Load server payments and update status
+        google.script.run
+          .withSuccessHandler((serverPayments) => {
+            console.log("Loaded server payments:", serverPayments);
+            serverPayments = serverPayments || []; // Handle null response
+
+            // Merge local and server payments (server takes precedence)
+            const allPayments = [...localPayments];
+            serverPayments.forEach(serverPayment => {
+              const existingIndex = allPayments.findIndex(p => p.installmentNumber === serverPayment.installmentNumber);
+              if (existingIndex >= 0) {
+                allPayments[existingIndex] = serverPayment; // Replace with server data
+              } else {
+                allPayments.push(serverPayment); // Add new server payment
+              }
+            });
+
+            if (allPayments.length > 0) {
+              updateInstallmentStatus(allPayments);
+            }
+          })
+          .withFailureHandler((error) => {
+            console.error("Error loading server payments:", error);
+            // Keep local payments as they are
+          })
+          .getInstallmentPaymentsForStudent(receiptNo);
+      })
+      .withFailureHandler((error) => {
+        console.error("Error loading saved installment schedule:", error);
+        // Fallback to generating default schedule
+        generateDefaultInstallmentSchedule(localPayments);
+      })
+      .loadInstallmentSchedule(receiptNo);
+  }
+
+  // Function to generate table rows from saved schedule
+  function generateInstallmentTableRowsFromSchedule(schedule, paidInstallments) {
+    const tableBody = document.getElementById("installmentTable");
+
+    schedule.forEach(installment => {
+      const row = document.createElement("tr");
+      row.className = "hover:bg-gray-50";
+
+      const statusId = `status-${installment.installmentNumber}`;
+      const receiptBtnId = `receiptBtn-${installment.installmentNumber}`;
+
+      // Check if this installment is paid
+      const isPaid = paidInstallments.some(p => p.installmentNumber === installment.installmentNumber);
+      const statusClass = isPaid ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
+      const statusText = isPaid ? "Paid" : "Pending";
+      const checkboxChecked = isPaid ? "checked disabled" : "";
+      const receiptBtnHidden = isPaid ? "" : "hidden";
+
+      row.innerHTML = `
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${installment.installmentNumber}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${new Date(installment.dueDate).toLocaleDateString('en-IN')}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-600">₹${installment.amount.toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <span id="${statusId}" class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${statusText}</span>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <input type="checkbox" class="installment-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" data-installment="${installment.installmentNumber}" data-amount="${installment.amount}" onchange="handleInstallmentPayment(this, '${statusId}', '${receiptBtnId}')" ${checkboxChecked}>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
+          <button id="${receiptBtnId}" onclick="generateInstallmentReceipt(${installment.installmentNumber}, ${installment.amount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded ${receiptBtnHidden} hover:bg-green-700 transition-colors">
+            Receipt
+          </button>
+        </td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+  }
+
+  // Fallback function to generate default installment schedule
+  function generateDefaultInstallmentSchedule(paidInstallments) {
     const totalFeesElement = document.getElementById("totalFees");
     const totalFeesText = totalFeesElement.textContent || totalFeesElement.innerText;
     const totalAmount = parseFloat(totalFeesText.replace(/[^0-9.]/g, '')) || 0;
@@ -736,50 +865,10 @@
     const numberOfInstallments = 12;
     const installmentAmount = Math.ceil(totalAmount / numberOfInstallments);
 
-    const tableBody = document.getElementById("installmentTable");
-    tableBody.innerHTML = "";
-
     const today = new Date();
-    const receiptNo = document.getElementById("ID").value;
-
-    // Load local payments first for immediate UI updates
-    let localPayments = [];
-    if (receiptNo && receiptNo.trim() !== "") {
-      localPayments = loadLocalPayments(receiptNo);
-      console.log("Loaded local payments:", localPayments);
-    }
 
     // Generate the table with local payments applied
-    generateInstallmentTableRows(numberOfInstallments, installmentAmount, today, localPayments);
-
-    // If there's a receipt number, also try to load from server and update
-    if (receiptNo && receiptNo.trim() !== "") {
-      google.script.run
-        .withSuccessHandler((serverPayments) => {
-          console.log("Loaded server payments:", serverPayments);
-          serverPayments = serverPayments || []; // Handle null response
-
-          // Merge local and server payments (server takes precedence)
-          const allPayments = [...localPayments];
-          serverPayments.forEach(serverPayment => {
-            const existingIndex = allPayments.findIndex(p => p.installmentNumber === serverPayment.installmentNumber);
-            if (existingIndex >= 0) {
-              allPayments[existingIndex] = serverPayment; // Replace with server data
-            } else {
-              allPayments.push(serverPayment); // Add new server payment
-            }
-          });
-
-          if (allPayments.length > 0) {
-            updateInstallmentStatus(allPayments);
-          }
-        })
-        .withFailureHandler((error) => {
-          console.error("Error loading server payments:", error);
-          // Keep local payments as they are
-        })
-        .getInstallmentPaymentsForStudent(receiptNo);
-    }
+    generateInstallmentTableRows(numberOfInstallments, installmentAmount, today, paidInstallments);
   }
 
   // Function to update installment status based on existing payments
@@ -791,12 +880,15 @@
       paidInstallments[payment.installmentNumber] = payment;
     });
 
-    for (let i = 1; i <= 12; i++) { // Assuming 12 installments
-      if (paidInstallments[i]) {
-        console.log(`Marking installment ${i} as paid`);
-        const statusSpan = document.getElementById(`status-${i}`);
-        const checkbox = document.querySelector(`input[data-installment="${i}"]`);
-        const receiptBtn = document.getElementById(`receiptBtn-${i}`);
+    // Get all installment checkboxes and update their status
+    const checkboxes = document.querySelectorAll('.installment-checkbox');
+    checkboxes.forEach(checkbox => {
+      const installmentNumber = parseInt(checkbox.getAttribute('data-installment'));
+      const statusSpan = document.getElementById(`status-${installmentNumber}`);
+      const receiptBtn = document.getElementById(`receiptBtn-${installmentNumber}`);
+
+      if (paidInstallments[installmentNumber]) {
+        console.log(`Marking installment ${installmentNumber} as paid`);
 
         if (statusSpan) {
           statusSpan.className = "px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800";
@@ -813,7 +905,7 @@
           receiptBtn.classList.remove("hidden");
         }
       }
-    }
+    });
   }
 
   // Function to store payment locally for immediate persistence
@@ -829,7 +921,8 @@
   // Function to load local payments for immediate UI update
   function loadLocalPayments(receiptNo) {
     const payments = [];
-    for (let i = 1; i <= 12; i++) {
+    // Load payments for this receipt number (up to a reasonable limit)
+    for (let i = 1; i <= 50; i++) { // Increased limit to handle more installments
       const key = `payment_${receiptNo}_${i}`;
       const stored = localStorage.getItem(key);
       if (stored) {
@@ -954,6 +1047,9 @@
             loggedInUser: formData.loggedInUser
           });
 
+          // Generate and save receipt data
+          generateAndSaveInstallmentReceipt(installmentNumber, amount, formData);
+
           // Update status to Paid
           const statusSpan = document.getElementById(statusId);
           if (statusSpan) {
@@ -971,7 +1067,7 @@
             receiptButton.classList.remove("hidden");
           }
 
-          alert(`Installment ${installmentNumber} payment saved successfully!`);
+          alert(`Installment ${installmentNumber} payment saved successfully! Receipt has been generated and saved.`);
         } else {
           alert("Error: " + (result.message || "Failed to save payment"));
           checkbox.checked = false;
@@ -984,6 +1080,272 @@
         checkbox.disabled = false;
       })
       .saveInstallmentPayment(formData);
+  }
+
+  // Function to generate and save installment receipt data
+  function generateAndSaveInstallmentReceipt(installmentNumber, amount, paymentData) {
+    try {
+      // Generate receipt number
+      const receiptNo = "IR" + Math.floor(1000 + Math.random() * 9000);
+
+      // Get form data
+      const date = new Date().toLocaleDateString('en-GB');
+      const studentName = paymentData.studentName;
+      const courseName = paymentData.courseName;
+      const paymentMode = paymentData.paymentMethod;
+
+      // Format currency
+      const formatCurrency = (amount) => {
+        return '₹' + amount.toFixed(2);
+      };
+
+      // Prepare receipt data
+      const receiptData = {
+        receiptNo: receiptNo,
+        date: date,
+        studentName: studentName,
+        courseName: courseName,
+        installmentNumber: installmentNumber,
+        amountPaid: formatCurrency(amount),
+        paymentMode: paymentMode,
+        receiptType: 'installment'
+      };
+
+      // Generate the receipt HTML
+      const receiptHTML = generateInstallmentReceiptHTML(receiptData);
+
+      // Save receipt data to localStorage for persistence
+      const receiptKey = `installment_receipt_${paymentData.receiptNo}_${installmentNumber}`;
+      localStorage.setItem(receiptKey, JSON.stringify({
+        ...receiptData,
+        html: receiptHTML,
+        generatedAt: new Date().toISOString()
+      }));
+
+      // Add receipt to the receipt container
+      addReceiptToContainer(receiptData, receiptHTML);
+
+      console.log("Installment receipt generated and saved:", receiptNo);
+
+    } catch (error) {
+      console.error("Error generating installment receipt:", error);
+    }
+  }
+
+  // Function to generate installment receipt HTML
+  function generateInstallmentReceiptHTML(receiptData) {
+    
+
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Installment Receipt</title>
+        <style>
+          @page { size: A4; margin: 0.5in; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
+          .page-container { width: 210mm; height: 297mm; display: flex; flex-direction: column;
+                          justify-content: space-between; padding: 10mm; box-sizing: border-box; }
+          .receipt { width: 100%; height: 45%; border: 3px solid #000; border-radius: 15px;
+                   padding: 15px; box-sizing: border-box; background: white; margin-bottom: 10mm;
+                   page-break-inside: avoid; }
+          .header { display: flex; align-items: center; margin-bottom: 15px;
+                   border-bottom: 2px solid #000; padding-bottom: 10px; }
+           .logo img { width: 65px; height: auto;}
+          .institute-name { font-size: 28px; font-weight: bold; color: #000;
+                          flex-grow: 1; letter-spacing: 1px; }
+          .receipt-label { background: #333; color: white; padding: 5px 15px;
+                          border-radius: 20px; font-size: 14px; font-weight: bold; }
+          .receipt-content { display: flex; flex-direction: column; height: calc(100% - 100px); }
+          .receipt-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          .receipt-no, .date { font-size: 16px; font-weight: bold; }
+          .form-fields { flex-grow: 1; display: flex; flex-direction: column; gap: 12px; }
+          .field-row { display: flex; align-items: center; font-size: 14px; font-weight: bold; }
+          .field-label { min-width: 140px; color: #000; }
+          .field-value { flex-grow: 1; border-bottom: 1px solid #000; padding: 2px 5px;
+                       min-height: 20px; color: #0066cc; white-space: nowrap;
+                       overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 140px); }
+          .footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+          .note { font-size: 12px; font-weight: bold; max-width: 60%; }
+          .signature-area { text-align: center; min-width: 150px; }
+          .signature-line { border-bottom: 1px solid #000; height: 40px; margin-bottom: 5px; }
+          .signature-label { font-size: 12px; font-weight: bold; }
+          @media print {
+            .page-container { height: 297mm; padding: 0.5in; }
+            .receipt { margin-bottom: 5mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page-container">
+          <!-- First Receipt -->
+          <div class="receipt">
+            <div class="header">
+               <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
+              <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
+              <div class="receipt-label">INSTALLMENT RECEIPT</div>
+            </div>
+            <div class="receipt-content">
+              <div class="receipt-info">
+                <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
+                <div class="date">Date: ${receiptData.date}</div>
+              </div>
+              <div class="form-fields">
+                <div class="field-row">
+                  <div class="field-label">Student Name:</div>
+                  <div class="field-value">${receiptData.studentName}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Course Name:</div>
+                  <div class="field-value">${receiptData.courseName}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Installment No:</div>
+                  <div class="field-value">${receiptData.installmentNumber}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Amount Paid:</div>
+                  <div class="field-value">${receiptData.amountPaid}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Payment Mode:</div>
+                  <div class="field-value">${receiptData.paymentMode}</div>
+                </div>
+              </div>
+              <div class="footer">
+                <div class="note">• Installment payment received successfully</div>
+                <div class="signature-area">
+                  <div class="signature-line"></div>
+                  <div class="signature-label">Authorized Signature</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Second Receipt (Duplicate) -->
+          <div class="receipt">
+            <div class="header">
+               <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
+              <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
+              <div class="receipt-label">INSTALLMENT RECEIPT</div>
+            </div>
+            <div class="receipt-content">
+              <div class="receipt-info">
+                <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
+                <div class="date">Date: ${receiptData.date}</div>
+              </div>
+              <div class="form-fields">
+                <div class="field-row">
+                  <div class="field-label">Student Name:</div>
+                  <div class="field-value">${receiptData.studentName}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Course Name:</div>
+                  <div class="field-value">${receiptData.courseName}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Installment No:</div>
+                  <div class="field-value">${receiptData.installmentNumber}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Amount Paid:</div>
+                  <div class="field-value">${receiptData.amountPaid}</div>
+                </div>
+                <div class="field-row">
+                  <div class="field-label">Payment Mode:</div>
+                  <div class="field-value">${receiptData.paymentMode}</div>
+                </div>
+              </div>
+              <div class="footer">
+                <div class="note">• Installment payment received successfully</div>
+                <div class="signature-area">
+                  <div class="signature-line"></div>
+                  <div class="signature-label">Authorized Signature</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          setTimeout(() => {
+            window.print();
+          }, 500);
+        </scr` + `ipt>
+      </body>
+      </html>
+    `;
+  }
+
+  // Function to add receipt to the receipt container
+  function addReceiptToContainer(receiptData, receiptHTML) {
+    const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
+    const receiptContainer = document.getElementById("receiptContainer");
+    if (!receiptContainer) return;
+
+    // Show the container if it's hidden
+    receiptContainer.classList.remove("hidden");
+
+    // Create receipt item
+    const receiptItem = document.createElement("div");
+    receiptItem.className = "bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm";
+    receiptItem.innerHTML = `
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-lg font-semibold text-gray-800">Installment Receipt - ${receiptData.receiptNo}</h3>
+        <div class="flex space-x-2">
+          <button onclick="printReceipt('${receiptData.receiptNo}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+            Print
+          </button>
+          <button onclick="viewReceipt('${receiptData.receiptNo}')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+            View
+          </button>
+        </div>
+      </div>
+      <div class="text-sm text-gray-600 space-y-1">
+        <p><strong>Student:</strong> ${receiptData.studentName}</p>
+        <p><strong>Course:</strong> ${receiptData.courseName}</p>
+        <p><strong>Installment:</strong> ${receiptData.installmentNumber}</p>
+        <p><strong>Amount:</strong> ${receiptData.amountPaid}</p>
+        <p><strong>Date:</strong> ${receiptData.date}</p>
+      </div>
+    `;
+
+    // Add to container
+    receiptContainer.appendChild(receiptItem);
+  }
+
+  // Function to print receipt
+  function printReceipt(receiptNo) {
+    const receiptKey = `installment_receipt_${document.getElementById("ID").value}_${receiptNo.split('IR')[1]}`;
+    const storedReceipt = localStorage.getItem(receiptKey);
+
+    if (storedReceipt) {
+      const receiptData = JSON.parse(storedReceipt);
+      const printWindow = window.open('', '_blank', 'width=800,height=1000');
+      if (printWindow) {
+        printWindow.document.write(receiptData.html);
+        printWindow.document.close();
+      }
+    }
+  }
+
+  // Function to view receipt
+  function viewReceipt(receiptNo) {
+    const receiptKey = `installment_receipt_${document.getElementById("ID").value}_${receiptNo.split('IR')[1]}`;
+    const storedReceipt = localStorage.getItem(receiptKey);
+
+    if (storedReceipt) {
+      const receiptData = JSON.parse(storedReceipt);
+      const viewWindow = window.open('', '_blank', 'width=800,height=1000');
+      if (viewWindow) {
+        viewWindow.document.write(receiptData.html);
+        viewWindow.document.close();
+      }
+    }
   }
 
   // Function to generate installment receipt (similar to exam receipt)
@@ -1204,6 +1566,31 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     }
   }
 
+  // Function to save course payment data persistently
+  function saveCoursePaymentData(data) {
+    const key = `course_payment_${data.receiptNo}`;
+    localStorage.setItem(key, JSON.stringify({
+      ...data,
+      savedAt: new Date().toISOString()
+    }));
+    console.log("Course payment data saved:", key);
+  }
+
+  // Function to load course payment data
+  function loadCoursePaymentData(receiptNo) {
+    const key = `course_payment_${receiptNo}`;
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error("Error parsing stored course payment data:", e);
+        return null;
+      }
+    }
+    return null;
+  }
+
   // Function to populate form from admission data
   function populateCoursePaymentFromAdmission(admissionData) {
     if (admissionData) {
@@ -1237,9 +1624,58 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
         }
       }
 
+      // Save this data persistently for future visits
+      saveCoursePaymentData({
+        receiptNo: admissionData.receiptNumber,
+        enrollmentId: admissionData.enrollmentId,
+        studentName: fullName,
+        courseName: admissionData.courseName,
+        firstName: admissionData.firstName,
+        middleName: admissionData.middleName,
+        lastName: admissionData.lastName
+      });
+
       // Hide payment options and show installment schedule for users from admission analytics
       document.getElementById("paymentOptionsSection").classList.add("hidden");
       document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+      // Wait for course details to load, then populate installment schedule
+      waitForCourseDetailsAndPopulate();
+    }
+  }
+
+  // Function to populate form from saved data when user returns
+  function populateCoursePaymentFromSavedData(savedData) {
+    if (savedData) {
+      document.getElementById("ID").value = savedData.receiptNo || "";
+      document.getElementById("enrollmentId").value = savedData.enrollmentId || "";
+      document.getElementById("std_Coursepayname").value = savedData.studentName || "";
+
+      // Set course selection
+      const courseSelect = document.getElementById("coursePaySelect");
+      if (savedData.courseName) {
+        const courseValueMap = {
+          "ANM Nursing Diploma": "anm_nursing",
+          "GNM Nursing Diploma": "gnm_nursing",
+          "DMLT Diploma": "dmlt",
+          "OT Technician": "ot_technician",
+          "General Nursing Assistant": "general_nursing"
+        };
+        const courseValue = courseValueMap[savedData.courseName] || savedData.courseName;
+        courseSelect.value = courseValue;
+
+        // Trigger course details update
+        if (typeof updateCoursePayDetails === 'function') {
+          updateCoursePayDetails();
+        }
+      }
+
+      // Hide payment options and show installment schedule
+      document.getElementById("paymentOptionsSection").classList.add("hidden");
+      document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+      // Load saved receipts immediately
+      loadSavedReceipts();
 
       // Wait for course details to load, then populate installment schedule
       waitForCourseDetailsAndPopulate();
@@ -1262,8 +1698,67 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     populateInstallmentSchedule();
   }
 
+  // Function to load saved receipts for this student
+  function loadSavedReceipts() {
+    const receiptNo = document.getElementById("ID").value;
+    if (!receiptNo) return;
+
+    // Load all receipts for this receipt number
+    for (let i = 1; i <= 50; i++) {
+      const receiptKey = `installment_receipt_${receiptNo}_${i}`;
+      const storedReceipt = localStorage.getItem(receiptKey);
+
+      if (storedReceipt) {
+        try {
+          const receiptData = JSON.parse(storedReceipt);
+          addReceiptToContainer(receiptData, receiptData.html);
+        } catch (e) {
+          console.error(`Error loading saved receipt for installment ${i}:`, e);
+        }
+      }
+    }
+  }
+
+  // Function to handle receipt number input changes
+  function handleReceiptNumberChange() {
+    const receiptNoInput = document.getElementById("ID");
+    const receiptNo = receiptNoInput.value.trim();
+
+    if (receiptNo) {
+      // Check if there's saved data for this receipt number
+      const savedData = loadCoursePaymentData(receiptNo);
+
+      if (savedData) {
+        console.log("Found saved data for receipt:", receiptNo, savedData);
+        // Populate form with saved data
+        populateCoursePaymentFromSavedData(savedData);
+      } else {
+        console.log("No saved data found for receipt:", receiptNo);
+        // Clear any existing data and show payment options
+        document.getElementById("std_Coursepayname").value = "";
+        document.getElementById("enrollmentId").value = "";
+        document.getElementById("paymentOptionsSection").classList.remove("hidden");
+        document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+        // Clear receipt container
+        const receiptContainer = document.getElementById("receiptContainer");
+        if (receiptContainer) {
+          receiptContainer.innerHTML = "";
+          receiptContainer.classList.add("hidden");
+        }
+      }
+    }
+  }
+
   // Initialize when page loads
   document.addEventListener('DOMContentLoaded', function() {
+    // Add event listener for receipt number changes
+    const receiptNoInput = document.getElementById("ID");
+    if (receiptNoInput) {
+      receiptNoInput.addEventListener('input', handleReceiptNumberChange);
+      receiptNoInput.addEventListener('change', handleReceiptNumberChange);
+    }
+
     // Check if there's admission data from sessionStorage (coming from admission analytics)
     const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
 
@@ -1271,12 +1766,23 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
       // User came from admission analytics - hide payment options, show installment schedule
       populateCoursePaymentFromAdmission(admissionData);
 
+      // Load any saved receipts after populating the form
+      setTimeout(() => {
+        loadSavedReceipts();
+      }, 500);
+
       // Keep the sessionStorage data so returning users see the installment schedule
       // sessionStorage.removeItem('admissionDataForPayment'); // Commented out to persist data
     } else {
-      // User accessed course payment directly - show payment options, hide installment schedule
-      document.getElementById("paymentOptionsSection").classList.remove("hidden");
-      document.getElementById("installmentScheduleSection").classList.add("hidden");
+      // Check if there's a receipt number already entered (user returning)
+      const currentReceiptNo = receiptNoInput?.value?.trim();
+      if (currentReceiptNo) {
+        handleReceiptNumberChange(); // This will load saved data if available
+      } else {
+        // User accessed course payment directly - show payment options, hide installment schedule
+        document.getElementById("paymentOptionsSection").classList.remove("hidden");
+        document.getElementById("installmentScheduleSection").classList.add("hidden");
+      }
     }
   });
 </script>
