@@ -164,8 +164,8 @@ function findLastReceiptInSheet1(sheetName) {
     // Loop through all values to find valid receipt numbers and get the maximum.
     for (let i = 0; i < columnValues.length; i++) {
       const cellValue = columnValues[i][0];
-      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('R-')) {
-        const numericPart = parseInt(cellValue.substring(2), 10);
+      if (cellValue && typeof cellValue === 'string' && cellValue.startsWith('ER-')) {
+        const numericPart = parseInt(cellValue.substring(3), 10);
         if (!isNaN(numericPart) && numericPart > lastNumericPart) {
           lastNumericPart = numericPart;
         }

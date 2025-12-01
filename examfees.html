@@ -417,7 +417,7 @@
                         </div>
                         <div>
                             <h1 class="text-2xl font-bold text-white">SHELAR TRAINING INSTITUTE</h1>
-                            <p class="text-blue-100 text-sm">Quality Education • Skill Development</p>
+                            <!-- <p class="text-blue-100 text-sm">Quality Education • Skill Development</p> -->
                         </div>
                     </div>
                     <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3">
@@ -428,7 +428,7 @@
                 </div>
             </div>
 
-            <form id="feeReceiptForm" class="p-8" onsubmit="FeeReceiptFormHandle(event)">
+            <form id="examReceiptForm" class="p-8" onsubmit="FeeReceiptFormHandle(event)">
                 <div id="FeeReceiptForm" class="space-y-8">
 
                     <!-- Invoice Details Section -->
@@ -500,8 +500,8 @@
                                 <label for="totalAmount" class="block text-sm font-medium text-gray-700 flex items-center">
                                     <i class="fas fa-rupee-sign mr-2 text-green-500"></i>Total Amount (₹) <span class="text-red-500 ml-1">*</span>
                                 </label>
-                                <input type="number" id="totalAmount" name="totalAmount" value="500"
-                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; font-weight: 600; outline: none;"
+                                <input type="number" id="totalAmount" name="totalAmount" value="6000" readonly
+                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: #f3f4f6; color: #111827; font-size: 0.875rem; font-weight: 600; outline: none; cursor: not-allowed;"
                                        class="transition-colors duration-200 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                             </div>
 
@@ -564,10 +564,10 @@
             </form>
         </div>
 
-        <!-- Footer -->
+        <!-- Footer
         <div class="bg-gray-800 text-white text-center py-4 rounded-b-xl">
             <p class="text-sm opacity-75">© 2025 Shelar Training Institute. All rights reserved.</p>
-        </div>
+        </div> -->
     </div>
 </div>
 
@@ -584,26 +584,124 @@
     function FeeReceiptFormHandle(e) {
   e.preventDefault();
 
-  const form = document.getElementById('feeReceiptForm');
+  const form = document.getElementById('examReceiptForm');
   const formData = new FormData(form);
 
+  const receiptNumber = formData.get('receiptNumber');
+
+  // Validate that receipt number is loaded
+  if (!receiptNumber || receiptNumber === 'Generating...' || receiptNumber === '') {
+    showNotification("Please wait for the receipt number to load before submitting.", "error");
+    return;
+  }
+
+  // Get current date in a format that Google Apps Script can handle
+  const now = new Date();
+  const dateString = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+
   const data = {
-    receiptDate: formData.get('receiptDate'),
-    receiptNumber: formData.get('ExamReceiptNumber'),
+    receiptDate: dateString, // Current date as MM/DD/YYYY string
+    receiptNumber: receiptNumber,
     studentName: formData.get('studentName'),
     courseName: formData.get('courseName'),
     totalAmount: formData.get('totalAmount'),
     paymentMode: formData.get('paymentMode'),
-    // receivedBy: formData.get('receivedBy'),
-    // branch: formData.get('branch'),
     agreeTerms: formData.get('agreeTerms') ? 'Yes' : 'No'
   };
 
-  google.script.run.withSuccessHandler(() => {
-    alert("Receipt saved successfully!");
-    form.reset();
-  }).saveReceiptData(data);
+  // Show loading state
+  const submitBtn = document.getElementById('submitReceipt');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+  submitBtn.disabled = true;
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      // Reset button
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+
+      if (result && result.success) {
+        // Success notification
+        showNotification(result.message || "Receipt saved successfully!", "success");
+
+        // Reset form but keep the date
+        form.reset();
+
+        // Reload only receipt number for next entry (without resetting date)
+        loadexamfeeOnly();
+      } else {
+        // Error notification
+        showNotification(result.message || "Failed to save receipt. Please try again.", "error");
+      }
+    })
+    .withFailureHandler(function(error) {
+      // Reset button
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+
+      // Error notification
+      showNotification("Error saving receipt: " + error.message, "error");
+      console.error("Save receipt error:", error);
+    })
+    .saveReceiptData(data);
 }
+
+    // Notification function
+    function showNotification(message, type = "info") {
+      // Remove any existing notifications
+      const existingNotifications = document.querySelectorAll('.notification-toast');
+      existingNotifications.forEach(notification => notification.remove());
+
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `notification-toast fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+
+      // Set colors based on type
+      if (type === "success") {
+        notification.classList.add('bg-green-500', 'text-white');
+        notification.innerHTML = `
+          <div class="flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span>${message}</span>
+          </div>
+        `;
+      } else if (type === "error") {
+        notification.classList.add('bg-red-500', 'text-white');
+        notification.innerHTML = `
+          <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span>${message}</span>
+          </div>
+        `;
+      } else {
+        notification.classList.add('bg-blue-500', 'text-white');
+        notification.innerHTML = `
+          <div class="flex items-center">
+            <i class="fas fa-info-circle mr-2"></i>
+            <span>${message}</span>
+          </div>
+        `;
+      }
+
+      // Add to page
+      document.body.appendChild(notification);
+
+      // Animate in
+      setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+      }, 100);
+
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 5000);
+    }
 
     
     // Generate PDF receipt
@@ -726,6 +824,8 @@ function openexamfees() {
 
 function generateexamReceipt() {
     try {
+      const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
+
         // Get values from the form
         const receiptNo = document.getElementById('ExamReceiptNumber').value || "REC" + Math.floor(1000 + Math.random() * 9000);
         const date = document.getElementById('receiptDate').value || new Date().toLocaleDateString('en-GB');
@@ -775,9 +875,7 @@ function generateexamReceipt() {
                              page-break-inside: avoid; }
                     .header { display: flex; align-items: center; margin-bottom: 15px; 
                              border-bottom: 2px solid #000; padding-bottom: 10px; }
-                    .logo { width: 60px; height: 60px; margin-right: 15px; display: flex; 
-                           align-items: center; justify-content: center; overflow: hidden; }
-                    .logo img { width: 100%; height: auto; object-fit: contain; display: block; }
+                    .logo img { width: 65px; height: auto;}
                     .institute-name { font-size: 28px; font-weight: bold; color: #000; 
                                     flex-grow: 1; letter-spacing: 1px; }
                     .receipt-label { background: #333; color: white; padding: 5px 15px; 
@@ -812,15 +910,9 @@ function generateexamReceipt() {
                     <div class="receipt">
                         <div class="header">
                             <div class="logo">
-                                <img src="data:image/svg+xml;utf8,
-<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-  <circle cx='80' cy='80' r='75' fill='%232c3e50'/>
-  <text x='50%' y='55%' font-size='80' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>S</text>
-</svg>"
-alt="Logo"
-style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
-
-                            </div>
+                        <img src="${logoBase64}">
+                    </div> 
+                    
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -866,16 +958,10 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                     <!-- Second Receipt (Duplicate) -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">
-                               <img src="data:image/svg+xml;utf8,
-<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-  <circle cx='80' cy='80' r='75' fill='%232c3e50'/>
-  <text x='50%' y='55%' font-size='80' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>S</text>
-</svg>"
-alt="Logo"
-style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
-
-                            </div>
+                           <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
+                    
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -944,49 +1030,123 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
 
 function loadexamfee(){
   const receiptInput = document.getElementById("ExamReceiptNumber");
-    if (!receiptInput) {
-      console.error("Receipt number input field not found!");
-      return;
-    }
+  const submitBtn = document.getElementById("submitReceipt");
 
-    // 1. Reset the input field's state each time the form is opened.
-    receiptInput.readOnly = false;
-    receiptInput.value = "Generating..."; // Show immediate feedback.
+  if (!receiptInput) {
+    console.error("Receipt number input field not found!");
+    return;
+  }
 
-    // 2. Clear any lingering timers from previous times the form was opened.
-    clearTimeout(receiptLockTimer);
+  // Disable submit button while loading
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+  }
 
-    // 3. Call the backend script to fetch the number.
-    google.script.run
-      .withSuccessHandler(function (newReceiptNumber) {
-        // 4. Populate the input field as soon as the number is received.
-        receiptInput.value = newReceiptNumber;
-        console.log(
-          `Populated receipt number: ${newReceiptNumber}. Field will lock in 5 seconds if not edited.`
-        );
+  // 1. Reset the input field's state each time the form is opened.
+  receiptInput.readOnly = false;
+  receiptInput.value = "Generating..."; // Show immediate feedback.
 
-        // 5. Set a 5-second timer. If it completes, the field becomes read-only.
-        receiptLockTimer = setTimeout(() => {
-          receiptInput.readOnly = true;
-          console.log(`Receipt number ${newReceiptNumber} is now locked.`);
-        }, 5000); // 5000 milliseconds = 5 seconds
+  // 2. Clear any lingering timers from previous times the form was opened.
+  clearTimeout(receiptLockTimer);
 
-        // 6. Listen for the *very first* input from the user.
-        // The { once: true } option automatically removes the listener after it runs once.
-        receiptInput.addEventListener(
-          "input",
-          () => {
-            console.log("User is typing. Cancelling the auto-lock timer.");
-            // If the user starts typing, cancel the timer that would have locked the field.
-            clearTimeout(receiptLockTimer);
-          },
-          { once: true }
-        );
-      })
-      .withFailureHandler(function (error) {
-        console.error("Error fetching receipt number: " + error.message);
-        receiptInput.value = "Error fetching number";
-      })
-      .getNextReceiptNumberEF();
+  // 3. Call the backend script to fetch the number.
+  google.script.run
+    .withSuccessHandler(function (newReceiptNumber) {
+      // 4. Populate the input field as soon as the number is received.
+      receiptInput.value = newReceiptNumber;
+      console.log(
+        `Populated receipt number: ${newReceiptNumber}. Field will lock in 5 seconds if not edited.`
+      );
+
+      // Enable submit button now that receipt number is loaded
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+      }
+
+      // 5. Set a 5-second timer. If it completes, the field becomes read-only.
+      receiptLockTimer = setTimeout(() => {
+        receiptInput.readOnly = true;
+        console.log(`Receipt number ${newReceiptNumber} is now locked.`);
+      }, 5000); // 5000 milliseconds = 5 seconds
+
+      // 6. Listen for the *very first* input from the user.
+      // The { once: true } option automatically removes the listener after it runs once.
+      receiptInput.addEventListener(
+        "input",
+        () => {
+          console.log("User is typing. Cancelling the auto-lock timer.");
+          // If the user starts typing, cancel the timer that would have locked the field.
+          clearTimeout(receiptLockTimer);
+        },
+        { once: true }
+      );
+    })
+    .withFailureHandler(function (error) {
+      console.error("Error fetching receipt number: " + error.message);
+      receiptInput.value = "Error fetching number";
+
+      // Re-enable submit button even on error, so user can try again
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+      }
+    })
+    .getNextReceiptNumberEF();
+}
+
+function loadexamfeeOnly(){
+  const receiptInput = document.getElementById("ExamReceiptNumber");
+  const submitBtn = document.getElementById("submitReceipt");
+
+  if (!receiptInput) {
+    console.error("Receipt number input field not found!");
+    return;
+  }
+
+  // Disable submit button while loading
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+  }
+
+  // Clear any lingering timers
+  clearTimeout(receiptLockTimer);
+
+  // Set to generating state
+  receiptInput.readOnly = false;
+  receiptInput.value = "Generating...";
+
+  // Call the backend script to fetch the number
+  google.script.run
+    .withSuccessHandler(function (newReceiptNumber) {
+      // Populate the input field
+      receiptInput.value = newReceiptNumber;
+      console.log(`Loaded next receipt number: ${newReceiptNumber}`);
+
+      // Enable submit button
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+      }
+
+      // Set a 5-second timer to lock the field
+      receiptLockTimer = setTimeout(() => {
+        receiptInput.readOnly = true;
+        console.log(`Receipt number ${newReceiptNumber} is now locked.`);
+      }, 5000);
+    })
+    .withFailureHandler(function (error) {
+      console.error("Error fetching receipt number: " + error.message);
+      receiptInput.value = "Error fetching number";
+
+      // Re-enable submit button even on error
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+      }
+    })
+    .getNextReceiptNumberEF();
 }
 </script>

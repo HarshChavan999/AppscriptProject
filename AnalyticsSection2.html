@@ -98,7 +98,7 @@
              <div id="fsTableContainer1" class="overflow-x-auto"></div>
           </div>
           <script>
-  let feeStructureData = []; // Global
+  let feeStructureData2 = []; // Global - renamed to avoid conflict
 
 function loadFeeStructure() {
   console.log("loadFeeStructure() CALLED");
@@ -115,7 +115,7 @@ function loadFeeStructure() {
       }
 
       // Store global data for filtering
-      feeStructureData = response.data;
+      feeStructureData2 = response.data;
 
       // Populate summary cards
       document.getElementById("fsTotalRecords").textContent = response.summary.totalRecords;
@@ -124,7 +124,7 @@ function loadFeeStructure() {
       document.getElementById("fsTopPaymentMode").textContent = response.summary.mostCommonPaymentMode || "-";
 
       // Render table
-      renderFeeStructureTable(feeStructureData);
+      renderFeeStructureTable(feeStructureData2);
     })
     .getFeeStructureData("admin");
 }
@@ -133,7 +133,7 @@ function filterFeeStructure() {
   const paymentMode = document.getElementById("fsPaymentModeSelect").value.toLowerCase();
 
   // Filter the global dataset (this will hold the original fetched data)
-  const filtered = feeStructureData.filter(d => {
+  const filtered = feeStructureData2.filter(d => {
     if (!paymentMode) return true;
     return d.payMode.toLowerCase() === paymentMode;
   });

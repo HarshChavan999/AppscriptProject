@@ -822,12 +822,14 @@ function resetCoursePaymentForm() {
     const nameField = document.getElementById("std_Coursepayname");
     if (nameField) {
       nameField.value = fullName;
+      nameField.readOnly = true; // Lock the field
     }
 
     let receiptNumber = sessionStorage.getItem('tempText4') || document.getElementById("receipt_number")?.value || '';
     const idField = document.getElementById("ID");
     if (receiptNumber && idField) {
       idField.value = receiptNumber;
+      idField.readOnly = true; // Lock the field
     }
 
     // Enrollment ID - get from sessionStorage, localStorage, or form
@@ -842,7 +844,8 @@ function resetCoursePaymentForm() {
       let enrollmentField = document.getElementById("enrollmentId");
       if (enrollmentField) {
         enrollmentField.value = enrollmentId;
-        console.log("Enrollment ID set in course payment form:", enrollmentId);
+        enrollmentField.readOnly = true; // Ensure it's locked
+        console.log("Enrollment ID set and locked in course payment form:", enrollmentId);
       } else {
         console.log("Enrollment ID field not found in course payment form");
       }
@@ -855,6 +858,7 @@ function resetCoursePaymentForm() {
     if (courseSelectField) {
       sessionStorage.setItem("tempText5", document.getElementById("courseSelect")?.value || "");
       courseSelectField.value = sessionStorage.getItem("tempText5");
+      courseSelectField.disabled = true; // Lock the field
 
       // Only call update functions if elements exist
       if (typeof updateCoursePayDetails === 'function') {
@@ -3639,14 +3643,6 @@ html2pdf()
   }
 
   //Handle admission form submission
-  document.addEventListener("DOMContentLoaded", function () {
-  const admissionBtn = document.getElementById("admissionBtn");
-  if (admissionBtn) {
-    admissionBtn.addEventListener("click", openAdmissionForm);
-  } else {
-    console.error("Admission button not found!");
-  }
-    });
   
 
 
@@ -3705,6 +3701,19 @@ function populateInquiryTakenBy() {
         } else {
             branchInput.value = "N/A"; // Or some default
             console.warn("Logged-in user branch not found in hidden input.");
+        }
+    }
+}
+
+function examfeeTakenBy() {
+    const receivedByInput = document.getElementById("receivedBy");
+    const loggedInUserFromHiddenInput = document.getElementById("loggedInUserId")?.value;
+
+    if (receivedByInput) {
+        if (loggedInUserFromHiddenInput) {
+            receivedByInput.value = loggedInUserFromHiddenInput;
+        } else {
+            receivedByInput.value = "Admin";
         }
     }
 }
@@ -4063,34 +4072,83 @@ function populateInquiryTakenBy() {
 
 
  // --- Login Form Handling ---
-    // loginForm.addEventListener('submit', function(event) {
-    //   event.preventDefault(); // Prevent default form submission
+    loginForm.addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent default form submission
 
-    //   const username = document.getElementById('loginUsername').value;
-    //   const password = document.getElementById('loginPassword').value;
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
 
-    //   console.log("Attempting login for:", username); // Debugging: log username
+      console.log("Attempting login for:", username); // Debugging: log username
 
-    //   // Call the server-side loginUser function
-    //   google.script.run
-    //     .withSuccessHandler(function(response) {
-    //       console.log("Login Response (from server):", response); // Debugging: log server response
-    //       if (response.success) {
-    //         currentLoggedInUser = response.userName; // Store the logged-in user's name
-    //         sessionStorage.setItem('loggedInUser', currentLoggedInUser); // Store in session storage
-    //         console.log("Current Logged In User (after setting):", currentLoggedInUser); // Debugging
-    //         showCustomAlert("Login Successful", `Welcome, ${currentLoggedInUser}!`, true);
-    //         updateUI(); // Update UI after successful login
-    //       } else {
-    //         showCustomAlert("Login Failed", response.error, false);
-    //       }
-    //     })
-    //     .withFailureHandler(function(error) {
-    //       console.error("Login server error:", error);
-    //       showCustomAlert("Error", `An unexpected error occurred during login: ${error.message}`, false);
-    //     })
-    //     .loginUser({ username: username, password: password });
-    // });
+      // Call the server-side loginUser function
+      google.script.run
+        .withSuccessHandler(function(response) {
+          console.log("Login Response (from server):", response); // Debugging: log server response
+          if (response.success) {
+            currentLoggedInUser = response.userName; // Store the logged-in user's name
+            sessionStorage.setItem('loggedInUser', currentLoggedInUser); // Store in session storage
+            console.log("Current Logged In User (after setting):", currentLoggedInUser); // Debugging
+            Swal.fire({
+              icon: "success",
+              title: "Login Successful",
+              text: `Welcome, ${currentLoggedInUser}!`,
+              timer: 1500,
+              showConfirmButton: false,
+            });
+            // Hide login section and show app section
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("appSection").classList.remove("hidden");
+
+            // Set user details
+            document.getElementById("userName").value = response.userName;
+            document.getElementById("userRole").value = response.role;
+            document.getElementById("userBranch").value = response.branch;
+            document.getElementById("loggedInUserId").value = response.userId;
+
+            // Show admin UI if role is admin
+            if (response.role === "admin") {
+              document.getElementById("manageStudentsBtn")?.classList.remove("hidden");
+              document.getElementById("analyticsBtn")?.classList.remove("hidden");
+              document.getElementById("classMonthDashboardBtn")?.classList.remove("hidden");
+              document.getElementById("dueFeesBtn")?.classList.remove("hidden");
+            }
+
+            // Load dropdown data
+            google.script.run
+              .withSuccessHandler(function (dd) {
+                if (dd.error) {
+                  console.log("Dropdown error", dd.error);
+                  return;
+                }
+                dropdownData = dd;
+                fillDropdowns();
+              })
+              .getDropdownData();
+
+            // Open inquiry form by default after login
+            setTimeout(() => {
+              openInquiryForm();
+              populateInquiryTakenBy();
+            }, 500);
+
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Login Failed",
+              text: response.error,
+            });
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error("Login server error:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: `An unexpected error occurred during login: ${error.message}`,
+          });
+        })
+        .loginUser({ username: username, password: password });
+    });
 
 
 function copyadmissionreceipt(){

@@ -1028,23 +1028,37 @@ function getClassMonthDashboard(selectedClass, selectedMonth, userRole) {
 function saveEnrollment(data) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("Enrollments");
-    
+    let sheet = ss.getSheetByName(CONFIG.ENROLLMENTS_SHEET_NAME);
+
+    // Create sheet if it doesn't exist
+    if (!sheet) {
+      sheet = ss.insertSheet(CONFIG.ENROLLMENTS_SHEET_NAME);
+      // Add headers
+      sheet.appendRow([
+        "Enrollment ID",
+        "Student Name",
+        "Course",
+        "Date",
+        "Status"
+      ]);
+    }
+
     // Validate data
     if (!data.enrollmentID || !data.studentName) {
       throw new Error("Missing required enrollment data");
     }
-    
+
     // Check for duplicate enrollment ID
-    const existingIds = sheet.getRange(2, 1, sheet.getLastRow()-1, 1).getValues().flat();
+    const existingData = sheet.getDataRange().getValues();
+    const existingIds = existingData.slice(1).map(row => row[0]); // Skip header row
     if (existingIds.includes(data.enrollmentID)) {
       throw new Error("Enrollment ID already exists: " + data.enrollmentID);
     }
-    
+
     // Format date as dd/mm/yyyy
     const today = new Date();
     const formattedDate = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
-    
+
     // Append to sheet
     sheet.appendRow([
       data.enrollmentID,
@@ -1053,14 +1067,14 @@ function saveEnrollment(data) {
       formattedDate,
       "Active"
     ]);
-    
+
     // Return success with the enrollment ID
     return {
       success: true,
       message: "Enrollment saved successfully",
       enrollmentID: data.enrollmentID
     };
-    
+
   } catch (e) {
     console.error("Save enrollment error:", e);
     throw new Error("Failed to save enrollment: " + e.message);
@@ -1782,17 +1796,22 @@ function saveReceiptData(data) {
                        "Anonymous";
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("EXAMRECEIPT");
+    let sheet = ss.getSheetByName(CONFIG.EXAMRECEIPT_SHEET_NAME);
 
     if (!sheet) {
-      createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
-        error: "Sheet 'EXAMRECEIPT' not found",
-        receiptDataSummary: {
-          receiptNumber: data.receiptNumber,
-          studentName: data.studentName
-        }
-      });
-      throw new Error('Sheet "EXAMRECEIPT" not found!');
+      sheet = ss.insertSheet(CONFIG.EXAMRECEIPT_SHEET_NAME);
+      // Add headers
+      sheet.appendRow([
+        "Receipt Date",
+        "Receipt Number",
+        "Student Name",
+        "Course Name",
+        "Total Amount",
+        "Payment Mode",
+        "Agree Terms",
+        "Record Timestamp",
+        "User ID"
+      ]);
     }
 
     // Validate required fields
@@ -1829,17 +1848,20 @@ function saveReceiptData(data) {
       };
     }
 
+    // Parse the date string and create proper Date object
+    const receiptDate = data.receiptDate ? new Date(data.receiptDate) : new Date();
+
     // Save receipt data
     sheet.appendRow([
-      data.receiptDate || new Date(),
-      data.receiptNumber,
-      data.studentName,
-      data.courseName,
-      amount,
-      data.paymentMode,
-      data.agreeTerms === 'on' ? 'Agreed' : 'Not Agreed',
-      new Date(), // Timestamp of record creation
-      userIdForAudit // Added user who created the receipt
+      receiptDate,                     // Receipt Date
+      data.receiptNumber,              // Receipt Number
+      data.studentName,                // Student Name
+      data.courseName,                 // Course Name
+      amount,                          // Total Amount
+      data.paymentMode,                // Payment Mode
+      data.agreeTerms === 'Yes' ? 'Agreed' : 'Not Agreed', // Agree Terms
+      new Date(),                      // Record Timestamp
+      userIdForAudit                   // User ID
     ]);
 
     const lastRow = sheet.getLastRow();
@@ -2162,6 +2184,161 @@ function saveAdmissionReceipt(data) {
       success: false,
       message: `Failed to save complete admission receipt: ${error.message}`
     };
+  }
+}
+
+/**
+ * Saves installment schedule for a student to persist the exact schedule
+ * @param {Object} data Receipt data with installment schedule
+ * @returns {Object} Operation result
+ */
+function saveInstallmentSchedule(data) {
+  const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Get or create "InstallmentSchedules" sheet
+    let sheet = ss.getSheetByName("InstallmentSchedules");
+    if (!sheet) {
+      sheet = ss.insertSheet("InstallmentSchedules");
+
+      // Add headers
+      sheet.appendRow([
+        "Timestamp",
+        "Receipt_No",
+        "Student_Name",
+        "Enrollment_ID",
+        "Course_Name",
+        "Payment_Type",
+        "Total_Fees",
+        "Installment_Number",
+        "Installment_Amount",
+        "Due_Date",
+        "Status",
+        "Logged_In_User"
+      ]);
+    }
+
+    const receiptNo = data.receiptNo || "";
+    const studentName = data.studentName || "";
+    const enrollmentId = data.enrollmentNo || "";
+    const courseName = data.courseName || "";
+    const paymentType = data.paymentType || "full";
+    const totalFees = parseFloat(data.totalFee) || 0;
+    const installmentSchedule = data.installmentSchedule || [];
+
+    // Check if schedule already exists for this receipt
+    const existingData = sheet.getDataRange().getValues();
+    const hasExistingSchedule = existingData.some(row => row[1] === receiptNo); // Column B is Receipt_No
+
+    if (hasExistingSchedule) {
+      // Update existing schedule - clear old entries and add new ones
+      const rowsToDelete = [];
+      for (let i = existingData.length - 1; i >= 1; i--) {
+        if (existingData[i][1] === receiptNo) {
+          rowsToDelete.push(i + 1); // Sheet rows are 1-indexed
+        }
+      }
+
+      // Delete old entries
+      rowsToDelete.reverse().forEach(rowNum => {
+        sheet.deleteRow(rowNum);
+      });
+    }
+
+    // Save new schedule
+    const savedRows = [];
+    installmentSchedule.forEach(installment => {
+      sheet.appendRow([
+        new Date(), // Timestamp
+        receiptNo,
+        studentName,
+        enrollmentId,
+        courseName,
+        paymentType,
+        totalFees,
+        installment.installmentNumber,
+        installment.amount,
+        installment.dueDate,
+        installment.status || "Pending",
+        userIdForAudit
+      ]);
+      savedRows.push(sheet.getLastRow());
+    });
+
+    // Log successful schedule save
+    createAuditLogEntry("Installment Schedule Saved", userIdForAudit, {
+      receiptNo: receiptNo,
+      studentName: studentName,
+      courseName: courseName,
+      paymentType: paymentType,
+      installmentCount: installmentSchedule.length,
+      totalFees: totalFees,
+      rows: savedRows
+    });
+
+    return {
+      success: true,
+      message: "Installment schedule saved successfully",
+      rows: savedRows
+    };
+
+  } catch (error) {
+    console.error("Error in saveInstallmentSchedule:", error);
+
+    createAuditLogEntry("Installment Schedule Save Error", userIdForAudit, {
+      error: error.message,
+      dataSummary: {
+        receiptNo: data.receiptNo,
+        studentName: data.studentName
+      }
+    });
+
+    return {
+      success: false,
+      message: `Failed to save installment schedule: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Loads saved installment schedule for a student
+ * @param {string} receiptNo Receipt number to load schedule for
+ * @returns {Array} Array of installment objects
+ */
+function loadInstallmentSchedule(receiptNo) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("InstallmentSchedules");
+
+    if (!sheet) {
+      return []; // No schedule saved yet
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const schedule = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[1] === receiptNo) { // Column B is Receipt_No
+        schedule.push({
+          installmentNumber: parseInt(row[7]) || 0, // Column H
+          amount: parseFloat(row[8]) || 0, // Column I
+          dueDate: row[9] ? row[9].toISOString().split('T')[0] : "", // Column J
+          status: row[10] || "Pending" // Column K
+        });
+      }
+    }
+
+    // Sort by installment number
+    schedule.sort((a, b) => a.installmentNumber - b.installmentNumber);
+
+    return schedule;
+
+  } catch (error) {
+    console.error("Error in loadInstallmentSchedule:", error);
+    return [];
   }
 }
 
