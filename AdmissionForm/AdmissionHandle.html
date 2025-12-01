@@ -68,6 +68,8 @@ function generateAndSaveEnrollment() {
 
 function loadReceipt(enrollmentID, studentName, course) {
     try {
+           const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
+
         // Get receipt number from form field (already generated sequentially)
         const receiptNo = document.getElementById('receipt_number').value || "AR-0001";
         const date = new Date().toLocaleDateString('en-GB');
@@ -166,20 +168,8 @@ function loadReceipt(enrollmentID, studentName, course) {
                         padding-bottom: 10px;
                     }
 
-                    .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #333;
-                        border-radius: 50%;
-                        margin-right: 15px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: white;
-                        font-size: 24px;
-                        font-weight: bold;
-                    }
-
+                     .logo img { width: 65px; height: auto;}
+                     
                     .institute-name {
                         font-size: 28px;
                         font-weight: bold;
@@ -315,7 +305,9 @@ function loadReceipt(enrollmentID, studentName, course) {
                     <!-- First Receipt -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">S</div>
+                            <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -386,7 +378,10 @@ function loadReceipt(enrollmentID, studentName, course) {
                     <!-- Second Receipt (Copy) -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">S</div>
+                            <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
+
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>

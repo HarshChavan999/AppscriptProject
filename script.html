@@ -3643,14 +3643,6 @@ html2pdf()
   }
 
   //Handle admission form submission
-  document.addEventListener("DOMContentLoaded", function () {
-  const admissionBtn = document.getElementById("admissionBtn");
-  if (admissionBtn) {
-    admissionBtn.addEventListener("click", openAdmissionForm);
-  } else {
-    console.error("Admission button not found!");
-  }
-    });
   
 
 
@@ -3709,6 +3701,19 @@ function populateInquiryTakenBy() {
         } else {
             branchInput.value = "N/A"; // Or some default
             console.warn("Logged-in user branch not found in hidden input.");
+        }
+    }
+}
+
+function examfeeTakenBy() {
+    const receivedByInput = document.getElementById("receivedBy");
+    const loggedInUserFromHiddenInput = document.getElementById("loggedInUserId")?.value;
+
+    if (receivedByInput) {
+        if (loggedInUserFromHiddenInput) {
+            receivedByInput.value = loggedInUserFromHiddenInput;
+        } else {
+            receivedByInput.value = "Admin";
         }
     }
 }
