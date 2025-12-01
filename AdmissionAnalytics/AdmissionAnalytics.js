@@ -19,7 +19,7 @@ function toggleAdmissionAnalytics() {
 }
 function getCourseListFromAdmissions() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ADMISSIONF");
-  const data = sheet.getRange(2, 6, sheet.getLastRow() - 1, 1).getValues(); // Column F
+  const data = sheet.getRange(2, 7, sheet.getLastRow() - 1, 1).getValues(); // Column G (Course Name)
   return [...new Set(data.flat())].filter(String);
 }
 
