@@ -4072,7 +4072,7 @@ function examfeeTakenBy() {
 
 
  // --- Login Form Handling ---
-    loginForm.addEventListener('submit', function(event) {
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
       event.preventDefault(); // Prevent default form submission
 
       const username = document.getElementById('loginUsername').value;

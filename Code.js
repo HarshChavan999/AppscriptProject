@@ -1433,6 +1433,9 @@ function getAdmissionAnalyticsData(userRole) {
   let courseCounts = {};
 
   // Find column indices
+  const dateIdx = headers.indexOf("Date") !== -1 ? headers.indexOf("Date") :
+                  headers.indexOf("Admission Date") !== -1 ? headers.indexOf("Admission Date") :
+                  headers.indexOf("Timestamp") !== -1 ? headers.indexOf("Timestamp") : -1;
   const receiptNumberIdx = headers.indexOf("Receipt Number");
   const enrollmentIdIdx = headers.indexOf("Enrollment ID");
   const firstNameIdx = headers.indexOf("First Name");
@@ -1461,7 +1464,18 @@ function getAdmissionAnalyticsData(userRole) {
     const agreement = row[agreementIdx] || "";
     const user = row[userIdx] || "";
 
+    // Format date if available
+    let formattedDate = "";
+    if (dateIdx !== -1 && row[dateIdx]) {
+      if (row[dateIdx] instanceof Date) {
+        formattedDate = Utilities.formatDate(row[dateIdx], Session.getScriptTimeZone(), "yyyy-MM-dd");
+      } else {
+        formattedDate = row[dateIdx].toString();
+      }
+    }
+
     results.push({
+      date: formattedDate,
       receiptNumber: receiptNumber,
       enrollmentId: enrollmentId,
       firstName: firstName,
