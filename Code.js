@@ -1316,8 +1316,9 @@ function getNextReceiptNumber() {
  * FEE STRUCT ANALYTICS
  ************************************************/
 function getCourseList() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
-  const data = sheet.getRange(2, 3, sheet.getLastRow() - 1, 1).getValues(); // Column C
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+  if (!sheet) return [];
+  const data = sheet.getRange(2, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_NAME_COL + 1, sheet.getLastRow() - 1, 1).getValues(); // Course_Name column
   const courses = [...new Set(data.flat())].filter(String);
   return courses;
 }
@@ -1328,19 +1329,25 @@ function getFeeStructureData(userRole) {
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("FeeStructure");
+  const sheet = ss.getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
 
-  // If sheet doesn't exist, create it with headers
+  // If sheet doesn't exist, create it with headers matching the new structure
   if (!sheet) {
-    const newSheet = ss.insertSheet("FeeStructure");
-    newSheet.appendRow(["ID", "Name", "Enrollment ID", "Course", "Duration", "Pay Fees", "Total Fees", "Payment Mode", "Timestamp", "User ID"]);
+    const newSheet = ss.insertSheet(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+    newSheet.appendRow([
+      "TimeStamp", "Enrollment ID", "Name", "Course_Name", "Payment Mode",
+      "Admission_Fee", "Admission_Fee_Due", "Course_Fee", "Exam_Fee",
+      "Exam_Fee_Due", "Total_Amount_Due", "Branch", "User_Name"
+    ]);
 
     return {
       data: [],
       summary: {
         totalRecords: 0,
-        totalFees: 0,
-        averageFees: 0,
+        totalAdmissionFees: 0,
+        totalCourseFees: 0,
+        totalExamFees: 0,
+        totalAmountDue: 0,
         mostCommonPaymentMode: "",
       },
     };
@@ -1348,40 +1355,66 @@ function getFeeStructureData(userRole) {
 
   const data = sheet.getDataRange().getValues();
   const results = [];
-  let totalOverallFees = 0;
+  let totalAdmissionFees = 0;
+  let totalCourseFees = 0;
+  let totalExamFees = 0;
+  let totalAmountDue = 0;
   const paymentModeCounts = {};
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const id = String(row[0] || "").trim();
-    const name = String(row[1] || "").trim();
-    const enrollmentId = String(row[2] || "").trim();
-    const course = String(row[3] || "").trim();
-    const duration = String(row[4] || "").trim();
-    const payFees = parseFloat(String(row[5]).replace(/[^\d.-]/g, "")) || 0;
-    const totalFees = parseFloat(String(row[6]).replace(/[^\d.-]/g, "")) || 0;
-    const payMode = String(row[7] || "").trim();
+
+    // Format timestamp
+    let timestamp = "";
+    if (row[CONFIG.FEE_STRUCTURE_LOOKUP.TIMESTAMP_COL]) {
+      if (row[CONFIG.FEE_STRUCTURE_LOOKUP.TIMESTAMP_COL] instanceof Date) {
+        timestamp = Utilities.formatDate(row[CONFIG.FEE_STRUCTURE_LOOKUP.TIMESTAMP_COL], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+      } else {
+        timestamp = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.TIMESTAMP_COL]);
+      }
+    }
+
+    const enrollmentId = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ENROLLMENT_ID_COL] || "").trim();
+    const name = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.NAME_COL] || "").trim();
+    const courseName = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_NAME_COL] || "").trim();
+    const paymentMode = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.PAYMENT_MODE_COL] || "").trim();
+    const admissionFee = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ADMISSION_FEE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const admissionFeeDue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ADMISSION_FEE_DUE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const courseFee = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const examFee = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const examFeeDue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_DUE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const totalAmountDueValue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const branch = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.BRANCH_COL] || "").trim();
+    const userName = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.USER_NAME_COL] || "").trim();
 
     results.push({
-      id: id,
-      name: name,
+      timestamp: timestamp,
       enrollmentId: enrollmentId,
-      course: course,
-      duration: duration,
-      payFees: payFees,
-      totalFees: totalFees,
-      payMode: payMode,
+      name: name,
+      courseName: courseName,
+      paymentMode: paymentMode,
+      admissionFee: admissionFee,
+      admissionFeeDue: admissionFeeDue,
+      courseFee: courseFee,
+      examFee: examFee,
+      examFeeDue: examFeeDue,
+      totalAmountDue: totalAmountDueValue,
+      branch: branch,
+      userName: userName,
     });
 
-    totalOverallFees += totalFees;
+    // Accumulate totals
+    totalAdmissionFees += admissionFee;
+    totalCourseFees += courseFee;
+    totalExamFees += examFee;
+    totalAmountDue += totalAmountDueValue;
 
-    if (payMode) {
-      if (!paymentModeCounts[payMode]) paymentModeCounts[payMode] = 0;
-      paymentModeCounts[payMode]++;
+    // Count payment modes
+    if (paymentMode) {
+      if (!paymentModeCounts[paymentMode]) paymentModeCounts[paymentMode] = 0;
+      paymentModeCounts[paymentMode]++;
     }
   }
-
-  const avgFee = results.length > 0 ? totalOverallFees / results.length : 0;
 
   let commonMode = "";
   let maxCount = 0;
@@ -1396,8 +1429,10 @@ function getFeeStructureData(userRole) {
     data: results,
     summary: {
       totalRecords: results.length,
-      totalFees: totalOverallFees,
-      averageFees: avgFee,
+      totalAdmissionFees: totalAdmissionFees,
+      totalCourseFees: totalCourseFees,
+      totalExamFees: totalExamFees,
+      totalAmountDue: totalAmountDue,
       mostCommonPaymentMode: commonMode,
     },
   };
@@ -1707,7 +1742,7 @@ function getCourseListFromInquiries() {
 
 
 /**
- * Saves course payment data to FeeStructure sheet with audit logging
+ * Saves course payment data to FeeStructure sheet with the new column structure
  * @param {Object} data Payment data object
  * @returns {Object} Operation result
  */
@@ -1717,28 +1752,28 @@ function saveCoursePayment(data) {
                        "Anonymous";
 
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("FeeStructure");
-    
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+
     if (!sheet) {
       createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
         error: "Sheet 'FeeStructure' not found",
         paymentDataSummary: {
-          studentId: data.ID,
+          enrollmentId: data.enrollmentId,
           courseName: data.coursePaySelect
         }
       });
       throw new Error('Sheet "FeeStructure" not found!');
     }
 
-    // Validate required fields
-    const requiredFields = ["ID", "Coursepayname", "coursePaySelect", "coursePayFees"];
+    // Validate required fields for the new structure
+    const requiredFields = ["enrollmentId", "Coursepayname", "coursePaySelect"];
     const missingFields = requiredFields.filter(field => !data[field]);
-    
+
     if (missingFields.length > 0) {
       createAuditLogEntry("Payment Validation Failed", userIdForAudit, {
         reason: `Missing required fields: ${missingFields.join(", ")}`,
         paymentDataSummary: {
-          studentId: data.ID,
+          enrollmentId: data.enrollmentId,
           courseName: data.coursePaySelect
         }
       });
@@ -1748,50 +1783,152 @@ function saveCoursePayment(data) {
       };
     }
 
+    // Prepare data for the new FeeStructure format
+    const rowData = [
+      new Date(), // TimeStamp (Column A)
+      data.enrollmentId, // Enrollment ID (Column B)
+      data.Coursepayname, // Name (Column C)
+      data.coursePaySelect, // Course_Name (Column D)
+      data.paySelect || "Cash", // Payment Mode (Column E)
+      parseFloat(data.admissionFee) || 0, // Admission_Fee (Column F)
+      parseFloat(data.admissionFeeDue) || 0, // Admission_Fee_Due (Column G)
+      parseFloat(data.coursePayFees) || 0, // Course_Fee (Column H)
+      parseFloat(data.examFee) || 0, // Exam_Fee (Column I)
+      parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column J)
+      parseFloat(data.totalAmountDue) || parseFloat(data.totalFees) || 0, // Total_Amount_Due (Column K)
+      data.branch || "", // Branch (Column L)
+      userIdForAudit // User_Name (Column M)
+    ];
+
     // Save payment data
-    sheet.appendRow([
-      data.ID,
-      data.Coursepayname,
-      data.enrollmentId,
-      data.coursePaySelect,
-      data.courseDuration,
-      data.coursePayFees,
-      data.totalFees,
-      data.paySelect,
-      new Date(), // Timestamp
-      userIdForAudit // Added user who recorded the payment
-    ]);
-    
+    sheet.appendRow(rowData);
+
     const lastRow = sheet.getLastRow();
-    
+
     // Log successful payment
     createAuditLogEntry("Course Payment Recorded", userIdForAudit, {
-      studentId: data.ID,
+      enrollmentId: data.enrollmentId,
       studentName: data.Coursepayname,
       course: data.coursePaySelect,
-      fees: data.coursePayFees,
-      totalFees: data.totalFees,
-      paymentType: data.paySelect,
+      admissionFee: data.admissionFee || 0,
+      courseFee: data.coursePayFees || 0,
+      examFee: data.examFee || 0,
+      totalAmountDue: data.totalAmountDue || data.totalFees || 0,
+      paymentMode: data.paySelect || "Cash",
       row: lastRow
     });
-    
+
     return {
       success: true,
       message: "Payment data saved successfully",
       row: lastRow
     };
-    
+
   } catch (error) {
     console.error("Error in saveCoursePayment:", error);
-    
+
     createAuditLogEntry("Payment Processing Error", userIdForAudit, {
       error: error.message,
       paymentDataSummary: {
-        studentId: data.ID,
+        enrollmentId: data.enrollmentId,
         courseName: data.coursePaySelect
       }
     });
-    
+
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+}
+
+/**
+ * Saves fee structure data with the specified attributes
+ * @param {Object} data Fee structure data object
+ * @returns {Object} Operation result
+ */
+function saveFeeStructureData(data) {
+  const userIdForAudit = data.loggedInUserId ||
+                       PropertiesService.getUserProperties().getProperty("loggedInUser") ||
+                       "Anonymous";
+
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+
+    if (!sheet) {
+      createAuditLogEntry("Sheet Not Found Error", userIdForAudit, {
+        error: "Sheet 'FeeStructure' not found"
+      });
+      throw new Error('Sheet "FeeStructure" not found!');
+    }
+
+    // Validate required fields
+    const requiredFields = ["enrollmentId", "name", "courseName"];
+    const missingFields = requiredFields.filter(field => !data[field]);
+
+    if (missingFields.length > 0) {
+      createAuditLogEntry("Fee Structure Validation Failed", userIdForAudit, {
+        reason: `Missing required fields: ${missingFields.join(", ")}`
+      });
+      return {
+        success: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`
+      };
+    }
+
+    // Prepare data for the FeeStructure format
+    const rowData = [
+      new Date(), // TimeStamp (Column A)
+      data.enrollmentId, // Enrollment ID (Column B)
+      data.name, // Name (Column C)
+      data.courseName, // Course_Name (Column D)
+      data.paymentMode || "Cash", // Payment Mode (Column E)
+      parseFloat(data.admissionFee) || 0, // Admission_Fee (Column F)
+      parseFloat(data.admissionFeeDue) || 0, // Admission_Fee_Due (Column G)
+      parseFloat(data.courseFee) || 0, // Course_Fee (Column H)
+      parseFloat(data.examFee) || 0, // Exam_Fee (Column I)
+      parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column J)
+      parseFloat(data.totalAmountDue) || 0, // Total_Amount_Due (Column K)
+      data.branch || "", // Branch (Column L)
+      userIdForAudit // User_Name (Column M)
+    ];
+
+    // Save fee structure data
+    sheet.appendRow(rowData);
+
+    const lastRow = sheet.getLastRow();
+
+    // Log successful fee structure save
+    createAuditLogEntry("Fee Structure Data Recorded", userIdForAudit, {
+      enrollmentId: data.enrollmentId,
+      name: data.name,
+      courseName: data.courseName,
+      admissionFee: data.admissionFee || 0,
+      courseFee: data.courseFee || 0,
+      examFee: data.examFee || 0,
+      totalAmountDue: data.totalAmountDue || 0,
+      paymentMode: data.paymentMode || "Cash",
+      branch: data.branch || "",
+      row: lastRow
+    });
+
+    return {
+      success: true,
+      message: "Fee structure data saved successfully",
+      row: lastRow
+    };
+
+  } catch (error) {
+    console.error("Error in saveFeeStructureData:", error);
+
+    createAuditLogEntry("Fee Structure Save Error", userIdForAudit, {
+      error: error.message,
+      dataSummary: {
+        enrollmentId: data.enrollmentId,
+        name: data.name
+      }
+    });
+
     return {
       success: false,
       message: error.message
@@ -1912,9 +2049,9 @@ function saveReceiptData(data) {
  * @param {Object} data Complete workflow data
  * @returns {Object} Operation result
  */
-function getInstallmentPaymentsForStudent(receiptNo) {
+function getInstallmentPaymentsForStudent(enrollmentId) {
   console.log("=== getInstallmentPaymentsForStudent START ===");
-  console.log("Input receiptNo:", receiptNo);
+  console.log("Input enrollmentId:", enrollmentId);
 
   try {
     // Get spreadsheet
@@ -1926,47 +2063,77 @@ function getInstallmentPaymentsForStudent(receiptNo) {
     if (!sheet) {
       console.log("Creating InstallmentPayments sheet");
       sheet = ss.insertSheet("InstallmentPayments");
-      sheet.appendRow([
+
+      // Add headers matching the required attributes with installment columns
+      const headers = [
         "Timestamp",
-        "Receipt_No",
-        "Student_Name",
         "Enrollment_ID",
+        "Student_Name",
         "Course_Name",
-        "Installment_Number",
-        "Installment_Amount",
-        "Payment_Method",
-        "Payment_Date",
-        "Logged_In_User"
-      ]);
+        "Seleted_Payement_Option",
+        "Course_Fee",
+        "Couse_Duration",
+        "Course_Year"
+      ];
+
+      // Add Installment_1 through Installment_36 columns
+      for (let i = 1; i <= 36; i++) {
+        headers.push(`Installment_${i}`);
+      }
+
+      // Add remaining columns
+      headers.push("Amount_Paid", "Payment_Method", "User");
+
+      sheet.appendRow(headers);
     }
 
     const data = sheet.getDataRange().getValues();
     console.log("Sheet has", data.length, "rows of data");
 
     const payments = [];
-    const searchReceipt = String(receiptNo || "").trim();
-    console.log("Searching for receipt:", searchReceipt);
+    const searchId = String(enrollmentId || "").trim();
+    console.log("Searching for enrollment ID:", searchId);
 
-    // Process each row
+    // Find the row for this enrollment ID
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const rowReceipt = String(row[1] || "").trim();
+      const rowEnrollmentId = String(row[1] || "").trim(); // Enrollment_ID column
 
-      if (rowReceipt === searchReceipt) {
-        const payment = {
-          timestamp: row[0],
-          receiptNo: rowReceipt,
-          studentName: String(row[2] || ""),
-          enrollmentId: String(row[3] || ""),
-          courseName: String(row[4] || ""),
-          installmentNumber: parseInt(row[5]) || 0,
-          installmentAmount: parseFloat(row[6]) || 0,
-          paymentMethod: String(row[7] || ""),
-          paymentDate: row[8],
-          loggedInUser: String(row[9] || "")
-        };
-        payments.push(payment);
-        console.log("Found payment:", payment);
+      if (rowEnrollmentId === searchId) {
+        console.log("Found row for enrollment:", searchId, "at index:", i);
+
+        // Extract all installment payments from this row
+        for (let instNum = 1; instNum <= 36; instNum++) {
+          const installmentColumnIndex = 7 + instNum; // Installment_1 is at index 8 (0-based)
+          const installmentAmount = parseFloat(row[installmentColumnIndex] || 0);
+
+          if (installmentAmount > 0) {
+            const payment = {
+              timestamp: row[0],
+              enrollmentId: rowEnrollmentId,
+              studentName: String(row[2] || ""),
+              courseName: String(row[3] || ""),
+              paymentOption: String(row[4] || ""),
+              courseFee: parseFloat(row[5]) || 0,
+              courseDuration: String(row[6] || ""),
+              courseYear: parseInt(row[7]) || 1,
+              installmentNumber: instNum,
+              amountPaid: installmentAmount,
+              paymentMethod: String(row[44] || ""), // Payment_Method column (after 36 installments)
+              user: String(row[45] || ""), // User column
+              // Keep backward compatibility
+              receiptNo: rowEnrollmentId,
+              installmentAmount: installmentAmount,
+              paymentDate: row[0], // Use timestamp as payment date
+              loggedInUser: String(row[45] || "")
+            };
+            payments.push(payment);
+            console.log("Found installment payment:", payment);
+          }
+        }
+
+        // Only process the first matching row (should be unique by enrollment ID)
+        break;
       }
     }
 
@@ -1998,75 +2165,209 @@ function saveInstallmentPayment(data) {
     if (!sheet) {
       sheet = ss.insertSheet("InstallmentPayments");
 
-      // Add headers
-      sheet.appendRow([
+      // Add headers matching the required attributes with installment columns
+      const headers = [
         "Timestamp",
-        "Receipt_No",
-        "Student_Name",
         "Enrollment_ID",
+        "Student_Name",
         "Course_Name",
-        "Installment_Number",
-        "Installment_Amount",
-        "Payment_Method",
-        "Payment_Date",
-        "Logged_In_User"
-      ]);
+        "Seleted_Payement_Option",
+        "Course_Fee",
+        "Couse_Duration",
+        "Course_Year"
+      ];
+
+      // Add Installment_1 through Installment_36 columns
+      for (let i = 1; i <= 36; i++) {
+        headers.push(`Installment_${i}`);
+      }
+
+      // Add remaining columns
+      headers.push("Amount_Paid", "Payment_Method", "User");
+
+      sheet.appendRow(headers);
     }
 
-    // Check if this installment is already paid for this student
-    const existingPayments = getInstallmentPaymentsForStudent(data.receiptNo);
-    console.log("Save attempt - ReceiptNo:", data.receiptNo, "Installment:", data.installmentNumber, "Student:", data.studentName);
-    console.log("Existing payments for this receipt:", existingPayments);
-    const alreadyPaid = existingPayments.some(payment =>
-      payment.installmentNumber === parseInt(data.installmentNumber) &&
-      payment.studentName === data.studentName
-    );
+    const enrollmentId = data.enrollmentId || data.receiptNo;
+    const installmentNumber = parseInt(data.installmentNumber);
+    const installmentAmount = parseFloat(data.installmentAmount);
 
-    if (alreadyPaid) {
+    // Define column indices explicitly (1-based for sheet ranges)
+    const TIMESTAMP_COL = 1;
+    const ENROLLMENT_ID_COL = 2;
+    const STUDENT_NAME_COL = 3;
+    const COURSE_NAME_COL = 4;
+    const PAYMENT_OPTION_COL = 5;
+    const COURSE_FEE_COL = 6;
+    const COURSE_DURATION_COL = 7;
+    const COURSE_YEAR_COL = 8;
+    const FIRST_INSTALLMENT_COL = 9; // Installment_1 column
+    const AMOUNT_PAID_COL = 45;
+    const PAYMENT_METHOD_COL = 46;
+    const USER_COL = 47;
+
+    // Get all data to find existing row for this enrollment
+    const allData = sheet.getDataRange().getValues();
+    let existingRowIndex = -1;
+
+    // Find existing row for this enrollment ID (skip header row)
+    for (let i = 1; i < allData.length; i++) {
+      if (String(allData[i][1] || "").trim() === enrollmentId) { // Enrollment_ID column (0-based index 1)
+        existingRowIndex = i + 1; // +1 because sheet rows are 1-indexed
+        break;
+      }
+    }
+
+    // Get course fee and duration from FeeStructure or other sources
+    let courseFee = 0;
+    let courseDuration = "";
+    let courseYear = 1; // Default to 1st year
+
+    try {
+      // Try to get course data from FeeStructure sheet
+      const feeSheet = ss.getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+      if (feeSheet) {
+        const feeData = feeSheet.getDataRange().getValues();
+        // Look for matching enrollment ID or student name
+        for (let i = 1; i < feeData.length; i++) {
+          const row = feeData[i];
+          if (String(row[1] || "").trim() === enrollmentId ||
+              String(row[2] || "").trim() === data.studentName) {
+            courseFee = parseFloat(row[7]) || 0; // Course_Fee column
+            break;
+          }
+        }
+      }
+
+      // Try to get course duration from course data
+      const courseData = {
+        "anm_nursing": { duration: "2 Years", fee: 50000 },
+        "gnm_nursing": { duration: "3 Years", fee: 75000 },
+        "dmlt": { duration: "2 Years", fee: 40000 },
+        "ot_technician": { duration: "2 Years", fee: 45000 },
+        "general_nursing": { duration: "1 Year", fee: 25000 }
+      };
+
+      if (courseData[data.courseName]) {
+        courseDuration = courseData[data.courseName].duration;
+        if (courseFee === 0) {
+          courseFee = courseData[data.courseName].fee;
+        }
+      }
+    } catch (error) {
+      console.log("Could not retrieve course data:", error);
+    }
+
+    if (existingRowIndex > 0) {
+      // Update existing row
+      console.log("Updating existing row for enrollment:", enrollmentId, "at row:", existingRowIndex);
+
+      // Check if this installment is already paid
+      const existingRow = allData[existingRowIndex - 1]; // -1 because array is 0-indexed
+      const installmentColumn = FIRST_INSTALLMENT_COL + (installmentNumber - 1); // Installment_1 = 9, Installment_2 = 10, etc.
+
+      if (existingRow[installmentColumn - 1] && parseFloat(existingRow[installmentColumn - 1]) > 0) { // -1 for 0-based array index
+        return {
+          success: false,
+          message: `Installment ${installmentNumber} has already been paid for this enrollment`
+        };
+      }
+
+      // Update the specific installment column
+      sheet.getRange(existingRowIndex, installmentColumn).setValue(installmentAmount);
+
+      // Calculate and update total Amount_Paid
+      let totalPaid = 0;
+      for (let i = 1; i <= 36; i++) {
+        const instColIndex = FIRST_INSTALLMENT_COL + (i - 1); // Installment_1 = 9, etc.
+        let amount = parseFloat(existingRow[instColIndex - 1] || 0) || 0; // -1 for 0-based array
+        // If this is the installment we're updating, use the new amount
+        if (i === installmentNumber) {
+          amount = installmentAmount;
+        }
+        totalPaid += amount;
+      }
+
+      sheet.getRange(existingRowIndex, AMOUNT_PAID_COL).setValue(totalPaid);
+
+      // Update timestamp and user
+      sheet.getRange(existingRowIndex, TIMESTAMP_COL).setValue(new Date());
+      sheet.getRange(existingRowIndex, USER_COL).setValue(userIdForAudit);
+
+      // Log successful update
+      createAuditLogEntry("Installment Payment Updated", userIdForAudit, {
+        enrollmentId: enrollmentId,
+        studentName: data.studentName,
+        courseName: data.courseName,
+        installmentNumber: installmentNumber,
+        amount: installmentAmount,
+        totalPaid: totalPaid,
+        row: existingRowIndex
+      });
+
       return {
-        success: false,
-        message: "This installment has already been paid"
+        success: true,
+        message: `Installment ${installmentNumber} payment updated successfully`,
+        row: existingRowIndex
+      };
+
+    } else {
+      // Create new row
+      console.log("Creating new row for enrollment:", enrollmentId);
+
+      // Prepare row data with all columns
+      const rowData = [
+        new Date(), // Timestamp
+        enrollmentId, // Enrollment_ID
+        data.studentName, // Student_Name
+        data.courseName, // Course_Name
+        data.paymentMethod || "Cash", // Seleted_Payement_Option
+        courseFee, // Course_Fee
+        courseDuration, // Couse_Duration
+        courseYear // Course_Year
+      ];
+
+      // Add empty values for all 36 installment columns
+      for (let i = 1; i <= 36; i++) {
+        if (i === installmentNumber) {
+          rowData.push(installmentAmount); // Set the specific installment amount
+        } else {
+          rowData.push(""); // Empty for other installments
+        }
+      }
+
+      // Add remaining columns
+      rowData.push(installmentAmount, data.paymentMethod, userIdForAudit); // Amount_Paid, Payment_Method, User
+
+      sheet.appendRow(rowData);
+
+      const lastRow = sheet.getLastRow();
+
+      // Log successful creation
+      createAuditLogEntry("Installment Payment Recorded", userIdForAudit, {
+        enrollmentId: enrollmentId,
+        studentName: data.studentName,
+        courseName: data.courseName,
+        installmentNumber: installmentNumber,
+        amount: installmentAmount,
+        courseFee: courseFee,
+        courseDuration: courseDuration,
+        row: lastRow
+      });
+
+      return {
+        success: true,
+        message: "Installment payment saved successfully",
+        row: lastRow
       };
     }
-
-    // Save installment payment data
-    sheet.appendRow([
-      new Date(),
-      data.receiptNo,
-      data.studentName,
-      data.enrollmentId,
-      data.courseName,
-      data.installmentNumber,
-      data.installmentAmount,
-      data.paymentMethod,
-      data.paymentDate,
-      userIdForAudit
-    ]);
-
-    const lastRow = sheet.getLastRow();
-
-    // Log successful installment payment
-    createAuditLogEntry("Installment Payment Recorded", userIdForAudit, {
-      receiptNo: data.receiptNo,
-      studentName: data.studentName,
-      courseName: data.courseName,
-      installmentNumber: data.installmentNumber,
-      amount: data.installmentAmount,
-      row: lastRow
-    });
-
-    return {
-      success: true,
-      message: "Installment payment saved successfully",
-      row: lastRow
-    };
 
   } catch (error) {
     console.error("Error in saveInstallmentPayment:", error);
 
     createAuditLogEntry("Installment Payment Save Error", userIdForAudit, {
       error: error.message,
-      receiptNo: data.receiptNo,
+      enrollmentId: data.enrollmentId || data.receiptNo,
       studentName: data.studentName
     });
 

@@ -1001,8 +1001,10 @@
       const courseSelect = document.getElementById('coursePaySelect');
       const courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
       const paymentMode = document.getElementById('pay-select')?.value || "Cash";
+      const enrollmentId = document.getElementById('enrollmentId')?.value || "";
+      const loggedInUser = document.getElementById("loggedInUserId")?.value || "Admin";
 
-      console.log("Receipt data:", { studentName, courseName, paymentMode });
+      console.log("Receipt data:", { studentName, courseName, paymentMode, enrollmentId });
 
       // Format currency
       const formatCurrency = (amount) => {
@@ -1021,6 +1023,39 @@
       };
 
       console.log("Prepared receipt data:", receiptData);
+
+      // 🔥 CRITICAL: Save installment payment data immediately after receipt generation
+      const installmentData = {
+        receiptNo: document.getElementById("ID").value, // Use the main receipt number
+        studentName: studentName,
+        enrollmentId: enrollmentId,
+        courseName: courseName,
+        installmentNumber: installmentNumber,
+        installmentAmount: amount,
+        paymentMethod: paymentMode,
+        paymentDate: new Date().toISOString().split('T')[0],
+        loggedInUser: loggedInUser
+      };
+
+      console.log("Saving installment payment data:", installmentData);
+
+      // Save the installment payment
+      google.script.run
+        .withSuccessHandler((result) => {
+          if (result.success) {
+            console.log("Installment payment saved successfully:", result);
+            // Update UI to show payment as completed
+            updateInstallmentStatusAfterReceipt(installmentNumber);
+          } else {
+            console.error("Failed to save installment payment:", result.message);
+            alert("Receipt generated but failed to save payment data: " + result.message);
+          }
+        })
+        .withFailureHandler((error) => {
+          console.error("Error saving installment payment:", error);
+          alert("Receipt generated but error saving payment data: " + error);
+        })
+        .saveInstallmentPayment(installmentData);
 
       // Generate the receipt HTML (similar to exam receipt)
       const receiptHTML = `
@@ -1260,6 +1295,31 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
 
     // Course details loaded, now populate installment schedule
     populateInstallmentSchedule();
+  }
+
+  // Function to update installment status after receipt generation
+  function updateInstallmentStatusAfterReceipt(installmentNumber) {
+    console.log("Updating installment status after receipt for installment:", installmentNumber);
+
+    // Update status to Paid
+    const statusSpan = document.getElementById(`status-${installmentNumber}`);
+    const checkbox = document.querySelector(`input[data-installment="${installmentNumber}"]`);
+    const receiptBtn = document.getElementById(`receiptBtn-${installmentNumber}`);
+
+    if (statusSpan) {
+      statusSpan.className = "px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800";
+      statusSpan.textContent = "Paid";
+    }
+
+    if (checkbox) {
+      checkbox.checked = true;
+      checkbox.disabled = true;
+      checkbox.removeAttribute('onchange'); // Prevent further changes
+    }
+
+    if (receiptBtn) {
+      receiptBtn.classList.remove("hidden");
+    }
   }
 
   // Initialize when page loads

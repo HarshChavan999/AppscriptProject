@@ -179,5 +179,57 @@ const CONFIG = {
     PAYMENT_METHOD_COL: 8,       // Column I
     PAYMENT_DATE_COL: 9,         // Column J
     LOGGED_IN_USER_COL: 10       // Column K
+  },
+
+  // --- Column Mappings for Fee Structure Table ---
+  // These indices (0-based) must match the column order in your fee structure table precisely.
+  // The fee structure table contains the following attributes:
+  // TimeStamp, Enrollment ID, Name, Course_Name, Payment Mode, Admission_Fee, Admission_Fee_Due,
+  // Course_Fee, Exam_Fee, Exam_Fee_Due, Total_Amount_Due, Branch, User_Name
+
+  FEE_STRUCTURE_SHEET_NAME: 'FeeStructure',
+
+  FEE_STRUCTURE_COLUMN_INDEX: {
+    // These indices are 0-based relative to the *data array that will be appended*,
+    // where the Timestamp (Col A) is automatically added by Google Sheets and isn't
+    // part of the data you explicitly pass in `appendRow([Timestamp, ...rowData])`.
+    // So, if your `rowData` starts with 'Enrollment ID' which goes into Col B,
+    // its index in `rowData` is 0.
+
+    ENROLLMENT_ID: 0,        // Corresponds to Col B in sheet (Enrollment ID)
+    NAME: 1,                 // Corresponds to Col C in sheet (Name)
+    COURSE_NAME: 2,          // Corresponds to Col D in sheet (Course_Name)
+    PAYMENT_MODE: 3,         // Corresponds to Col E in sheet (Payment Mode)
+    ADMISSION_FEE: 4,        // Corresponds to Col F in sheet (Admission_Fee)
+    ADMISSION_FEE_DUE: 5,    // Corresponds to Col G in sheet (Admission_Fee_Due)
+    COURSE_FEE: 6,           // Corresponds to Col H in sheet (Course_Fee)
+    EXAM_FEE: 7,             // Corresponds to Col I in sheet (Exam_Fee)
+    EXAM_FEE_DUE: 8,         // Corresponds to Col J in sheet (Exam_Fee_Due)
+    TOTAL_AMOUNT_DUE: 9,     // Corresponds to Col K in sheet (Total_Amount_Due)
+    BRANCH: 10,              // Corresponds to Col L in sheet (Branch)
+    USER_NAME: 11            // Corresponds to Col M in sheet (User_Name)
+  },
+
+  // --- Column Mappings for Fee Structure Lookup ---
+  // These indices (0-based) must match the column order in your fee structure table precisely,
+  // when you use `getDataRange().getValues()`. This method includes ALL columns,
+  // including the auto-generated Timestamp in Column A.
+
+  FEE_STRUCTURE_LOOKUP: {
+    SHEET_NAME: 'FeeStructure',
+    // These indices are 0-based from the `getValues()` array
+    TIMESTAMP_COL: 0,             // Column A (TimeStamp)
+    ENROLLMENT_ID_COL: 1,         // Column B (Enrollment ID)
+    NAME_COL: 2,                  // Column C (Name)
+    COURSE_NAME_COL: 3,           // Column D (Course_Name)
+    PAYMENT_MODE_COL: 4,          // Column E (Payment Mode)
+    ADMISSION_FEE_COL: 5,         // Column F (Admission_Fee)
+    ADMISSION_FEE_DUE_COL: 6,     // Column G (Admission_Fee_Due)
+    COURSE_FEE_COL: 7,            // Column H (Course_Fee)
+    EXAM_FEE_COL: 8,              // Column I (Exam_Fee)
+    EXAM_FEE_DUE_COL: 9,          // Column J (Exam_Fee_Due)
+    TOTAL_AMOUNT_DUE_COL: 10,     // Column K (Total_Amount_Due)
+    BRANCH_COL: 11,               // Column L (Branch)
+    USER_NAME_COL: 12             // Column M (User_Name)
   }
 };
