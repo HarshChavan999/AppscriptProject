@@ -2284,19 +2284,14 @@ function saveInstallmentPayment(data) {
       // Update the specific installment column with payment amount
       sheet.getRange(existingRowIndex, installmentColumn).setValue(installmentAmount);
 
-      // Calculate and update total Amount_Paid
+      // Calculate and update total Amount_Paid by summing all installment amounts
       let totalPaid = 0;
       for (let i = 1; i <= 36; i++) {
         const instColIndex = FIRST_INSTALLMENT_COL + (i - 1); // Installment_1 = 9, etc.
-        // If this installment is paid (has a date), add the amount to total
-        if (existingRow[instColIndex - 1] && String(existingRow[instColIndex - 1]).trim() !== "") {
-          if (i === installmentNumber) {
-            totalPaid += installmentAmount;
-          } else {
-            // For other paid installments, we need to get their amounts from somewhere
-            // For now, assume they have the same amount or get from a mapping
-            totalPaid += installmentAmount; // Simplified - assume same amount per installment
-          }
+        // Get the actual amount from each installment column
+        const instAmount = parseFloat(existingRow[instColIndex - 1]) || 0; // -1 for 0-based array index
+        if (instAmount > 0) {
+          totalPaid += instAmount;
         }
       }
 
@@ -2305,6 +2300,13 @@ function saveInstallmentPayment(data) {
       // Update timestamp and user
       sheet.getRange(existingRowIndex, TIMESTAMP_COL).setValue(new Date());
       sheet.getRange(existingRowIndex, USER_COL).setValue(userIdForAudit);
+
+      // Update FeeStructure sheet - reduce Total_Amount_Due by payment amount
+      const feeUpdateResult = updateFeeStructureAmountDue(enrollmentId, installmentAmount, userIdForAudit);
+      if (!feeUpdateResult.success) {
+        console.error("Warning: Failed to update FeeStructure amount due:", feeUpdateResult.message);
+        // Don't fail the payment, just log the warning
+      }
 
       // Log successful update
       createAuditLogEntry("Installment Payment Updated", userIdForAudit, {
@@ -2315,8 +2317,20 @@ function saveInstallmentPayment(data) {
         amount: installmentAmount,
         paymentDate: data.paymentDate,
         totalPaid: totalPaid,
+        feeStructureUpdated: feeUpdateResult.success,
         row: existingRowIndex
       });
+
+      // Update installment schedule status
+      const scheduleUpdateResult = updateInstallmentScheduleStatus({
+        receiptNo: enrollmentId,
+        installmentNumber: installmentNumber
+      });
+
+      if (!scheduleUpdateResult.success) {
+        console.error("Warning: Failed to update installment schedule status:", scheduleUpdateResult.message);
+        // Don't fail the payment, just log the warning
+      }
 
       return {
         success: true,
@@ -2368,6 +2382,17 @@ function saveInstallmentPayment(data) {
         courseDuration: courseDuration,
         row: lastRow
       });
+
+      // Update installment schedule status for new payment
+      const scheduleUpdateResult = updateInstallmentScheduleStatus({
+        receiptNo: enrollmentId,
+        installmentNumber: installmentNumber
+      });
+
+      if (!scheduleUpdateResult.success) {
+        console.error("Warning: Failed to update installment schedule status:", scheduleUpdateResult.message);
+        // Don't fail the payment, just log the warning
+      }
 
       return {
         success: true,
@@ -2527,9 +2552,8 @@ function saveInstallmentSchedule(data) {
       // Add headers
       sheet.appendRow([
         "Timestamp",
-        "Receipt_No",
-        "Student_Name",
         "Enrollment_ID",
+        "Student_Name",
         "Course_Name",
         "Payment_Type",
         "Total_Fees",
@@ -2549,15 +2573,15 @@ function saveInstallmentSchedule(data) {
     const totalFees = parseFloat(data.totalFee) || 0;
     const installmentSchedule = data.installmentSchedule || [];
 
-    // Check if schedule already exists for this receipt
+    // Check if schedule already exists for this enrollment ID
     const existingData = sheet.getDataRange().getValues();
-    const hasExistingSchedule = existingData.some(row => row[1] === receiptNo); // Column B is Receipt_No
+    const hasExistingSchedule = existingData.some(row => row[1] === enrollmentId); // Column B is Enrollment_ID
 
     if (hasExistingSchedule) {
       // Update existing schedule - clear old entries and add new ones
       const rowsToDelete = [];
       for (let i = existingData.length - 1; i >= 1; i--) {
-        if (existingData[i][1] === receiptNo) {
+        if (existingData[i][1] === enrollmentId) { // Changed from receiptNo to enrollmentId
           rowsToDelete.push(i + 1); // Sheet rows are 1-indexed
         }
       }
@@ -2573,9 +2597,8 @@ function saveInstallmentSchedule(data) {
     installmentSchedule.forEach(installment => {
       sheet.appendRow([
         new Date(), // Timestamp
-        receiptNo,
+        enrollmentId, // Enrollment_ID (changed from receiptNo)
         studentName,
-        enrollmentId,
         courseName,
         paymentType,
         totalFees,
@@ -2625,10 +2648,10 @@ function saveInstallmentSchedule(data) {
 
 /**
  * Loads saved installment schedule for a student
- * @param {string} receiptNo Receipt number to load schedule for
+ * @param {string} enrollmentId Enrollment ID to load schedule for
  * @returns {Array} Array of installment objects
  */
-function loadInstallmentSchedule(receiptNo) {
+function loadInstallmentSchedule(enrollmentId) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName("InstallmentSchedules");
@@ -2642,12 +2665,12 @@ function loadInstallmentSchedule(receiptNo) {
 
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[1] === receiptNo) { // Column B is Receipt_No
+      if (row[1] === enrollmentId) { // Column B is Enrollment_ID
         schedule.push({
-          installmentNumber: parseInt(row[7]) || 0, // Column H
-          amount: parseFloat(row[8]) || 0, // Column I
-          dueDate: row[9] ? row[9].toISOString().split('T')[0] : "", // Column J
-          status: row[10] || "Pending" // Column K
+          installmentNumber: parseInt(row[6]) || 0, // Column G: Installment_Number
+          amount: parseFloat(row[7]) || 0, // Column H: Installment_Amount
+          dueDate: row[8] ? row[8].toISOString().split('T')[0] : "", // Column I: Due_Date
+          status: row[9] || "Pending" // Column J: Status
         });
       }
     }
@@ -2660,6 +2683,79 @@ function loadInstallmentSchedule(receiptNo) {
   } catch (error) {
     console.error("Error in loadInstallmentSchedule:", error);
     return [];
+  }
+}
+
+/**
+ * Updates installment status in InstallmentSchedules sheet when payment is made
+ * @param {Object} data Payment data
+ * @returns {Object} Operation result
+ */
+function updateInstallmentScheduleStatus(data) {
+  const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("InstallmentSchedules");
+
+    if (!sheet) {
+      return {
+        success: false,
+        message: "InstallmentSchedules sheet not found"
+      };
+    }
+
+    const receiptNo = data.receiptNo || data.enrollmentId;
+    const installmentNumber = parseInt(data.installmentNumber);
+
+    const dataRange = sheet.getDataRange().getValues();
+
+    // Find the row for this enrollment ID and installment
+    for (let i = 1; i < dataRange.length; i++) {
+      const row = dataRange[i];
+      if (row[1] === receiptNo && parseInt(row[6]) === installmentNumber) { // Column B: Enrollment_ID, Column G: Installment_Number
+        // Update status to "Paid"
+        sheet.getRange(i + 1, 10).setValue("Paid"); // Column J: Status (1-based index 10)
+
+        // Update timestamp
+        sheet.getRange(i + 1, 1).setValue(new Date()); // Column A: Timestamp
+
+        // Log successful status update
+        createAuditLogEntry("Installment Schedule Status Updated", userIdForAudit, {
+          enrollmentId: receiptNo, // Changed from receiptNo
+          installmentNumber: installmentNumber,
+          status: "Paid",
+          row: i + 1
+        });
+
+        return {
+          success: true,
+          message: `Installment ${installmentNumber} status updated to Paid`,
+          row: i + 1
+        };
+      }
+    }
+
+    // If installment not found in schedule, that's okay - it might be a dynamic schedule
+    return {
+      success: true,
+      message: "Installment not found in saved schedule (may be dynamically generated)",
+      row: null
+    };
+
+  } catch (error) {
+    console.error("Error in updateInstallmentScheduleStatus:", error);
+
+    createAuditLogEntry("Installment Schedule Status Update Error", userIdForAudit, {
+      error: error.message,
+      receiptNo: data.receiptNo || data.enrollmentId,
+      installmentNumber: data.installmentNumber
+    });
+
+    return {
+      success: false,
+      message: `Failed to update installment schedule status: ${error.message}`
+    };
   }
 }
 
@@ -2761,6 +2857,99 @@ function getStudentDataByEnrollmentId(enrollmentId) {
     return {
       success: false,
       error: error.message
+    };
+  }
+}
+
+/**
+ * Updates the Total_Amount_Due in FeeStructure sheet when payment is made
+ * @param {string} enrollmentId The enrollment ID to update
+ * @param {number} paymentAmount The amount paid
+ * @param {string} userId The user making the update
+ * @returns {Object} Operation result
+ */
+function updateFeeStructureAmountDue(enrollmentId, paymentAmount, userId) {
+  const userIdForAudit = userId || PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+
+    if (!sheet) {
+      createAuditLogEntry("Fee Structure Update Error", userIdForAudit, {
+        error: "FeeStructure sheet not found",
+        enrollmentId: enrollmentId,
+        paymentAmount: paymentAmount
+      });
+      return {
+        success: false,
+        message: "FeeStructure sheet not found"
+      };
+    }
+
+    const data = sheet.getDataRange().getValues();
+
+    // Find the row for this enrollment ID (skip header row)
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowEnrollmentId = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ENROLLMENT_ID_COL] || "").trim(); // Column B
+
+      if (rowEnrollmentId === enrollmentId) {
+        // Get current Total_Amount_Due
+        const currentTotalDue = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL]) || 0; // Column K
+
+        // Calculate new amount due
+        const newTotalDue = Math.max(0, currentTotalDue - paymentAmount);
+
+        // Update the Total_Amount_Due column
+        sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL + 1).setValue(newTotalDue); // +1 for 1-based column index
+
+        // Update timestamp
+        sheet.getRange(i + 1, 1).setValue(new Date()); // Column A: Timestamp
+
+        // Log successful update
+        createAuditLogEntry("Fee Structure Amount Updated", userIdForAudit, {
+          enrollmentId: enrollmentId,
+          previousAmountDue: currentTotalDue,
+          paymentAmount: paymentAmount,
+          newAmountDue: newTotalDue,
+          row: i + 1
+        });
+
+        return {
+          success: true,
+          message: `Fee structure updated successfully. Amount due reduced by ₹${paymentAmount}`,
+          row: i + 1,
+          previousAmount: currentTotalDue,
+          newAmount: newTotalDue
+        };
+      }
+    }
+
+    // Enrollment ID not found in FeeStructure
+    createAuditLogEntry("Fee Structure Update Warning", userIdForAudit, {
+      warning: "Enrollment ID not found in FeeStructure sheet",
+      enrollmentId: enrollmentId,
+      paymentAmount: paymentAmount
+    });
+
+    return {
+      success: false,
+      message: `Enrollment ID ${enrollmentId} not found in FeeStructure sheet`
+    };
+
+  } catch (error) {
+    console.error("Error in updateFeeStructureAmountDue:", error);
+
+    createAuditLogEntry("Fee Structure Update Error", userIdForAudit, {
+      error: error.message,
+      enrollmentId: enrollmentId,
+      paymentAmount: paymentAmount
+    });
+
+    return {
+      success: false,
+      message: `Failed to update FeeStructure: ${error.message}`
     };
   }
 }

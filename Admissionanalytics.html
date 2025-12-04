@@ -126,6 +126,7 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortAdmissionTable('date')" id="sort-date">
               <div class="flex items-center gap-1">
                 Timestamp
@@ -203,7 +204,6 @@
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian Name</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -291,6 +291,7 @@ function loadAdmissionAnalytics() {
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt Number</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollment ID</th>
@@ -304,7 +305,6 @@ function loadAdmissionAnalytics() {
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian Name</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -709,6 +709,7 @@ function renderAdmissionTable(dataArray) {
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortAdmissionTable('date')" id="sort-date">
               <div class="flex items-center gap-1">
                 Timestamp
@@ -786,7 +787,6 @@ function renderAdmissionTable(dataArray) {
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian Name</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -796,6 +796,14 @@ function renderAdmissionTable(dataArray) {
     const dataId = `admission-data-${index}`;
     h += `
       <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <button id="course-payment-btn-${index}"
+                  data-admission='${JSON.stringify(d).replace(/'/g, "\\'")}'
+                  onclick="redirectToCoursePaymentFromTable('course-payment-btn-${index}')"
+                  class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm flex items-center gap-1 transition-colors">
+            <i class="fas fa-credit-card text-xs"></i> Course Payment
+          </button>
+        </td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.date || ''}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.receiptNumber || ''}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.enrollmentId || ''}</td>
@@ -813,14 +821,6 @@ function renderAdmissionTable(dataArray) {
           </span>
         </td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.user || ''}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm">
-          <button id="course-payment-btn-${index}"
-                  data-admission='${JSON.stringify(d).replace(/'/g, "\\'")}'
-                  onclick="redirectToCoursePaymentFromTable('course-payment-btn-${index}')"
-                  class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm flex items-center gap-1 transition-colors">
-            <i class="fas fa-credit-card text-xs"></i> Course Payment
-          </button>
-        </td>
       </tr>
     `;
   });

@@ -635,6 +635,39 @@ function readFileAsDataURL(file) {
   });
 }
 
+function goBackToInquiry() {
+  console.log("Back button clicked - checking where to go back");
+
+  // Check if we came from inquiry analytics
+  const cameFromAnalytics = sessionStorage.getItem('cameFromInquiryAnalytics');
+
+  // Check if we came from new inquiry form
+  const cameFromNewInquiry = sessionStorage.getItem('cameFromNewInquiry');
+
+  if (cameFromAnalytics === 'true') {
+    // Clear the flag
+    sessionStorage.removeItem('cameFromInquiryAnalytics');
+
+    // Go back to inquiry analytics
+    console.log("Going back to inquiry analytics");
+    hideAllSections();
+    document.getElementById("inquiryAnalyticsSection").classList.remove("hidden");
+  } else if (cameFromNewInquiry === 'true') {
+    // Clear the flag
+    sessionStorage.removeItem('cameFromNewInquiry');
+
+    // Go back to new inquiry form
+    console.log("Going back to new inquiry form");
+    hideAllSections();
+    document.getElementById("ifId").classList.remove("hidden");
+  } else {
+    // Default fallback - go to inquiry form
+    console.log("Default: going back to inquiry form");
+    hideAllSections();
+    document.getElementById("ifId").classList.remove("hidden");
+  }
+}
+
 function showReceiptModal(receiptHTML) {
   // Create modal overlay
   const modal = document.createElement('div');
