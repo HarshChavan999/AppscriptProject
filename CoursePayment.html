@@ -78,7 +78,7 @@
          <div class="form-row">
               <div>
                <label for="enrollmentId" class="form-label"><i class="fas fa-id-card"></i>Enrollment ID</label>
-               <input type="text" id="enrollmentId" placeholder="Enrollment ID" name="enrollmentId" readonly class="form-input">
+               <input type="text" id="enrollmentId" placeholder="Enrollment ID" name="enrollmentId" class="form-input">
               </div>
          </div>
       </div>
@@ -144,7 +144,6 @@
         <!-- Full Payment -->
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
-          onclick="selectPayment('full')"
           id="fullPaymentCard"
         >
           <div class="flex items-center mb-2">
@@ -153,7 +152,6 @@
               name="Coursepayment_type"
               value="full"
               class="h-5 w-5 text-blue-500"
-              checked
             />
             <h3 class="ml-2 font-semibold">Full Payment</h3>
           </div>
@@ -192,7 +190,6 @@
         <!-- Partial Payment -->
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
-          onclick="selectPayment('partial')"
           id="partialPaymentCard"
         >
           <div class="flex items-center mb-2">
@@ -253,7 +250,6 @@
         <!-- EMI Payment -->
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
-          onclick="selectPayment('emi')"
           id="emiPaymentCard"
         >
           <div class="flex items-center mb-2">
@@ -321,12 +317,12 @@
       </div>
     </div>
 
-    <!-- Installment Schedule (shown when coming from Admission Analytics) -->
+    <!-- Installment Schedule (synchronized with Admission Structure) -->
     <div id="installmentScheduleSection" class="space-y-4 hidden">
       <h2 class="text-xl font-semibold text-gray-800">Installment Schedule</h2>
       <div class="bg-white rounded-lg border border-gray-200 p-4">
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
+          <table class="installment-table min-w-full">
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Installment</th>
@@ -337,7 +333,7 @@
                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
               </tr>
             </thead>
-            <tbody id="installmentTable" class="bg-white divide-y divide-gray-200">
+            <tbody id="installmentTable" class="bg-white">
               <!-- Installment rows will be added here -->
             </tbody>
           </table>
@@ -387,12 +383,14 @@
         Proceed to Admission Form
       </button>
     </div> -->
- <div class="flex justify-end">
-
-
-<button onclick="proceedToAdmissionReceipt()"
- class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
-      >Proceed to Admission Receipt</button>
+ <div class="flex justify-end space-x-4">
+   <button onclick="clearCoursePaymentForm()"
+     class="bg-gray-500 hover:bg-gray-600 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
+     <i class="fas fa-undo mr-2"></i>Reset
+   </button>
+   <button onclick="proceedToAdmissionReceipt()"
+     class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
+       >Proceed to Admission Receipt</button>
  </div>
 <style>
   /* Hide number input arrows (spinner buttons) */
@@ -598,6 +596,15 @@
     // Get selected payment type and generate installment schedule
     const paymentType = document.querySelector('input[name="Coursepayment_type"]:checked')?.value || "full";
     const totalFee = document.getElementById("totalFees")?.textContent ? parseFloat(document.getElementById("totalFees").textContent.replace(/[^0-9.]/g, '')) : 0;
+
+    // Get selected tenure for inclusion in receipt data
+    let selectedTenure = 12;
+    if (paymentType === 'partial') {
+      selectedTenure = parseInt(document.getElementById("partialTenure").value) || 6;
+    } else if (paymentType === 'emi') {
+      selectedTenure = parseInt(document.getElementById("emiTenure").value) || 12;
+    }
+
     const installmentSchedule = generateInstallmentScheduleForPaymentType(paymentType, totalFee);
 
     const coursePaymentData = {
@@ -746,7 +753,7 @@
   }
 }
 
-  // Function to populate installment schedule
+  // Function to populate installment schedule - synchronized with Admission Structure
   function populateInstallmentSchedule() {
     const receiptNo = document.getElementById("ID").value;
 
@@ -762,18 +769,25 @@
     let localPayments = loadLocalPayments(receiptNo);
     console.log("Loaded local payments:", localPayments);
 
+    // Check if user came from admission form or admission analytics (they should use the same functionality)
+    const admissionAnalyticsData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+    const firstName = sessionStorage.getItem('first_name');
+    const lastName = sessionStorage.getItem('last_name');
+    const receiptNumber = sessionStorage.getItem('tempText4');
+    const hasAdmissionData = admissionAnalyticsData || ((firstName || lastName) && receiptNumber);
+
     // Try to load saved installment schedule first
     google.script.run
       .withSuccessHandler((savedSchedule) => {
         console.log("Loaded saved installment schedule:", savedSchedule);
 
         if (savedSchedule && savedSchedule.length > 0) {
-          // Use the saved schedule
-          generateInstallmentTableRowsFromSchedule(savedSchedule, localPayments);
+          // Use the shared function that matches Admission Structure format
+          generateInstallmentTableRowsFromScheduleShared(tableBody, savedSchedule, localPayments, true, true);
         } else {
-          // Fallback to generating default schedule if no saved schedule
-          console.log("No saved schedule found, generating default schedule");
-          generateDefaultInstallmentSchedule(localPayments);
+          // No saved schedule - generate default schedule but use the same functionality as admission analytics
+          console.log("No saved schedule found, generating default schedule with admission analytics functionality");
+          generateDefaultInstallmentScheduleWithAdmissionFunctionality(localPayments, hasAdmissionData);
         }
 
         // Load server payments and update status
@@ -805,8 +819,8 @@
       })
       .withFailureHandler((error) => {
         console.error("Error loading saved installment schedule:", error);
-        // Fallback to generating default schedule
-        generateDefaultInstallmentSchedule(localPayments);
+        // Fallback to generating default schedule with admission analytics functionality
+        generateDefaultInstallmentScheduleWithAdmissionFunctionality(localPayments, hasAdmissionData);
       })
       .loadInstallmentSchedule(receiptNo);
   }
@@ -869,6 +883,57 @@
 
     // Generate the table with local payments applied
     generateInstallmentTableRows(numberOfInstallments, installmentAmount, today, paidInstallments);
+  }
+
+  // Function to generate default installment schedule with admission analytics functionality
+  function generateDefaultInstallmentScheduleWithAdmissionFunctionality(paidInstallments, hasAdmissionData) {
+    const totalFeesElement = document.getElementById("totalFees");
+    const totalFeesText = totalFeesElement.textContent || totalFeesElement.innerText;
+    const totalAmount = parseFloat(totalFeesText.replace(/[^0-9.]/g, '')) || 0;
+
+    if (totalAmount === 0) {
+      console.log("No total fees found, cannot generate installment schedule");
+      return;
+    }
+
+    // Get saved payment details to use the correct tenure instead of default 12
+    const savedPaymentDetails = JSON.parse(sessionStorage.getItem('coursePaymentDetails') || 'null');
+    let numberOfInstallments = 12; // Default to 12 installments
+
+    if (savedPaymentDetails) {
+      if (savedPaymentDetails.paymentType === 'emi' && savedPaymentDetails.emiTenure) {
+        numberOfInstallments = parseInt(savedPaymentDetails.emiTenure);
+      } else if (savedPaymentDetails.paymentType === 'partial' && savedPaymentDetails.partialTenure) {
+        numberOfInstallments = parseInt(savedPaymentDetails.partialTenure);
+      } else if (savedPaymentDetails.paymentType === 'full') {
+        numberOfInstallments = 1; // Full payment has 1 installment
+      }
+    }
+
+    // Create a default schedule array (like admission analytics would have)
+    const schedule = [];
+    const today = new Date();
+    const installmentAmount = Math.ceil(totalAmount / numberOfInstallments);
+
+    for (let i = 1; i <= numberOfInstallments; i++) {
+      const dueDate = new Date(today);
+      dueDate.setMonth(today.getMonth() + i - 1); // Monthly intervals starting from today
+
+      schedule.push({
+        installmentNumber: i,
+        dueDate: dueDate.toISOString().split('T')[0],
+        amount: installmentAmount,
+        status: "Pending"
+      });
+    }
+
+    // Use the same function as admission analytics for consistency
+    const tableElement = document.getElementById("installmentTable");
+    // Clear any existing content before adding new rows
+    tableElement.innerHTML = "";
+    generateInstallmentTableRowsFromScheduleShared(tableElement, schedule, paidInstallments, true, true);
+
+    console.log("Generated default installment schedule with admission analytics functionality:", schedule);
   }
 
   // Function to update installment status based on existing payments
@@ -983,6 +1048,8 @@
 
   // Function to handle installment payment checkbox
   function handleInstallmentPayment(checkbox, statusId, receiptBtnId) {
+    console.log("handleInstallmentPayment called with checkbox:", checkbox.checked);
+
     if (!checkbox.checked) {
       // If unchecked, hide receipt button and reset status
       const statusSpan = document.getElementById(statusId);
@@ -1002,13 +1069,19 @@
     const installmentNumber = checkbox.getAttribute('data-installment');
     const amount = checkbox.getAttribute('data-amount');
 
+    console.log("Showing confirmation dialog for installment:", installmentNumber);
+
     // Show confirmation dialog
-    const confirmed = confirm(`Are you sure the payment is completed?\n\nInstallment: ${installmentNumber}\nAmount: ₹${parseInt(amount).toLocaleString()}`);
+    const confirmed = confirm(`Are you sure the payment has been completed?\n\nInstallment: ${installmentNumber}\nAmount: ₹${parseInt(amount).toLocaleString()}`);
+
+    console.log("Confirmation result:", confirmed);
 
     if (confirmed) {
+      console.log("User confirmed, calling saveInstallmentPayment");
       // Automatically save to sheet
       saveInstallmentPayment(installmentNumber, amount, checkbox, statusId, receiptBtnId);
     } else {
+      console.log("User cancelled, unchecking checkbox");
       // Uncheck if not confirmed
       checkbox.checked = false;
     }
@@ -1067,7 +1140,7 @@
             receiptButton.classList.remove("hidden");
           }
 
-          alert(`Installment ${installmentNumber} payment saved successfully! Receipt has been generated and saved.`);
+          alert(`Installment ${installmentNumber} payment recorded successfully! The receipt has been generated and saved.`);
         } else {
           alert("Error: " + (result.message || "Failed to save payment"));
           checkbox.checked = false;
@@ -1114,7 +1187,7 @@
       // Generate the receipt HTML
       const receiptHTML = generateInstallmentReceiptHTML(receiptData);
 
-      // Save receipt data to localStorage for persistence
+      // Save receipt data to localStorage for persistence (like admission analytics)
       const receiptKey = `installment_receipt_${paymentData.receiptNo}_${installmentNumber}`;
       localStorage.setItem(receiptKey, JSON.stringify({
         ...receiptData,
@@ -1122,10 +1195,13 @@
         generatedAt: new Date().toISOString()
       }));
 
-      // Add receipt to the receipt container
+      // Add receipt to the receipt container (like admission analytics does)
       addReceiptToContainer(receiptData, receiptHTML);
 
       console.log("Installment receipt generated and saved:", receiptNo);
+
+      // SUCCESS ALERT - This is what admission analytics shows
+      alert(`Installment ${installmentNumber} payment recorded successfully! The receipt has been generated and saved.`);
 
     } catch (error) {
       console.error("Error generating installment receipt:", error);
@@ -1659,6 +1735,34 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
         }
       }
 
+      // Lock the fields to prevent changes
+      document.getElementById("ID").readOnly = true;
+      document.getElementById("std_Coursepayname").readOnly = true;
+      // Allow enrollment ID to be editable so users can search for different students
+      // document.getElementById("enrollmentId").readOnly = true;
+      document.getElementById("coursePaySelect").disabled = true;
+
+      // Load saved payment details if available
+      const savedPaymentDetails = JSON.parse(sessionStorage.getItem('coursePaymentDetails') || 'null');
+      if (savedPaymentDetails) {
+        setPaymentDetails(savedPaymentDetails);
+      }
+
+      // If admission data has tenure, update saved payment details
+      if (admissionData.tenure) {
+        let savedDetails = savedPaymentDetails || {};
+        if (admissionData.paymentType === 'emi') {
+          savedDetails.emiTenure = admissionData.tenure;
+          savedDetails.paymentType = 'emi';
+        } else if (admissionData.paymentType === 'partial') {
+          savedDetails.partialTenure = admissionData.tenure;
+          savedDetails.paymentType = 'partial';
+        } else {
+          savedDetails.paymentType = 'full';
+        }
+        sessionStorage.setItem('coursePaymentDetails', JSON.stringify(savedDetails));
+      }
+
       // Save this data persistently for future visits
       saveCoursePaymentData({
         receiptNo: admissionData.receiptNumber,
@@ -1810,39 +1914,381 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     }
   }
 
-  // Initialize when page loads
+  // Function to clear all form fields
+  function clearCoursePaymentForm() {
+    // Clear input fields
+    document.getElementById("ID").value = "";
+    document.getElementById("std_Coursepayname").value = "";
+    document.getElementById("enrollmentId").value = "";
+
+    // Reset course selection
+    const courseSelect = document.getElementById("coursePaySelect");
+    if (courseSelect) {
+      courseSelect.selectedIndex = 0; // Select the first option (usually placeholder)
+    }
+
+    // Clear course details
+    document.getElementById("courseDuration").textContent = "-";
+    document.getElementById("coursePayFees").textContent = "-";
+    document.getElementById("totalFees").textContent = "-";
+
+    // Clear payment option fields first
+    document.getElementById("fullDiscountRupees").value = "";
+    document.getElementById("partialInitialInput").value = "";
+    document.getElementById("partialTenure").value = "6";
+    document.getElementById("emiDownPaymentInput").value = "";
+    document.getElementById("emiTenure").value = "12";
+
+    // Show all payment cards without any selection
+    document.getElementById("fullPaymentCard").classList.remove("selected");
+    document.getElementById("partialPaymentCard").classList.remove("selected");
+    document.getElementById("emiPaymentCard").classList.remove("selected");
+
+    // Show all payment cards
+    document.getElementById("fullPaymentCard").style.display = 'block';
+    document.getElementById("partialPaymentCard").style.display = 'block';
+    document.getElementById("emiPaymentCard").style.display = 'block';
+
+    // Clear all radio button selections - NO payment option should be pre-selected
+    const paymentRadios = document.querySelectorAll('input[name="Coursepayment_type"]');
+    paymentRadios.forEach(radio => {
+        radio.checked = false;
+    });
+
+    // Reset selectedPaymentType to null
+    if (typeof selectedPaymentType !== 'undefined') {
+      selectedPaymentType = null;
+    }
+
+    // Update payment displays
+    if (typeof updateFullPaymentDiscount === 'function') {
+      updateFullPaymentDiscount();
+    }
+    if (typeof updatePartialPayment === 'function') {
+      updatePartialPayment();
+    }
+    if (typeof updateEMIPayment === 'function') {
+      updateEMIPayment();
+    }
+
+    // Clear installment schedule section and hide it
+    document.getElementById("installmentTable").innerHTML = "";
+    document.getElementById("receiptContainer").innerHTML = "";
+    document.getElementById("receiptContainer").classList.add("hidden");
+    document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+    // Show payment options section
+    document.getElementById("paymentOptionsSection").classList.remove("hidden");
+
+    // Reset payment method
+    const paySelect = document.getElementById("pay-select");
+    if (paySelect) {
+      paySelect.selectedIndex = 0;
+    }
+  }
+
+  // Function to handle enrollment ID input changes
+  function handleEnrollmentIdChange() {
+    const enrollmentIdInput = document.getElementById("enrollmentId");
+    const enrollmentId = enrollmentIdInput.value.trim();
+
+    if (enrollmentId && enrollmentId.length > 2) { // Only search if enrollment ID has meaningful length
+      console.log("Searching for enrollment ID:", enrollmentId);
+
+      // Show loading indicator
+      enrollmentIdInput.style.opacity = "0.7";
+
+      google.script.run
+        .withSuccessHandler(function(studentData) {
+          enrollmentIdInput.style.opacity = "1"; // Reset opacity
+
+          if (studentData && studentData.success !== false) {
+            console.log("Found student data:", studentData);
+
+            // Populate student name
+            const nameField = document.getElementById("std_Coursepayname");
+            if (nameField) {
+              // Build full name from available parts
+              const firstName = studentData.firstName || "";
+              const middleName = studentData.middleName || "";
+              const lastName = studentData.lastName || "";
+              const fullName = [firstName, middleName, lastName].filter(n => n.trim()).join(" ");
+              nameField.value = fullName || studentData.studentName || "";
+            }
+
+            // Populate course selection
+            const courseSelect = document.getElementById("coursePaySelect");
+            if (courseSelect && studentData.courseName) {
+              // Map course name to select value
+              const courseValueMap = {
+                "ANM Nursing Diploma": "anm_nursing",
+                "GNM Nursing Diploma": "gnm_nursing",
+                "DMLT Diploma": "dmlt",
+                "OT Technician": "ot_technician",
+                "General Nursing Assistant": "general_nursing"
+              };
+
+              const courseValue = courseValueMap[studentData.courseName] || studentData.courseName;
+              courseSelect.value = courseValue;
+
+              // Trigger course details update
+              if (typeof updateCoursePayDetails === 'function') {
+                updateCoursePayDetails();
+              }
+            }
+
+            // Populate receipt number if available
+            const receiptField = document.getElementById("ID");
+            if (receiptField && studentData.receiptNumber) {
+              receiptField.value = studentData.receiptNumber;
+            }
+
+            // Show installment schedule if this student has payment data
+            if (studentData.hasPayments || studentData.receiptNumber) {
+              document.getElementById("paymentOptionsSection").classList.add("hidden");
+              document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+              // Load installment schedule
+              if (typeof populateInstallmentSchedule === 'function') {
+                setTimeout(() => {
+                  populateInstallmentSchedule();
+                }, 500);
+              }
+            } else {
+              // Show payment options for new students
+              document.getElementById("paymentOptionsSection").classList.remove("hidden");
+              document.getElementById("installmentScheduleSection").classList.add("hidden");
+            }
+
+            // Success message
+            console.log("Student data populated successfully for enrollment ID:", enrollmentId);
+
+          } else {
+            console.log("No student data found for enrollment ID:", enrollmentId);
+            // Clear form fields but keep the enrollment ID
+            document.getElementById("std_Coursepayname").value = "";
+            document.getElementById("ID").value = "";
+            document.getElementById("paymentOptionsSection").classList.remove("hidden");
+            document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+            // Optional: Show a subtle message that enrollment ID was not found
+            // You could add a small notification here if desired
+          }
+        })
+        .withFailureHandler(function(error) {
+          enrollmentIdInput.style.opacity = "1"; // Reset opacity
+          console.error("Error fetching student data:", error);
+          alert("Error searching for enrollment ID. Please check the console for details.");
+        })
+        .getStudentDataByEnrollmentId(enrollmentId);
+    }
+  }
+
+  // Shared function to generate installment table rows (synchronized with Admission Structure)
+  function generateInstallmentTableRowsFromScheduleShared(tableElement, schedule, paidInstallments, showCheckboxes = true, showReceiptButtons = true) {
+    schedule.forEach((installment, index) => {
+      const row = document.createElement("tr");
+      row.className = "hover:bg-gray-50";
+
+      const statusId = `status-${installment.installmentNumber}`;
+      const receiptBtnId = `receiptBtn-${installment.installmentNumber}`;
+
+      // Check if this installment is paid (for status display)
+      const isPaid = paidInstallments.some(p => p.installmentNumber === installment.installmentNumber) ||
+                    installment.status === 'Paid' || installment.status === 'Full Paid';
+      const statusClass = isPaid ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
+      const statusText = isPaid ? "Paid" : installment.status || "Pending";
+      const checkboxChecked = isPaid ? "checked disabled" : "";
+      const receiptBtnHidden = isPaid ? "" : "hidden";
+
+      row.innerHTML = `
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${installment.installmentNumber}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${new Date(installment.dueDate).toLocaleDateString('en-IN')}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-600">₹${installment.amount.toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <span id="${statusId}" class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${statusText}</span>
+        </td>
+        ${showCheckboxes ? `
+        <td class="px-4 py-3 whitespace-nowrap text-sm">
+          <input type="checkbox" class="installment-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" data-installment="${installment.installmentNumber}" data-amount="${installment.amount}" onchange="handleInstallmentPayment(this, '${statusId}', '${receiptBtnId}')" ${checkboxChecked}>
+        </td>
+        ` : '<td class="px-4 py-3 whitespace-nowrap text-sm">-</td>'}
+        ${showReceiptButtons ? `
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
+          <button id="${receiptBtnId}" onclick="generateInstallmentReceipt(${installment.installmentNumber}, ${installment.amount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded ${receiptBtnHidden} hover:bg-green-700 transition-colors">
+            Receipt
+          </button>
+        </td>
+        ` : '<td class="px-4 py-3 whitespace-nowrap text-sm">-</td>'}
+      `;
+
+      tableElement.appendChild(row);
+    });
+  }
+
+  // // Initialize when page loads
+  // document.addEventListener('DOMContentLoaded', function() {
+  //   // Add event listener for receipt number changes
+  //   const receiptNoInput = document.getElementById("ID");
+  //   if (receiptNoInput) {
+  //     receiptNoInput.addEventListener('input', handleReceiptNumberChange);
+  //     receiptNoInput.addEventListener('change', handleReceiptNumberChange);
+  //   }
+
+  //   // Add event listener for enrollment ID changes
+  //   const enrollmentIdInput = document.getElementById("enrollmentId");
+  //   if (enrollmentIdInput) {
+  //     enrollmentIdInput.addEventListener('input', handleEnrollmentIdChange);
+  //     enrollmentIdInput.addEventListener('change', handleEnrollmentIdChange);
+  //   }
+
+  //   // Check if there's admission data from sessionStorage (coming from admission analytics)
+  //   const admissionAnalyticsData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+
+  //   // Check if there's admission form data (coming from admission form submission)
+  //   const firstName = sessionStorage.getItem('first_name');
+  //   const lastName = sessionStorage.getItem('last_name');
+  //   const receiptNumber = sessionStorage.getItem('tempText4');
+  //   const courseValue = sessionStorage.getItem('tempText5');
+  //   const enrollmentId = sessionStorage.getItem('enrollmentId') || localStorage.getItem('admission_enrollmentId');
+
+  //   const hasAdmissionFormData = (firstName || lastName) && receiptNumber;
+
+  //   if (admissionAnalyticsData && (admissionAnalyticsData.firstName || admissionAnalyticsData.lastName) && admissionAnalyticsData.receiptNumber) {
+  //     // User came from admission analytics - populate the form with admission data
+  //     populateCoursePaymentFromAdmission(admissionAnalyticsData);
+
+  //     // Load any saved receipts after populating the form
+  //     setTimeout(() => {
+  //       loadSavedReceipts();
+  //     }, 500);
+
+  //     // Keep the sessionStorage data so returning users see the installment schedule
+  //     // sessionStorage.removeItem('admissionDataForPayment'); // Commented out to persist data
+  //   } else if (hasAdmissionFormData) {
+  //     // User came from admission form - populate the form and show installment schedule
+  //     console.log("User came from admission form, populating course payment form");
+
+  //     // Populate form fields
+  //     if (firstName) document.getElementById("std_Coursepayname").value = firstName + ' ' + (lastName || '');
+  //     if (receiptNumber) document.getElementById("ID").value = receiptNumber;
+  //     if (enrollmentId) document.getElementById("enrollmentId").value = enrollmentId;
+
+  //     // Set course selection
+  //     const courseSelect = document.getElementById("coursePaySelect");
+  //     if (courseSelect && courseValue) {
+  //       courseSelect.value = courseValue;
+  //       courseSelect.disabled = true; // Lock the field
+
+  //       // Trigger course details update
+  //       if (typeof updateCoursePayDetails === 'function') {
+  //         updateCoursePayDetails();
+  //       }
+  //     }
+
+  //     // Hide payment options and show installment schedule (same as admission analytics)
+  //     document.getElementById("paymentOptionsSection").classList.add("hidden");
+  //     document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+  //     // Load any saved receipts after populating the form
+  //     setTimeout(() => {
+  //       loadSavedReceipts();
+  //       // Populate installment schedule
+  //       populateInstallmentSchedule();
+  //     }, 500);
+
+  //   } else {
+  //     // User accessed course payment directly - always clear the form and show payment options
+  //     clearCoursePaymentForm();
+  //     document.getElementById("paymentOptionsSection").classList.remove("hidden");
+  //     document.getElementById("installmentScheduleSection").classList.add("hidden");
+  //   }
+  // });
   document.addEventListener('DOMContentLoaded', function() {
+    // Load saved payment details if available
+    const savedPaymentDetails = JSON.parse(sessionStorage.getItem('coursePaymentDetails') || 'null');
+    if (savedPaymentDetails) {
+        console.log("Found saved payment details from admission form:", savedPaymentDetails);
+        // Wait a bit for the form to load, then apply saved details
+        setTimeout(() => {
+            loadSavedPaymentDetails(savedPaymentDetails);
+        }, 1000);
+    }
+
     // Add event listener for receipt number changes
     const receiptNoInput = document.getElementById("ID");
     if (receiptNoInput) {
-      receiptNoInput.addEventListener('input', handleReceiptNumberChange);
-      receiptNoInput.addEventListener('change', handleReceiptNumberChange);
+        receiptNoInput.addEventListener('input', handleReceiptNumberChange);
+        receiptNoInput.addEventListener('change', handleReceiptNumberChange);
+    }
+
+    // Add event listener for enrollment ID changes
+    const enrollmentIdInput = document.getElementById("enrollmentId");
+    if (enrollmentIdInput) {
+        enrollmentIdInput.addEventListener('input', handleEnrollmentIdChange);
+        enrollmentIdInput.addEventListener('change', handleEnrollmentIdChange);
     }
 
     // Check if there's admission data from sessionStorage (coming from admission analytics)
-    const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+    const admissionAnalyticsData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
 
-    if (admissionData && (admissionData.firstName || admissionData.lastName) && admissionData.receiptNumber) {
-      // User came from admission analytics - hide payment options, show installment schedule
-      populateCoursePaymentFromAdmission(admissionData);
+    // Check if there's admission form data (coming from admission form submission)
+    const firstName = sessionStorage.getItem('first_name');
+    const lastName = sessionStorage.getItem('last_name');
+    const receiptNumber = sessionStorage.getItem('tempText4');
+    const courseValue = sessionStorage.getItem('tempText5');
+    const enrollmentId = sessionStorage.getItem('enrollmentId') || localStorage.getItem('admission_enrollmentId');
 
-      // Load any saved receipts after populating the form
-      setTimeout(() => {
-        loadSavedReceipts();
-      }, 500);
+    const hasAdmissionFormData = (firstName || lastName) && receiptNumber;
 
-      // Keep the sessionStorage data so returning users see the installment schedule
-      // sessionStorage.removeItem('admissionDataForPayment'); // Commented out to persist data
+    if (admissionAnalyticsData && (admissionAnalyticsData.firstName || admissionAnalyticsData.lastName) && admissionAnalyticsData.receiptNumber) {
+        // User came from admission analytics - populate the form with admission data
+        populateCoursePaymentFromAdmission(admissionAnalyticsData);
+
+        // Load any saved receipts after populating the form
+        setTimeout(() => {
+            loadSavedReceipts();
+        }, 500);
+
+        // Keep the sessionStorage data so returning users see the installment schedule
+        // sessionStorage.removeItem('admissionDataForPayment'); // Commented out to persist data
+    } else if (hasAdmissionFormData) {
+        // User came from admission form - populate the form and show installment schedule
+        console.log("User came from admission form, populating course payment form");
+
+        // Populate form fields
+        if (firstName) document.getElementById("std_Coursepayname").value = firstName + ' ' + (lastName || '');
+        if (receiptNumber) document.getElementById("ID").value = receiptNumber;
+        if (enrollmentId) document.getElementById("enrollmentId").value = enrollmentId;
+
+        // Set course selection
+        const courseSelect = document.getElementById("coursePaySelect");
+        if (courseSelect && courseValue) {
+            courseSelect.value = courseValue;
+            courseSelect.disabled = true; // Lock the field
+
+            // Trigger course details update
+            if (typeof updateCoursePayDetails === 'function') {
+                updateCoursePayDetails();
+            }
+        }
+
+        // Hide payment options and show installment schedule (same as admission analytics)
+        document.getElementById("paymentOptionsSection").classList.add("hidden");
+        document.getElementById("installmentScheduleSection").classList.remove("hidden");
+
+        // Load any saved receipts after populating the form
+        setTimeout(() => {
+            loadSavedReceipts();
+            // Populate installment schedule
+            populateInstallmentSchedule();
+        }, 500);
+
     } else {
-      // Check if there's a receipt number already entered (user returning)
-      const currentReceiptNo = receiptNoInput?.value?.trim();
-      if (currentReceiptNo) {
-        handleReceiptNumberChange(); // This will load saved data if available
-      } else {
-        // User accessed course payment directly - show payment options, hide installment schedule
+        // User accessed course payment directly - always clear the form and show payment options
+        clearCoursePaymentForm();
         document.getElementById("paymentOptionsSection").classList.remove("hidden");
         document.getElementById("installmentScheduleSection").classList.add("hidden");
-      }
     }
-  });
+});
 </script>

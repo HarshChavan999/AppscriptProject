@@ -47,6 +47,7 @@ function getAdmissionAnalyticsData(userRole) {
     const totalCourseFees = parseFloat(String(row[7]).replace(/[^\d.-]/g, "")) || 0;
     const guardianRelation = row[8] || "";
     const agreement = row[10] || "";
+    const tenure = parseInt(row[11]) || 12; // Assuming tenure is in column 12 (index 11)
 
     results.push({
       receipt: receipt,
@@ -55,7 +56,8 @@ function getAdmissionAnalyticsData(userRole) {
       duration: duration,
       totalFees: totalCourseFees,
       guardianRelation: guardianRelation,
-      agreement: agreement
+      agreement: agreement,
+      tenure: tenure
     });
 
     totalFees += totalCourseFees;

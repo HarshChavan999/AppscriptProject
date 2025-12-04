@@ -118,9 +118,14 @@ function renderAdmissionAnalyticsTable(dataArray) {
           <th class='px-4 py-2 text-left'>Total Course Fees</th>
           <th class='px-4 py-2 text-left'>Guardian</th>
           <th class='px-4 py-2 text-left'>Agreement</th>
+          <th class='px-4 py-2 text-left'>Actions</th>
         </tr>
       </thead><tbody>`;
   dataArray.forEach(d => {
+    const nameParts = d.name.split(' ');
+    const firstName = nameParts[0] || '';
+    const middleName = nameParts.slice(1, -1).join(' ') || '';
+    const lastName = nameParts[nameParts.length - 1] || '';
     h += `<tr class='border-b'>
       <td class='px-4 py-2'>${d.receipt}</td>
       <td class='px-4 py-2'>${d.name}</td>
@@ -129,10 +134,33 @@ function renderAdmissionAnalyticsTable(dataArray) {
       <td class='px-4 py-2'>₹${d.totalFees.toLocaleString()}</td>
       <td class='px-4 py-2'>${d.guardianRelation}</td>
       <td class='px-4 py-2'>${d.agreement}</td>
+      <td class='px-4 py-2'>
+        <button onclick="openCoursePaymentFromAnalytics('${d.receipt}', '${firstName}', '${middleName}', '${lastName}', '${d.course}', '${d.tenure}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+          Course Payment
+        </button>
+      </td>
     </tr>`;
   });
   h += "</tbody></table>";
   document.getElementById("aaTableContainer").innerHTML = h;
+}
+
+function openCoursePaymentFromAnalytics(receiptNumber, firstName, middleName, lastName, course, tenure) {
+  // Set sessionStorage data for course payment
+  const admissionData = {
+    receiptNumber: receiptNumber,
+    firstName: firstName,
+    middleName: middleName,
+    lastName: lastName,
+    courseName: course,
+    tenure: parseInt(tenure) || 12,
+    paymentType: tenure > 1 ? 'emi' : 'full' // Assume EMI if tenure > 1
+  };
+
+  sessionStorage.setItem('admissionDataForPayment', JSON.stringify(admissionData));
+
+  // Open course payment section
+  openCoursePayment();
 }
 
 function closeAdmissionAnalytics() {
