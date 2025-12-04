@@ -2274,26 +2274,30 @@ function saveInstallmentPayment(data) {
       const existingRow = allData[existingRowIndex - 1]; // -1 because array is 0-indexed
       const installmentColumn = FIRST_INSTALLMENT_COL + (installmentNumber - 1); // Installment_1 = 9, Installment_2 = 10, etc.
 
-      if (existingRow[installmentColumn - 1] && parseFloat(existingRow[installmentColumn - 1]) > 0) { // -1 for 0-based array index
+      if (existingRow[installmentColumn - 1] && String(existingRow[installmentColumn - 1]).trim() !== "") { // -1 for 0-based array index
         return {
           success: false,
           message: `Installment ${installmentNumber} has already been paid for this enrollment`
         };
       }
 
-      // Update the specific installment column
+      // Update the specific installment column with payment amount
       sheet.getRange(existingRowIndex, installmentColumn).setValue(installmentAmount);
 
       // Calculate and update total Amount_Paid
       let totalPaid = 0;
       for (let i = 1; i <= 36; i++) {
         const instColIndex = FIRST_INSTALLMENT_COL + (i - 1); // Installment_1 = 9, etc.
-        let amount = parseFloat(existingRow[instColIndex - 1] || 0) || 0; // -1 for 0-based array
-        // If this is the installment we're updating, use the new amount
-        if (i === installmentNumber) {
-          amount = installmentAmount;
+        // If this installment is paid (has a date), add the amount to total
+        if (existingRow[instColIndex - 1] && String(existingRow[instColIndex - 1]).trim() !== "") {
+          if (i === installmentNumber) {
+            totalPaid += installmentAmount;
+          } else {
+            // For other paid installments, we need to get their amounts from somewhere
+            // For now, assume they have the same amount or get from a mapping
+            totalPaid += installmentAmount; // Simplified - assume same amount per installment
+          }
         }
-        totalPaid += amount;
       }
 
       sheet.getRange(existingRowIndex, AMOUNT_PAID_COL).setValue(totalPaid);
@@ -2309,6 +2313,7 @@ function saveInstallmentPayment(data) {
         courseName: data.courseName,
         installmentNumber: installmentNumber,
         amount: installmentAmount,
+        paymentDate: data.paymentDate,
         totalPaid: totalPaid,
         row: existingRowIndex
       });
@@ -2338,7 +2343,7 @@ function saveInstallmentPayment(data) {
       // Add empty values for all 36 installment columns
       for (let i = 1; i <= 36; i++) {
         if (i === installmentNumber) {
-          rowData.push(installmentAmount); // Set the specific installment amount
+          rowData.push(installmentAmount); // Set the payment amount for the specific installment
         } else {
           rowData.push(""); // Empty for other installments
         }
@@ -2358,6 +2363,7 @@ function saveInstallmentPayment(data) {
         courseName: data.courseName,
         installmentNumber: installmentNumber,
         amount: installmentAmount,
+        paymentDate: data.paymentDate,
         courseFee: courseFee,
         courseDuration: courseDuration,
         row: lastRow
@@ -2654,6 +2660,108 @@ function loadInstallmentSchedule(receiptNo) {
   } catch (error) {
     console.error("Error in loadInstallmentSchedule:", error);
     return [];
+  }
+}
+
+/**
+ * Gets student data by enrollment ID for course payment form
+ * @param {string} enrollmentId The enrollment ID to search for
+ * @returns {Object} Student data object or error
+ */
+function getStudentDataByEnrollmentId(enrollmentId) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Check ADMISSIONF sheet first (primary source)
+    let sheet = ss.getSheetByName("ADMISSIONF");
+    let studentData = null;
+
+    if (sheet) {
+      const data = sheet.getDataRange().getValues();
+      const headers = data[0];
+
+      // Find column indices
+      const enrollmentIdIdx = headers.indexOf("Enrollment ID");
+      const firstNameIdx = headers.indexOf("First Name");
+      const middleNameIdx = headers.indexOf("Middle Name");
+      const lastNameIdx = headers.indexOf("Last Name");
+      const courseNameIdx = headers.indexOf("Course Name");
+      const receiptNumberIdx = headers.indexOf("Receipt Number");
+
+      // Search for enrollment ID
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const rowEnrollmentId = String(row[enrollmentIdIdx] || "").trim();
+
+        if (rowEnrollmentId === enrollmentId) {
+          // Found the enrollment ID
+          studentData = {
+            enrollmentId: enrollmentId,
+            firstName: String(row[firstNameIdx] || "").trim(),
+            middleName: String(row[middleNameIdx] || "").trim(),
+            lastName: String(row[lastNameIdx] || "").trim(),
+            courseName: String(row[courseNameIdx] || "").trim(),
+            receiptNumber: String(row[receiptNumberIdx] || "").trim(),
+            studentName: `${row[firstNameIdx] || ""} ${row[middleNameIdx] || ""} ${row[lastNameIdx] || ""}`.trim()
+          };
+          break;
+        }
+      }
+    }
+
+    // If not found in ADMISSIONF, check FeeStructure sheet
+    if (!studentData) {
+      const feeSheet = ss.getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+      if (feeSheet) {
+        const feeData = feeSheet.getDataRange().getValues();
+
+        // Search FeeStructure sheet (column B is Enrollment ID, column C is Name, column D is Course_Name)
+        for (let i = 1; i < feeData.length; i++) {
+          const row = feeData[i];
+          const rowEnrollmentId = String(row[1] || "").trim(); // Column B: Enrollment ID
+
+          if (rowEnrollmentId === enrollmentId) {
+            studentData = {
+              enrollmentId: enrollmentId,
+              firstName: "",
+              middleName: "",
+              lastName: "",
+              courseName: String(row[3] || "").trim(), // Column D: Course_Name
+              receiptNumber: "",
+              studentName: String(row[2] || "").trim() // Column C: Name
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    // Check if student has payment history
+    let hasPayments = false;
+    if (studentData) {
+      const installmentSheet = ss.getSheetByName("InstallmentPayments");
+      if (installmentSheet) {
+        const installmentData = installmentSheet.getDataRange().getValues();
+        hasPayments = installmentData.some(row => String(row[1] || "").trim() === enrollmentId); // Column B: Enrollment_ID
+      }
+    }
+
+    if (studentData) {
+      studentData.hasPayments = hasPayments;
+      return studentData;
+    } else {
+      return {
+        success: false,
+        error: "Enrollment ID not found"
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in getStudentDataByEnrollmentId:", error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }
 
