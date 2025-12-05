@@ -2048,15 +2048,21 @@ function resetCoursePaymentForm() {
     document.getElementById("ifId").classList.add("hidden");
     document.getElementById("admissionFormSection").classList.add("hidden");
 
-    // Hide the course payment section (but don't clear data)
-    const coursePaymentSection = document.getElementById("coursePaymentSection");
-    if (coursePaymentSection) {
-      coursePaymentSection.classList.add("hidden");
-    }
+  // Hide the course payment section (but don't clear data)
+  const coursePaymentSection = document.getElementById("coursePaymentSection");
+  if (coursePaymentSection) {
+    coursePaymentSection.classList.add("hidden");
+  }
 
-    // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
-    document.getElementById("feeStructureSection").classList.add("hidden");
-    document.getElementById("receiptFormSection").classList.add("hidden");
+  // Hide the inquiry form section
+  const inquiryFormSection = document.getElementById("ifId");
+  if (inquiryFormSection) {
+    inquiryFormSection.classList.add("hidden");
+  }
+
+  // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
+  document.getElementById("feeStructureSection").classList.add("hidden");
+  document.getElementById("receiptFormSection").classList.add("hidden");
 
 
    
