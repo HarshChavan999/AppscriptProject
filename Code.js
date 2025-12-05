@@ -1955,6 +1955,7 @@ function saveReceiptData(data) {
       sheet.appendRow([
         "Receipt Date",
         "Receipt Number",
+        "Enrollment ID",
         "Student Name",
         "Course Name",
         "Total Amount",
@@ -2006,6 +2007,7 @@ function saveReceiptData(data) {
     sheet.appendRow([
       receiptDate,                     // Receipt Date
       data.receiptNumber,              // Receipt Number
+      data.enrollmentId || "",         // Enrollment ID
       data.studentName,                // Student Name
       data.courseName,                 // Course Name
       amount,                          // Total Amount

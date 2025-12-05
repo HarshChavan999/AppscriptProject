@@ -403,32 +403,28 @@
     </form>
 </div> -->
 
-<div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 hidden" id="feeReceiptForm">
-    <div class="w-full max-w-5xl">
+<div class="exam-receipt-container hidden" id="feeReceiptForm">
+    <div class="exam-receipt-wrapper">
         <!-- Header Section -->
-        <div class="bg-white rounded-t-xl shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex-shrink-0">
+        <div class="exam-receipt-card">
+            <div class="exam-receipt-header">
+                <div class="header-main-content flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="header-logo-title">
+                        <div class="logo-container">
                             <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png"
                                  alt="Shelar Training Institute Logo"
-                                 class="h-16 w-auto rounded-lg shadow-sm">
-                        </div>
-                        <div>
-                            <h1 class="text-2xl font-bold text-white">SHELAR TRAINING INSTITUTE</h1>
-                            <!-- <p class="text-blue-100 text-sm">Quality Education • Skill Development</p> -->
+                                 class="logo-image">
                         </div>
                     </div>
-                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-6 py-3">
-                        <p class="text-white font-semibold text-lg">
+                    <div class="header-contact-info">
+                        <p class="exam-receipt-label">
                             <i class="fas fa-receipt mr-2"></i>EXAM RECEIPT
                         </p>
                     </div>
                 </div>
             </div>
 
-            <form id="examReceiptForm" class="p-8" onsubmit="FeeReceiptFormHandle(event)">
+            <form id="examReceiptForm" class="exam-receipt-body" onsubmit="FeeReceiptFormHandle(event)">
                 <div id="FeeReceiptForm" class="space-y-8">
 
                     <!-- Invoice Details Section -->
@@ -436,54 +432,70 @@
                         <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                             <i class="fas fa-file-invoice-dollar mr-2 text-blue-500"></i>Invoice Details
                         </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- First Row: Enrollment ID (Left), Date (Middle), Receipt Number (Right) -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Enrollment ID Field (Left) -->
+                                <div class="space-y-2">
+                                    <label for="enrollmentIdInput" class="block text-sm font-medium text-gray-700 flex items-center">
+                                        <i class="fas fa-id-card mr-2 text-blue-500"></i>Enrollment ID <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="text" id="enrollmentIdInput" name="enrollmentId"
+                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
+                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="Enter enrollment ID">
+                                </div>
 
-                            <!-- Date Field -->
-                            <div class="space-y-2">
-                                <label for="receiptDate" class="block text-sm font-medium text-gray-700 flex items-center">
-                                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date <span class="text-red-500 ml-1">*</span>
-                                </label>
-                                <div class="relative">
-                                    <div id="receiptDateDisplay"
-                                         style="width: 100%; padding: 0.75rem 3rem 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f9f9f9; color: #111827; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
-                                        Loading...
+                                <!-- Date Field (Middle) -->
+                                <div class="space-y-2">
+                                    <label for="receiptDate" class="block text-sm font-medium text-gray-700 flex items-center">
+                                        <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div id="receiptDateDisplay"
+                                             style="width: 100%; padding: 0.75rem 3rem 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f9f9f9; color: #111827; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+                                            Loading...
+                                        </div>
+                                        <input type="hidden" id="receiptDate" name="receiptDate" value="">
+                                        <i class="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                                     </div>
-                                    <input type="hidden" id="receiptDate" name="receiptDate" value="">
-                                    <i class="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                </div>
+
+                                <!-- Receipt Number Field (Right) -->
+                                <div class="space-y-2">
+                                    <label for="ExamReceiptNumber" class="block text-sm font-medium text-gray-700 flex items-center">
+                                        <i class="fas fa-hashtag mr-2 text-blue-500"></i>Receipt Number <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="text" id="ExamReceiptNumber" name="receiptNumber"
+                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
+                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           readonly>
                                 </div>
                             </div>
 
-                            <!-- Receipt Number Field -->
-                            <div class="space-y-2">
-                                <label for="ExamReceiptNumber" class="block text-sm font-medium text-gray-700 flex items-center">
-                                    <i class="fas fa-hashtag mr-2 text-blue-500"></i>Receipt Number <span class="text-red-500 ml-1">*</span>
-                                </label>
-                                <input type="text" id="ExamReceiptNumber" name="receiptNumber"
-                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                       class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       readonly>
-                            </div>
+                            <!-- Second Row: Student Name and Course Name -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Student Name Field -->
+                                <div class="space-y-2">
+                                    <label for="studentNameInput" class="block text-sm font-medium text-gray-700 flex items-center">
+                                        <i class="fas fa-user-graduate mr-2 text-blue-500"></i>Student Name <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="text" id="studentNameInput" name="studentName"
+                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
+                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           required placeholder="Enter student name">
+                                </div>
 
-                            <!-- Student Name Field -->
-                            <div class="space-y-2">
-                                <label for="studentNameInput" class="block text-sm font-medium text-gray-700 flex items-center">
-                                    <i class="fas fa-user-graduate mr-2 text-blue-500"></i>Student Name <span class="text-red-500 ml-1">*</span>
-                                </label>
-                                <input type="text" id="studentNameInput" name="studentName"
-                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                       class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       required placeholder="Enter student name">
-                            </div>
-
-                            <!-- Course Name Field -->
-                            <div class="space-y-2">
-                                <label for="courseNameInput" class="block text-sm font-medium text-gray-700 flex items-center">
-                                    <i class="fas fa-book mr-2 text-blue-500"></i>Course Name <span class="text-red-500 ml-1">*</span>
-                                </label>
-                                <input type="text" id="courseNameInput" name="courseName"
-                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                       class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       required placeholder="Enter course name">
+                                <!-- Course Name Field -->
+                                <div class="space-y-2">
+                                    <label for="courseNameInput" class="block text-sm font-medium text-gray-700 flex items-center">
+                                        <i class="fas fa-book mr-2 text-blue-500"></i>Course Name <span class="text-red-500 ml-1">*</span>
+                                    </label>
+                                    <input type="text" id="courseNameInput" name="courseName"
+                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
+                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           required placeholder="Enter course name">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -526,7 +538,7 @@
                     </div>
 
                     <!-- Terms and Actions Section -->
-                    <div class="bg-green-50 rounded-xl p-6 border border-green-200">
+                    <div class="bg-white rounded-xl p-6 border border-gray-200">
                         <div class="flex items-start space-x-3 mb-6">
                             <input type="checkbox" id="agreeTerms" name="agreeTerms"
                                    class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-0.5"
@@ -547,13 +559,13 @@
                         <!-- Action Buttons -->
                         <div class="flex flex-col sm:flex-row gap-4 justify-end">
                             <button type="button" onclick="generateexamReceipt()"
-                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
                                 <i class="fas fa-print"></i>
                                 Generate Receipt
                             </button>
 
                             <button type="submit" id="submitReceipt"
-                                    class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
+                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
                                 <i class="fas fa-save"></i>
                                 Save Receipt
                             </button>
@@ -602,6 +614,7 @@
   const data = {
     receiptDate: dateString, // Current date as MM/DD/YYYY string
     receiptNumber: receiptNumber,
+    enrollmentId: formData.get('enrollmentId'),
     studentName: formData.get('studentName'),
     courseName: formData.get('courseName'),
     totalAmount: formData.get('totalAmount'),
@@ -709,6 +722,41 @@
         // Add your PDF generation logic here
         console.log("Generating PDF receipt");
     }
+
+    // Setup event listener for enrollment ID input
+    function setupEnrollmentIdListener() {
+        const enrollmentIdInput = document.getElementById('enrollmentIdInput');
+        if (enrollmentIdInput) {
+            enrollmentIdInput.addEventListener('blur', function() {
+                const enrollmentId = this.value.trim();
+                if (enrollmentId) {
+                    // Show loading state
+                    showNotification("Fetching student data...", "info");
+
+                    // Call the backend function to get student data
+                    google.script.run
+                        .withSuccessHandler(function(studentData) {
+                            if (studentData && !studentData.error) {
+                                // Populate the form fields with retrieved data
+                                document.getElementById('studentNameInput').value = studentData.studentName || '';
+                                document.getElementById('courseNameInput').value = studentData.courseName || '';
+
+                                showNotification("Student data loaded successfully!", "success");
+                                console.log("Student data loaded:", studentData);
+                            } else {
+                                showNotification("Enrollment ID not found or invalid", "error");
+                                console.error("Error fetching student data:", studentData);
+                            }
+                        })
+                        .withFailureHandler(function(error) {
+                            showNotification("Error fetching student data: " + error.message, "error");
+                            console.error("Error fetching student data:", error);
+                        })
+                        .getStudentDataByEnrollmentId(enrollmentId);
+                }
+            });
+        }
+    }
 function openexamfees() {
     console.log("openexamfees() called - starting form setup");
     hideAllSections();
@@ -720,6 +768,9 @@ function openexamfees() {
 
     loadexamfee();
     console.log("loadexamfee() completed");
+
+    // Add event listener for enrollment ID input
+    setupEnrollmentIdListener();
 
     // Auto-populate today's date in the date field - Format DD/MM/YYYY for display
     console.log("About to set date in exam fees form...");
@@ -762,7 +813,7 @@ function openexamfees() {
             console.log("Form visibility:", isFormVisible);
         }
     }, 500); // Increased delay to 500ms
-   
+
   //   // 1. Get the stored branch from the hidden input
   //   const userBranch = document.getElementById("userBranch").value;
 
