@@ -1,6 +1,6 @@
 <div
   id="coursePaymentSection"
-  class="bg-white rounded-xl shadow-xl overflow-hidden"
+  class="bg-white rounded-xl shadow-lg border border-gray-200 mt-6"
 >
   <!-- <div class="header-bg text-white p-6 bg-blue-800">
     <div class="logo-container" style="width: 180px; height: auto; display: flex; justify-content: center; align-items: center;">
@@ -19,18 +19,22 @@
               </p>
                             </div>
   </div> -->
-  <div class="header-bg text-white p-6 bg-blue-800 flex flex-col md:flex-row justify-between items-center">
-  <div class="logo-container" style="width: 180px; height: auto; display: flex; justify-content: center; align-items: center;">
-     <img 
-      src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" 
-      alt="Logo" 
-      style="width: 100%; max-width: 160px; height: auto; padding: 5px;"
-    />
+  <div class="bg-white text-gray-900 p-6 border-b border-gray-200">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center space-x-4 mb-4 md:mb-0">
+        <div class="logo-container" style="width: 180px; height: auto; display: flex; justify-content: center; align-items: center;">
+          <img
+            src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png"
+            alt="Logo"
+            style="width: 100%; max-width: 160px; height: auto; padding: 5px;"
+          />
+        </div>
+      </div>
+      <div class="text-center md:text-right">
+        <p class="text-gray-600 font-medium text-lg"><i class="fas fa-file-alt mr-1"></i>COURSE PAYMENT</p>
+      </div>
+    </div>
   </div>
-  <div class="text-yellow-300 font-medium text-lg mt-4 md:mt-0 md:text-right w-full md:w-auto text-center md:text-right">
-    <i class="fas fa-file-alt mr-1"></i> COURSE PAYMENT
-  </div>
-</div>
 
   <div class="p-6 space-y-8">
     <!-- Course Selection -->
@@ -91,7 +95,7 @@
           >
           <select
             id="coursePaySelect"
-            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+            class="form-select"
           >
             <option value="" disabled selected>Select a course</option>
             <option value="anm_nursing">ANM Nursing Diploma</option>
@@ -169,7 +173,7 @@
       <input
         type="text"
         id="fullDiscountRupees"
-        class="w-20 px-2 py-1 border border-gray-300 rounded text-right"
+        class="form-input text-right w-20"
         placeholder="0"
         oninput="validateIntegerOnly(this)"
         onchange="updateFullPaymentDiscount()"
@@ -210,7 +214,7 @@
               <input
                 type="text"
                 id="partialInitialInput"
-                class="w-24 px-2 py-1 border border-gray-300 rounded text-right"
+                class="form-input text-right w-24"
                 placeholder="0"
                 oninput="validateIntegerOnly(this)"
                 onchange="updatePartialPayment()"
@@ -220,7 +224,7 @@
               <label class="font-semibold">EMI Tenure (months):</label>
               <select
                 id="partialTenure"
-                class="border rounded px-2 py-1"
+                class="form-select"
                 onchange="updatePartialPayment()"
                 style="width: 80px;"
               >
@@ -271,7 +275,7 @@
               <input
                 type="text"
                 id="emiDownPaymentInput"
-                class="w-24 px-2 py-1 border border-gray-300 rounded text-right"
+                class="form-input text-right w-24"
                 placeholder="0"
                 oninput="validateIntegerOnly(this)"
                 onchange="updateEMIPayment()"
@@ -281,7 +285,7 @@
               <label class="font-semibold">EMI Tenure (months):</label>
               <select
                 id="emiTenure"
-                class="border rounded px-2 py-1"
+                class="form-select"
                 onchange="updateEMIPayment()"
                 style="width: 80px;"
               >
@@ -351,28 +355,12 @@
     <label class="text-l font-semibold text-gray-600" for="pay-select"
       >Select payment:</label
     >
-    <select id="pay-select">
-      <button>
-        <selectedcontent></selectedcontent>
-      </button>
-
+    <select id="pay-select" class="form-select">
       <option value="">Select a method</option>
-      <option value="Bank">
-        <span class="icon" aria-hidden="true">🏦</span
-        ><span class="option-label">Bank</span>
-      </option>
-      <option value="UPI">
-        <span class="icon" aria-hidden="true">📱</span
-        ><span class="option-label">UPI</span>
-      </option>
-      <option value="Cash">
-        <span class="icon" aria-hidden="true">💵</span
-        ><span class="option-label">Cash</span>
-      </option>
-      <option value="cheque">
-  <span class="icon text-lg" aria-hidden="true">✍️</span>
-  <span class="option-label">Bank Check</span>
- </option>
+      <option value="Bank">Bank</option>
+      <option value="UPI">UPI</option>
+      <option value="Cash">Cash</option>
+      <option value="cheque">Bank Check</option>
     </select>
 
     <!-- Submit Button -->

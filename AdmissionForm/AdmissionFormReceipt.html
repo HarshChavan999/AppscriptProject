@@ -481,9 +481,7 @@
             <div class="form-group">
               <label>Course Year</label>
               <select id="courseYear" name="courseYear" onchange="generateInstallmentTables()">
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
+                <!-- Options will be populated dynamically based on course duration -->
               </select>
             </div>
             <div class="form-group">
@@ -649,6 +647,36 @@
   document.getElementById('receiptDateAF').valueAsDate = new Date();
   document.getElementById('startDate').valueAsDate = new Date();
 
+  // Function to populate course year dropdown based on duration
+  function populateCourseYearDropdown() {
+    const durationInput = document.getElementById('receiptCourseDuration');
+    const courseYearSelect = document.getElementById('courseYear');
+    const durationText = durationInput.value.trim();
+
+    // Clear existing options
+    courseYearSelect.innerHTML = '';
+
+    // Parse duration to get number of years (e.g., "3 years" -> 3)
+    const durationMatch = durationText.match(/^(\d+)/);
+    const numberOfYears = durationMatch ? parseInt(durationMatch[1]) : 1;
+
+    // Add options based on number of years
+    for (let i = 1; i <= numberOfYears; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = `${i}${i === 1 ? 'st' : i === 2 ? 'nd' : i === 3 ? 'rd' : 'th'} Year`;
+      courseYearSelect.appendChild(option);
+    }
+
+    // If no options were added (invalid duration), add a default
+    if (courseYearSelect.options.length === 0) {
+      const option = document.createElement('option');
+      option.value = '1';
+      option.textContent = '1st Year';
+      courseYearSelect.appendChild(option);
+    }
+  }
+
   // Add course change event listener to update fee and duration dynamically
   document.getElementById('courseName').addEventListener('change', function () {
     const selected = this.value;
@@ -667,9 +695,13 @@
         document.getElementById('receiptCourseDuration').value = completeReceiptData.courseDuration;
       }
       document.getElementById('totalFee').value = courseData[selected].fees;
+      populateCourseYearDropdown(); // Update course year options based on duration
       generateInstallmentTables(); // refresh table
     }
   });
+
+  // Add duration change event listener to update course year dropdown
+  document.getElementById('receiptCourseDuration').addEventListener('input', populateCourseYearDropdown);
 
   function handlePhotoUploadAF(event) {
     const file = event.target.files[0];
@@ -696,9 +728,29 @@
     // Check if we have a custom installment schedule from course payment
     const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
     if (completeReceiptData.installmentSchedule && completeReceiptData.installmentSchedule.length > 0) {
-      // Use the custom schedule from course payment
-      const tableHTML = generateInstallmentTableFromSchedule(completeReceiptData.installmentSchedule);
-      container.innerHTML = tableHTML;
+      // Use the custom schedule from course payment - split by year if more than 12 installments
+      const totalInstallments = completeReceiptData.installmentSchedule.length;
+
+      if (totalInstallments > 12) {
+        // Split installments by course duration/years
+        const numberOfYears = courseDuration ? parseInt(courseDuration.split(' ')[0]) || 1 : 1;
+        const installmentsPerYear = Math.ceil(totalInstallments / numberOfYears);
+
+        // Calculate start and end indices for the selected year
+        const startIndex = (selectedYear - 1) * installmentsPerYear;
+        const endIndex = Math.min(startIndex + installmentsPerYear, totalInstallments);
+
+        // Get installments for the selected year
+        const yearInstallments = completeReceiptData.installmentSchedule.slice(startIndex, endIndex);
+
+        // Generate table for this year's installments
+        const tableHTML = generateInstallmentTableFromSchedule(yearInstallments);
+        container.innerHTML = tableHTML;
+      } else {
+        // Less than or equal to 12 installments - show all
+        const tableHTML = generateInstallmentTableFromSchedule(completeReceiptData.installmentSchedule);
+        container.innerHTML = tableHTML;
+      }
 
       // Update installment status from course payment data
       updateInstallmentStatusFromCoursePayment();
@@ -963,6 +1015,7 @@
         document.getElementById("courseName").value = storedCourse;
         document.getElementById("receiptCourseDuration").value = courseData[storedCourse].duration;
         document.getElementById("totalFee").value = courseData[storedCourse].fees;
+        populateCourseYearDropdown(); // Update course year options based on duration
       }
     }
 
@@ -1003,6 +1056,9 @@
       document.getElementById("courseName").value = completeReceiptData.courseName || "";
       document.getElementById("courseYear").value = completeReceiptData.courseYear || "1";
       document.getElementById("receiptCourseDuration").value = completeReceiptData.courseDuration || "";
+
+      // Update course year dropdown based on duration
+      populateCourseYearDropdown();
 
       // Re-enable the change listener
       courseSelect.onchange = originalChangeHandler;
