@@ -173,8 +173,8 @@
   }
 
   .logo-container {
-    width: 3.5rem; /* 56px */
-    height: 3.5rem; /* 56px */
+    width: 180px;
+    height: auto;
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
     display: flex;
@@ -185,8 +185,9 @@
   }
 
   .logo-image {
-    width: 3rem; /* 48px */
-    height: 3rem; /* 48px */
+    width: 100%;
+    max-width: 160px;
+    height: auto;
     object-fit: contain;
   }
 
@@ -509,5 +510,47 @@
     .action-buttons {
       width: auto;
     }
+  }
+
+  /* --- Exam Receipt Styles (Minimal and White) --- */
+  .exam-receipt-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    background-color: #f0f2f5; /* Same as inquiry form */
+  }
+
+  .exam-receipt-wrapper {
+    max-width: 52rem;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .exam-receipt-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+  }
+
+  .exam-receipt-header {
+    background-color: #ffffff;
+    color: #111827;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .exam-receipt-body {
+    padding: 2rem;
+    background-color: #ffffff;
+  }
+
+  .exam-receipt-label {
+    color: #374151; /* gray-700 */
+    font-weight: 500;
+    font-size: 1rem;
   }
 </style>

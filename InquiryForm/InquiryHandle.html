@@ -256,8 +256,18 @@
             if (!keepAadhar) {
                 document.getElementById('aadharNumber').value = '';
             }
-             document.getElementById('inquiryTakenBy').value = savedInquiryTakenBy;
-        document.getElementById('branch22').value = savedBranch;
+             // Restore inquiryTakenBy only if it's not "undefined"
+             if (savedInquiryTakenBy !== "undefined") {
+                 document.getElementById('inquiryTakenBy').value = savedInquiryTakenBy;
+             } else {
+                 document.getElementById('inquiryTakenBy').value = "";
+             }
+             // Restore branch only if it's not "undefined"
+             if (savedBranch !== "undefined") {
+                 document.getElementById('branch22').value = savedBranch;
+             } else {
+                 document.getElementById('branch22').value = "";
+             }
 
             // Set today's date back
             const today = new Date();
@@ -286,6 +296,13 @@
             '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
         submitBtn.disabled = true;
 
+        // Get logged-in user from hidden input or sessionStorage
+        const loggedInUser = document.getElementById("loggedInUserId")?.value || currentLoggedInUser || "Anonymous";
+
+        // Get inquiry taken by value, ensuring it's not "undefined" or empty
+        const inquiryTakenByValue = document.getElementById("inquiryTakenBy")?.value?.trim();
+        const finalInquiryTakenBy = (inquiryTakenByValue && inquiryTakenByValue !== "undefined") ? inquiryTakenByValue : loggedInUser;
+
         // Collect form data with individual name and address fields
         const formValues = {
             date:
@@ -308,11 +325,10 @@
             pincode: document.getElementById("pincode")?.value.trim() || "",
             interestedCourse:
                 document.getElementById("interestedCourse")?.value.trim() || "",
-            inquiryTakenBy:
-                document.getElementById("inquiryTakenBy")?.value.trim() || "",
+            inquiryTakenBy: finalInquiryTakenBy,
             branch: document.getElementById("branch22")?.value.trim() || "",
 
-            loggedInUserId: currentLoggedInUser || "Anonymous"
+            loggedInUserId: loggedInUser
         };
 
         console.log("Form Values:", formValues);

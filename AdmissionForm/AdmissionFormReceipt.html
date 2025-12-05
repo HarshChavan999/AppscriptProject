@@ -154,7 +154,7 @@
     flex-direction: column;
   }
 
-  #receiptFormSection .receipt-header {
+  /* #receiptFormSection .receipt-header {
     padding: 8px 15px;
     display: flex;
     justify-content: space-between;
@@ -182,7 +182,59 @@
     font-weight: bold;
     color: #2C3E50;
     text-align: center;
+  } */
+  #receiptFormSection .receipt-header {
+    padding: 5px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 85px;
+    width: 100%;
   }
+
+  #receiptFormSection .logo-section {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 160px;
+    height: 85px;
+  }
+
+  #receiptFormSection .logo-section img {
+    height: 85px;
+    width: 160px;
+    object-fit: contain;
+  }
+
+  #receiptFormSection .institute-info {
+    flex: 1;
+    text-align: center;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #002147;
+    line-height: 1.3;
+  }
+
+  #receiptFormSection .institute-info .institute-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  #receiptFormSection .institute-info .address-line {
+    font-size: 11px;
+    margin: 1px 0;
+    font-weight: 500;
+  }
+
+  #receiptFormSection .institute-info .contact-info {
+    font-size: 11px;
+    margin: 1px 0;
+    font-weight: 500;
+  }
+
 
   #receiptFormSection .photo-section {
     width: 80px;
@@ -423,13 +475,20 @@
           <div class="logo-section">
             <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
           </div>
-          <div class="institute-info">
+          <!-- <div class="institute-info">
             <strong>Shelar Training Institute</strong><br>
             Bungalow no. C34, <br>
             Near BMC School, <br>
             Kamgar Nagar, Kurla East,400024<br>
             Mob.: +61 9867285184 +61 7400406467
-          </div>
+          </div> -->
+            <div class="institute-info">
+    <div class="institute-name">Shelar Training Institute</div>
+    <div class="address-line">Bungalow no. C34,</div>
+    <div class="address-line">Near BMC School,</div>
+    <div class="address-line">Kamgar Nagar, Kurla East, 400024</div>
+    <div class="contact-info">Mob.: +61 9867285184 | +61 7400406467</div>
+  </div>
         </div>
 
         <div class="receipt-title">ADMISSION RECEIPT</div>
@@ -469,7 +528,14 @@
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Course Name</label>
-              <input type="text" id="courseName" name="courseName" readonly>
+              <select id="courseName" name="courseName">
+                <option value="" disabled selected>Select a course</option>
+                <option value="anm_nursing">ANM Nursing Diploma</option>
+                <option value="gnm_nursing">GNM Nursing Diploma</option>
+                <option value="dmlt">DMLT Diploma</option>
+                <option value="ot_technician">OT Technician</option>
+                <option value="general_nursing">General Nursing Assistant</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Course Year</label>

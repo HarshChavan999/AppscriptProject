@@ -2047,26 +2047,17 @@ function resetCoursePaymentForm() {
     document.getElementById("admissionAnalyticsSection").classList.add("hidden");
     document.getElementById("ifId").classList.add("hidden");
     document.getElementById("admissionFormSection").classList.add("hidden");
+    document.getElementById("receiptFormSection").classList.add("hidden");
 
-  // Hide the course payment section (but don't clear data)
-  const coursePaymentSection = document.getElementById("coursePaymentSection");
-  if (coursePaymentSection) {
-    coursePaymentSection.classList.add("hidden");
-  }
+    // Hide the course payment section (but don't clear data)
+    const coursePaymentSection = document.getElementById("coursePaymentSection");
+    if (coursePaymentSection) {
+      coursePaymentSection.classList.add("hidden");
+    }
 
-  // Hide the inquiry form section
-  const inquiryFormSection = document.getElementById("ifId");
-  if (inquiryFormSection) {
-    inquiryFormSection.classList.add("hidden");
-  }
+    // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
+    document.getElementById("feeStructureSection").classList.add("hidden");
 
-  // document.getElementById("receiptReadOnlyForm").classList.add("hidden");
-  document.getElementById("feeStructureSection").classList.add("hidden");
-  document.getElementById("receiptFormSection").classList.add("hidden");
-
-
-   
-    
 
   }
   function updateGeneratedTime() {
@@ -3260,14 +3251,11 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
           showConfirmButton: false,
         });
       sessionStorage.setItem("loggedInUser", resp.userName);
-       document.getElementById("loggedInUserId").value = resp.userName; 
+       document.getElementById("loggedInUserId").value = resp.userName;
         document.getElementById("userName").value = resp.userName;
-        document.getElementById("userRole").value = resp.role;
+        document.getElementById("userRole").value = resp.userName;
         document.getElementById("userRoleDisplay").textContent = resp.role;
         document.getElementById("userBranch").value = resp.branch;
-
-        
-        document.getElementById("loggedInUserId").value = resp.userId;
 
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("appSection").classList.remove("hidden");
@@ -5448,84 +5436,7 @@ function examfeeTakenBy() {
 
 
 
- // --- Login Form Handling ---
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
-      event.preventDefault(); // Prevent default form submission
 
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
-
-      console.log("Attempting login for:", username); // Debugging: log username
-
-      // Call the server-side loginUser function
-      google.script.run
-        .withSuccessHandler(function(response) {
-          console.log("Login Response (from server):", response); // Debugging: log server response
-          if (response.success) {
-            currentLoggedInUser = response.userName; // Store the logged-in user's name
-            sessionStorage.setItem('loggedInUser', currentLoggedInUser); // Store in session storage
-            console.log("Current Logged In User (after setting):", currentLoggedInUser); // Debugging
-            Swal.fire({
-              icon: "success",
-              title: "Login Successful",
-              text: `Welcome, ${currentLoggedInUser}!`,
-              timer: 1500,
-              showConfirmButton: false,
-            });
-            // Hide login section and show app section
-            document.getElementById("loginSection").classList.add("hidden");
-            document.getElementById("appSection").classList.remove("hidden");
-
-            // Set user details
-            document.getElementById("userName").value = response.userName;
-            document.getElementById("userRole").value = response.role;
-            document.getElementById("userBranch").value = response.branch;
-            document.getElementById("loggedInUserId").value = response.userId;
-
-            // Show admin UI if role is admin
-            if (response.role === "admin") {
-              document.getElementById("manageStudentsBtn")?.classList.remove("hidden");
-              document.getElementById("analyticsBtn")?.classList.remove("hidden");
-              document.getElementById("classMonthDashboardBtn")?.classList.remove("hidden");
-              document.getElementById("dueFeesBtn")?.classList.remove("hidden");
-            }
-
-            // Load dropdown data
-            google.script.run
-              .withSuccessHandler(function (dd) {
-                if (dd.error) {
-                  console.log("Dropdown error", dd.error);
-                  return;
-                }
-                dropdownData = dd;
-                fillDropdowns();
-              })
-              .getDropdownData();
-
-            // Open inquiry form by default after login
-            setTimeout(() => {
-              openInquiryForm();
-              populateInquiryTakenBy();
-            }, 500);
-
-          } else {
-            Swal.fire({
-              icon: "error",
-              title: "Login Failed",
-              text: response.error,
-            });
-          }
-        })
-        .withFailureHandler(function(error) {
-          console.error("Login server error:", error);
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: `An unexpected error occurred during login: ${error.message}`,
-          });
-        })
-        .loginUser({ username: username, password: password });
-    });
 
 
 function copyadmissionreceipt(){
