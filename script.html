@@ -1425,10 +1425,10 @@ function addInstallmentRowShared(table, number, date, amount, type, installmentA
       </span>
     </td>
     <td class="px-4 py-2 whitespace-nowrap text-center">
-      ${number === 0 ? "" : `<input type="checkbox" data-installment="${number}" data-amount="${installmentAmount}" class="installment-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" onchange="handleInstallmentPaymentShared(this, '${statusId}', '${receiptBtnId}')">`}
+      <input type="checkbox" data-installment="${number === 0 ? 1 : number}" data-amount="${installmentAmount}" class="installment-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" onchange="handleInstallmentPaymentShared(this, '${statusId}', '${receiptBtnId}')">
     </td>
     <td class="px-4 py-2 whitespace-nowrap text-center">
-      ${number === 0 ? "" : `<button id="${receiptBtnId}" onclick="generateInstallmentReceipt(${number}, ${installmentAmount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded hidden hover:bg-green-700 transition-colors">Receipt</button>`}
+      <button id="${receiptBtnId}" onclick="generateInstallmentReceipt(${number === 0 ? 1 : number}, ${installmentAmount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded hidden hover:bg-green-700 transition-colors">Receipt</button>
     </td>
   `;
 
@@ -1466,9 +1466,18 @@ function handleInstallmentPaymentShared(checkbox, statusId, receiptBtnId) {
   console.log("Confirmation result:", confirmed);
 
   if (confirmed) {
-    console.log("User confirmed, calling saveInstallmentPaymentShared");
-    // Automatically save to sheet
-    saveInstallmentPaymentShared(installmentNumber, amount, checkbox, statusId, receiptBtnId);
+    console.log("User confirmed, ensuring installment schedule is saved first");
+
+    // 🔥 CRITICAL: First ensure installment schedule is saved to InstallmentSchedules sheet
+    ensureInstallmentScheduleSaved().then(() => {
+      console.log("Installment schedule ensured, now saving payment");
+      // Now save the individual payment
+      saveInstallmentPaymentShared(installmentNumber, amount, checkbox, statusId, receiptBtnId);
+    }).catch((error) => {
+      console.error("Failed to save installment schedule:", error);
+      alert("Error saving installment schedule. Please try again.");
+      checkbox.checked = false;
+    });
   } else {
     console.log("User cancelled, unchecking checkbox");
     // Uncheck if not confirmed
@@ -1753,15 +1762,13 @@ function openCoursePayment() {
     document.getElementById("installmentScheduleSection").classList.remove("hidden");
 
     // Populate with admission data
-    setTimeout(() => {
-      copyAdmission();
-      // Load saved payment details if available
-      if (savedPaymentDetails) {
-        loadSavedPaymentDetails(savedPaymentDetails);
-      }
-      // Load existing payments for this student
-      loadInstallmentPaymentsForStudent();
-    }, 500);
+    copyAdmission();
+    // Load saved payment details if available
+    if (savedPaymentDetails) {
+      loadSavedPaymentDetails(savedPaymentDetails);
+    }
+    // Load existing payments for this student
+    loadInstallmentPaymentsForStudent();
   } else {
     // Normal access - show both payment options and installment schedule
     document.getElementById("paymentOptionsSection").classList.remove("hidden");
@@ -1777,18 +1784,16 @@ function openCoursePayment() {
     selectedPaymentType = null;
 
     // Populate data from admission form (if any)
-    setTimeout(() => {
-      copyAdmission();
-      // Load saved payment details if available
-      if (savedPaymentDetails) {
-        loadSavedPaymentDetails(savedPaymentDetails);
-      }
-      // Check if we have receipt number and load payments if so
-      const receiptNo = document.getElementById("ID").value;
-      if (receiptNo && receiptNo.trim() !== "") {
-        loadInstallmentPaymentsForStudent();
-      }
-    }, 500);
+    copyAdmission();
+    // Load saved payment details if available
+    if (savedPaymentDetails) {
+      loadSavedPaymentDetails(savedPaymentDetails);
+    }
+    // Check if we have receipt number and load payments if so
+    const receiptNo = document.getElementById("ID").value;
+    if (receiptNo && receiptNo.trim() !== "") {
+      loadInstallmentPaymentsForStudent();
+    }
   }
 }
 
@@ -4879,6 +4884,9 @@ html2pdf()
     window.scrollTo(0, 0);
     console.log("Admission Form button clicked");
     hideAllSections();
+
+    // Set flag to indicate we came from new inquiry form
+    sessionStorage.setItem('cameFromNewInquiry', 'true');
 
     const section = document.getElementById("admissionFormSection");
     if (!section) {
