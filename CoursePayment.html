@@ -221,7 +221,7 @@
               />
             </div>
             <div class="flex items-center justify-between py-1">
-              <label class="font-semibold">EMI Tenure (months):</label>
+              <label class="font-semibold">Total Installments:</label>
               <select
                 id="partialTenure"
                 class="form-select"
@@ -482,7 +482,7 @@
       const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
       const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
       const remainingAmount = totalFee - initialPayment;
-      const emiAmount = Math.ceil(remainingAmount / tenure);
+      const emiAmount = Math.ceil(remainingAmount / (tenure - 1)); // Divide by number of EMIs (tenure - 1)
 
       let installmentCounter = 1;
 
@@ -498,7 +498,7 @@
       }
 
       // EMI installments - start from month 1 (next month)
-      for (let i = 1; i <= tenure; i++) {
+      for (let i = 1; i <= tenure - 1; i++) { // Create tenure - 1 EMIs
         const dueDate = new Date(startDate);
         dueDate.setMonth(startDate.getMonth() + i); // Month 1, 2, 3, etc.
 
@@ -827,41 +827,16 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     console.log("localStorage admission_studentPhoto:", localStorage.getItem('admission_studentPhoto') ? "EXISTS (length: " + localStorage.getItem('admission_studentPhoto').length + ")" : "NOT FOUND");
     console.log("Final studentPhoto in completeReceiptData:", completeReceiptData.studentPhoto ? "EXISTS (length: " + completeReceiptData.studentPhoto.length + ")" : "NOT FOUND");
 
-    // 🔥 CRITICAL: Save installment schedule to persist exact schedule
-    google.script.run
-        .withSuccessHandler((scheduleResult) => {
-        if (scheduleResult.success) {
-          console.log("Installment schedule saved successfully");
-        } else {
-          console.error("Failed to save installment schedule:", scheduleResult.message);
-        }
+    // 🔥 CRITICAL: Store complete workflow data in sessionStorage
+    sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
 
-        // 🔥 CRITICAL: Store complete workflow data in sessionStorage
-        sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
+    console.log("Complete receipt data prepared:", completeReceiptData);
 
-        console.log("Complete receipt data prepared:", completeReceiptData);
+    // 🔥 CRITICAL: Navigate directly to admission receipt without reloading installment schedule
+    openreceiptFormSection();
 
-        // 🔥 CRITICAL: Navigate directly to admission receipt without reloading installment schedule
-        openreceiptFormSection();
-
-        // Clear the flag after navigation
-        window.proceedingToReceipt = false;
-      })
-      .withFailureHandler((error) => {
-        console.error("Error saving installment schedule:", error);
-        // Continue with receipt generation even if schedule save fails
-        sessionStorage.setItem('completeReceiptData', JSON.stringify(completeReceiptData));
-        openreceiptFormSection();
-      })
-      .saveInstallmentSchedule({
-        receiptNo: coursePaymentData.receiptNo,
-        studentName: coursePaymentData.studentName,
-        enrollmentNo: coursePaymentData.enrollmentId,
-        courseName: coursePaymentData.courseName,
-        paymentType: coursePaymentData.paymentType,
-        totalFee: coursePaymentData.totalFee,
-        installmentSchedule: coursePaymentData.installmentSchedule
-      });
+    // Clear the flag after navigation
+    window.proceedingToReceipt = false;
 
   } catch (error) {
     console.error("Error in proceedToAdmissionReceipt:", error);
@@ -2257,8 +2232,26 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
       const showControls = installment.installmentNumber === 0 || showCheckboxes;
       const showReceiptBtn = installment.installmentNumber === 0 || showReceiptButtons;
 
+      // Determine display text for installment column
+      let installmentDisplay = '';
+      if (installment.installmentNumber === 0) {
+        if (installment.type === "Initial Payment") {
+          installmentDisplay = "Installment 1 (Initial Payment)";
+        } else if (installment.type === "Down Payment") {
+          installmentDisplay = "Installment 1 (Down Payment)";
+        } else {
+          installmentDisplay = installment.type || "Full Payment";
+        }
+      } else if (installment.type === "Initial Payment") {
+        installmentDisplay = "Installment 1 (Initial Payment)";
+      } else if (installment.type === "Down Payment") {
+        installmentDisplay = "Installment 1 (Down Payment)";
+      } else {
+        installmentDisplay = `Installment ${installment.installmentNumber}`;
+      }
+
       row.innerHTML = `
-        <td class="px-4 py-2 whitespace-nowrap">${installment.installmentNumber === 0 ? installment.type || "Full Payment" : `Installment ${installment.installmentNumber}`}</td>
+        <td class="px-4 py-2 whitespace-nowrap">${installmentDisplay}</td>
         <td class="px-4 py-2 whitespace-nowrap">${installment.dueDate}</td>
         <td class="px-4 py-2 whitespace-nowrap">${formatCurrency(installment.amount)}</td>
         <td class="px-4 py-2 whitespace-nowrap">
