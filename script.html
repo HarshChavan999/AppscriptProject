@@ -1776,12 +1776,13 @@ function openCoursePayment() {
 
   // Check if user came from admission structure (only show installment schedule)
   const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
-  
+
   // Load saved payment details
   const savedPaymentDetails = JSON.parse(sessionStorage.getItem('coursePaymentDetails') || 'null');
-  
+
   if (admissionData && admissionData.name && admissionData.receipt) {
-    // User came from admission structure - show only installment schedule
+    // User came from admission structure - reset previous details first, then show only installment schedule
+    clearCoursePaymentForm();
     document.getElementById("paymentOptionsSection").classList.add("hidden");
     document.getElementById("installmentScheduleSection").classList.remove("hidden");
 
@@ -1915,75 +1916,7 @@ function setPaymentDetails(paymentDetails) {
     }, 200);
   }
 }
-// Function to reset Course Payment form and show payment options for normal users
-// function resetCoursePaymentForm() {
-//   console.log("resetCoursePaymentForm() called - resetting to payment options view");
 
-//   // Clear all form fields
-//   const fieldsToClear = [
-//     "ID", "std_Coursepayname", "enrollmentId", "coursePaySelect",
-//     "courseDuration", "coursePayFees", "totalFees", "pay-select"
-//   ];
-
-//   fieldsToClear.forEach(fieldId => {
-//     const field = document.getElementById(fieldId);
-//     if (field) {
-//       if (field.tagName === "SELECT") {
-//         field.selectedIndex = 0; // Reset select to first option
-//       } else {
-//         field.value = ""; // Clear input values
-//       }
-//     }
-//   });
-
-//   // Clear installment table if it exists
-//   const installmentTable = document.getElementById("installmentTable");
-//   if (installmentTable) {
-//     installmentTable.innerHTML = "";
-//   }
-
-//   // Clear all radio button selections - NO payment option should be pre-selected
-//   const paymentRadios = document.querySelectorAll('input[name="Coursepayment_type"]');
-//   paymentRadios.forEach(radio => {
-//     radio.checked = false;
-//   });
-
-//   // Reset UI - show all payment cards without any selection
-//   document.getElementById("fullPaymentCard").classList.remove("selected");
-//   document.getElementById("partialPaymentCard").classList.remove("selected");
-//   document.getElementById("emiPaymentCard").classList.remove("selected");
-
-//   // Show all payment cards
-//   console.log("Setting display block for all payment cards");
-//   const fullCard = document.getElementById("fullPaymentCard");
-//   const partialCard = document.getElementById("partialPaymentCard");
-//   const emiCard = document.getElementById("emiPaymentCard");
-
-//   console.log("fullCard:", fullCard);
-//   console.log("partialCard:", partialCard);
-//   console.log("emiCard:", emiCard);
-
-//   if (fullCard) fullCard.style.display = 'block';
-//   if (partialCard) partialCard.style.display = 'block';
-//   if (emiCard) emiCard.style.display = 'block';
-
-//   // Reset selectedPaymentType to null
-//   selectedPaymentType = null;
-
-//   // Show payment options section and hide installment schedule
-//   document.getElementById("paymentOptionsSection").classList.remove("hidden");
-//   document.getElementById("installmentScheduleSection").classList.add("hidden");
-
-//   // Clear all sessionStorage keys that copyAdmission() might use
-//   sessionStorage.removeItem('admissionDataForPayment');
-//   sessionStorage.removeItem('first_name');
-//   sessionStorage.removeItem('last_name');
-//   sessionStorage.removeItem('tempText4');
-//   sessionStorage.removeItem('tempText5');
-//   sessionStorage.removeItem('enrollmentId');
-
-//   console.log("Course Payment form reset to show payment options");
-// }
 function resetCoursePaymentForm() {
   console.log("resetCoursePaymentForm() called - resetting to payment options view");
 

@@ -53,11 +53,12 @@
               >General ID</label
             >
             <input
-              type="text"
-              id="ID"
-              placeholder="Enter your name"
-              class="w-full px-4 py-2 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style="text-align: left"
+              type="radio"
+              id="emi"
+              name="Coursepayment_type"
+              value="emi"
+              class="h-5 w-5 text-blue-500"
+              onchange="handlePaymentOptionChange(this)"
             />
           </div>
           <div class="max-w-md mx-auto mt-6">
@@ -154,10 +155,12 @@
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
           id="fullPaymentCard"
+          onclick="document.getElementById('full').click()"
         >
           <div class="flex items-center mb-2">
             <input
               type="radio"
+              id="full"
               name="Coursepayment_type"
               value="full"
               class="h-5 w-5 text-blue-500"
@@ -201,10 +204,12 @@
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
           id="partialPaymentCard"
+          onclick="document.getElementById('partial').click()"
         >
           <div class="flex items-center mb-2">
             <input
               type="radio"
+              id="partial"
               name="Coursepayment_type"
               value="partial"
               class="h-5 w-5 text-blue-500"
@@ -262,10 +267,12 @@
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
           id="emiPaymentCard"
+          onclick="document.getElementById('emi').click()"
         >
           <div class="flex items-center mb-2">
             <input
               type="radio"
+              id="emi"
               name="Coursepayment_type"
               value="emi"
               class="h-5 w-5 text-blue-500"
@@ -351,7 +358,7 @@
       </div>
 
       <!-- Payment Confirmation -->
-      <div id="paymentConfirmationSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+      <div id="paymentConfirmationSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div class="flex items-center space-x-3">
           <input
             type="checkbox"
@@ -451,9 +458,9 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 
-  /* Ensure all payment cards remain visible */
+  /* Allow JavaScript to control payment card visibility */
   .payment-card {
-    display: block !important;
+    /* Removed !important to allow dynamic display changes */
   }
 </style>
 <!-- Add this receipt container (if missing) -->
@@ -611,13 +618,14 @@
     const paymentType = radio.value;
     console.log("Payment option selected:", paymentType);
 
+    // Ensure confirmation checkbox is enabled
+    const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
+    if (confirmationCheckbox) {
+      confirmationCheckbox.disabled = false;
+    }
+
     // Store the selected payment type
     window.selectedPaymentType = paymentType;
-
-    // Ensure all payment cards remain visible
-    document.getElementById("fullPaymentCard").style.display = 'block';
-    document.getElementById("partialPaymentCard").style.display = 'block';
-    document.getElementById("emiPaymentCard").style.display = 'block';
 
     // Remove selected class from all cards
     document.getElementById("fullPaymentCard").classList.remove("selected");
@@ -630,13 +638,24 @@
       selectedCard.classList.add("selected");
     }
 
-    // Show the confirmation section
-    document.getElementById("paymentConfirmationSection").classList.remove("hidden");
+    // Check if the confirmation checkbox is checked
+    // confirmationCheckbox is already declared above
+    if (confirmationCheckbox.checked) {
+      // Hide other payment options if confirmation is checked
+      document.getElementById("fullPaymentCard").style.display = paymentType === 'full' ? 'block' : 'none';
+      document.getElementById("partialPaymentCard").style.display = paymentType === 'partial' ? 'block' : 'none';
+      document.getElementById("emiPaymentCard").style.display = paymentType === 'emi' ? 'block' : 'none';
+    } else {
+      // Ensure all payment cards remain visible if not confirmed
+      document.getElementById("fullPaymentCard").style.display = 'block';
+      document.getElementById("partialPaymentCard").style.display = 'block';
+      document.getElementById("emiPaymentCard").style.display = 'block';
+    }
 
-    // Uncheck the confirmation checkbox when changing selection
-    const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
+    // Uncheck and re-enable the confirmation checkbox when changing selection
     if (confirmationCheckbox) {
       confirmationCheckbox.checked = false;
+      confirmationCheckbox.disabled = false;
     }
 
     console.log("Payment option selected, waiting for confirmation");
@@ -645,7 +664,11 @@
   // Function to handle payment confirmation
   function handlePaymentConfirmation(checkbox) {
     if (!checkbox.checked) {
-      console.log("Confirmation unchecked");
+      console.log("Confirmation unchecked - showing all payment options");
+      // Show all payment cards when confirmation is unchecked
+      document.getElementById("fullPaymentCard").style.display = 'block';
+      document.getElementById("partialPaymentCard").style.display = 'block';
+      document.getElementById("emiPaymentCard").style.display = 'block';
       return;
     }
 
@@ -673,11 +696,14 @@
       radio.disabled = true;
     });
 
-    // Hide the confirmation section
-    document.getElementById("paymentConfirmationSection").classList.add("hidden");
+    // Lock the confirmation checkbox - disable it so it can't be unchecked
+    checkbox.disabled = true;
 
-    // Show the installment schedule section
-    document.getElementById("installmentScheduleSection").classList.remove("hidden");
+    // Hide the other payment options after confirmation
+    document.getElementById("fullPaymentCard").style.display = paymentType === 'full' ? 'block' : 'none';
+    document.getElementById("partialPaymentCard").style.display = paymentType === 'partial' ? 'block' : 'none';
+    document.getElementById("emiPaymentCard").style.display = paymentType === 'emi' ? 'block' : 'none';
+
 
     // Get the total fee
     const totalFeeElement = document.getElementById("totalFees");
@@ -692,12 +718,6 @@
     // Generate the installment schedule based on payment type
     const installmentSchedule = generateInstallmentScheduleForPaymentType(paymentType, totalFee);
 
-    // Clear the existing table
-    const tableBody = document.getElementById("installmentTable");
-    tableBody.innerHTML = "";
-
-    // Populate the table with the generated schedule
-    generateInstallmentTableRowsFromScheduleShared(tableBody, installmentSchedule, [], true, true);
 
     console.log("Installment schedule populated for confirmed payment type:", paymentType);
   }
@@ -2227,8 +2247,7 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     document.getElementById("receiptContainer").classList.add("hidden");
     document.getElementById("installmentScheduleSection").classList.add("hidden");
 
-    // Hide confirmation section
-    document.getElementById("paymentConfirmationSection").classList.add("hidden");
+
 
     // Uncheck confirmation checkbox
     const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
