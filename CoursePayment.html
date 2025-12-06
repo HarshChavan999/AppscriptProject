@@ -107,7 +107,7 @@
             <option value="gnm_nursing">GNM Nursing Diploma</option>
             <option value="dmlt">DMLT Diploma</option>
             <option value="ot_technician">OT Technician</option>
-            <option value="general_nursing">General Nursing Assistant</option>
+            <option value="general_nursing">General Nursing and Midwifery Assistant</option>
           </select>
         </div>
         <div>
@@ -306,8 +306,30 @@
                 <option value="10">10</option>
                 <option value="11">11</option>
                 <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
                 <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
                 <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+                <option value="32">32</option>
+                <option value="33">33</option>
+                <option value="34">34</option>
+                <option value="35">35</option>
+                <option value="36">36</option>
               </select>
             </div>
             <div class="flex justify-between py-1">
@@ -326,6 +348,24 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Payment Confirmation -->
+      <div id="paymentConfirmationSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+        <div class="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            id="paymentConfirmationCheckbox"
+            class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            onchange="handlePaymentConfirmation(this)"
+          />
+          <label for="paymentConfirmationCheckbox" class="text-sm font-medium text-gray-700">
+            I confirm my payment option selection and agree to proceed with the payment plan.
+          </label>
+        </div>
+        <p class="mt-2 text-xs text-gray-600">
+          Checking this box will lock your payment selection and generate the installment schedule.
+        </p>
       </div>
     </div>
 
@@ -402,6 +442,18 @@
 
   input[type="number"].no-spinner {
     -moz-appearance: textfield;
+  }
+
+  /* Payment card selected state */
+  .payment-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  /* Ensure all payment cards remain visible */
+  .payment-card {
+    display: block !important;
   }
 </style>
 <!-- Add this receipt container (if missing) -->
@@ -498,7 +550,7 @@
           amount: initialPayment,
           dueDate: startDate.toISOString().split('T')[0],
           status: "Pending",
-          type: "Initial Payment"
+          type: "Initial Payement"
         });
       }
 
@@ -559,6 +611,71 @@
     const paymentType = radio.value;
     console.log("Payment option selected:", paymentType);
 
+    // Store the selected payment type
+    window.selectedPaymentType = paymentType;
+
+    // Ensure all payment cards remain visible
+    document.getElementById("fullPaymentCard").style.display = 'block';
+    document.getElementById("partialPaymentCard").style.display = 'block';
+    document.getElementById("emiPaymentCard").style.display = 'block';
+
+    // Remove selected class from all cards
+    document.getElementById("fullPaymentCard").classList.remove("selected");
+    document.getElementById("partialPaymentCard").classList.remove("selected");
+    document.getElementById("emiPaymentCard").classList.remove("selected");
+
+    // Add selected class to the chosen card
+    const selectedCard = document.getElementById(`${paymentType}PaymentCard`);
+    if (selectedCard) {
+      selectedCard.classList.add("selected");
+    }
+
+    // Show the confirmation section
+    document.getElementById("paymentConfirmationSection").classList.remove("hidden");
+
+    // Uncheck the confirmation checkbox when changing selection
+    const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
+    if (confirmationCheckbox) {
+      confirmationCheckbox.checked = false;
+    }
+
+    console.log("Payment option selected, waiting for confirmation");
+  }
+
+  // Function to handle payment confirmation
+  function handlePaymentConfirmation(checkbox) {
+    if (!checkbox.checked) {
+      console.log("Confirmation unchecked");
+      return;
+    }
+
+    const paymentType = window.selectedPaymentType;
+    if (!paymentType) {
+      console.log("No payment type selected");
+      checkbox.checked = false;
+      return;
+    }
+
+    // Show confirmation dialog (swirl/modal as requested)
+    const confirmed = confirm(`Are you sure you want to proceed with ${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} Payment?\n\nThis will lock your payment selection and generate the installment schedule.`);
+
+    if (!confirmed) {
+      // Uncheck if not confirmed
+      checkbox.checked = false;
+      return;
+    }
+
+    console.log("Payment confirmed, proceeding with:", paymentType);
+
+    // Lock the radio buttons - disable all radio buttons
+    const radioButtons = document.querySelectorAll('input[name="Coursepayment_type"]');
+    radioButtons.forEach(radio => {
+      radio.disabled = true;
+    });
+
+    // Hide the confirmation section
+    document.getElementById("paymentConfirmationSection").classList.add("hidden");
+
     // Show the installment schedule section
     document.getElementById("installmentScheduleSection").classList.remove("hidden");
 
@@ -582,7 +699,7 @@
     // Populate the table with the generated schedule
     generateInstallmentTableRowsFromScheduleShared(tableBody, installmentSchedule, [], true, true);
 
-    console.log("Installment schedule populated for payment type:", paymentType);
+    console.log("Installment schedule populated for confirmed payment type:", paymentType);
   }
 
  function proceedToAdmissionReceipt() {
@@ -1084,7 +1201,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
         dueDate: today.toISOString().split('T')[0],
         amount: initialPayment,
         status: "Pending",
-        type: "Initial Payment"
+        type: "Initial Payement"
       });
 
       // EMI installments
@@ -2067,9 +2184,10 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     // Clear payment option fields first
     document.getElementById("fullDiscountRupees").value = "";
     document.getElementById("partialInitialInput").value = "";
-    document.getElementById("partialTenure").value = "6";
+    // Remove default values for tenure dropdowns
+    // document.getElementById("partialTenure").value = "6";
+    // document.getElementById("emiTenure").value = "12";
     document.getElementById("emiDownPaymentInput").value = "";
-    document.getElementById("emiTenure").value = "12";
 
     // Show all payment cards without any selection
     document.getElementById("fullPaymentCard").classList.remove("selected");
@@ -2108,6 +2226,15 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
     document.getElementById("receiptContainer").innerHTML = "";
     document.getElementById("receiptContainer").classList.add("hidden");
     document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+    // Hide confirmation section
+    document.getElementById("paymentConfirmationSection").classList.add("hidden");
+
+    // Uncheck confirmation checkbox
+    const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
+    if (confirmationCheckbox) {
+      confirmationCheckbox.checked = false;
+    }
 
     // Show payment options section
     document.getElementById("paymentOptionsSection").classList.remove("hidden");
@@ -2240,15 +2367,15 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
       // Determine display text for installment column
       let installmentDisplay = '';
       if (installment.installmentNumber === 0) {
-        if (installment.type === "Initial Payment") {
-          installmentDisplay = "Installment 1 (Initial Payment)";
+        if (installment.type === "Initial Payement") {
+          installmentDisplay = "Installment 1 (Initial Payement)";
         } else if (installment.type === "Down Payment") {
           installmentDisplay = "Installment 1 (Down Payment)";
         } else {
           installmentDisplay = installment.type || "Full Payment";
         }
-      } else if (installment.type === "Initial Payment") {
-        installmentDisplay = "Installment 1 (Initial Payment)";
+      } else if (installment.type === "Initial Payement") {
+        installmentDisplay = "Installment 1 (Initial Payement)";
       } else if (installment.type === "Down Payment") {
         installmentDisplay = "Installment 1 (Down Payment)";
       } else {

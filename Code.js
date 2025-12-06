@@ -1743,6 +1743,7 @@ function getCourseListFromInquiries() {
 
 /**
  * Saves course payment data to FeeStructure sheet with the new column structure
+ * Updates existing entry for the enrollment ID instead of creating new rows
  * @param {Object} data Payment data object
  * @returns {Object} Operation result
  */
@@ -1783,46 +1784,105 @@ function saveCoursePayment(data) {
       };
     }
 
-    // Prepare data for the new FeeStructure format
-    const rowData = [
-      new Date(), // TimeStamp (Column A)
-      data.enrollmentId, // Enrollment ID (Column B)
-      data.Coursepayname, // Name (Column C)
-      data.coursePaySelect, // Course_Name (Column D)
-      data.paySelect || "Cash", // Payment Mode (Column E)
-      parseFloat(data.admissionFee) || 0, // Admission_Fee (Column F)
-      parseFloat(data.admissionFeeDue) || 0, // Admission_Fee_Due (Column G)
-      parseFloat(data.coursePayFees) || 0, // Course_Fee (Column H)
-      parseFloat(data.examFee) || 0, // Exam_Fee (Column I)
-      parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column J)
-      parseFloat(data.totalAmountDue) || parseFloat(data.totalFees) || 0, // Total_Amount_Due (Column K)
-      data.branch || "", // Branch (Column L)
-      userIdForAudit // User_Name (Column M)
-    ];
+    const enrollmentId = data.enrollmentId;
+    const paymentAmount = parseFloat(data.coursePayFees) || 0;
 
-    // Save payment data
-    sheet.appendRow(rowData);
+    // Check if entry exists for this enrollment ID
+    const existingData = sheet.getDataRange().getValues();
+    let existingRowIndex = -1;
 
-    const lastRow = sheet.getLastRow();
+    // Find existing row for this enrollment ID (skip header row)
+    for (let i = 1; i < existingData.length; i++) {
+      const row = existingData[i];
+      const rowEnrollmentId = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ENROLLMENT_ID_COL] || "").trim();
 
-    // Log successful payment
-    createAuditLogEntry("Course Payment Recorded", userIdForAudit, {
-      enrollmentId: data.enrollmentId,
-      studentName: data.Coursepayname,
-      course: data.coursePaySelect,
-      admissionFee: data.admissionFee || 0,
-      courseFee: data.coursePayFees || 0,
-      examFee: data.examFee || 0,
-      totalAmountDue: data.totalAmountDue || data.totalFees || 0,
-      paymentMode: data.paySelect || "Cash",
-      row: lastRow
-    });
+      if (rowEnrollmentId === enrollmentId) {
+        existingRowIndex = i + 1; // +1 for 1-based sheet indexing
+        break;
+      }
+    }
 
-    return {
-      success: true,
-      message: "Payment data saved successfully",
-      row: lastRow
-    };
+    if (existingRowIndex > 0) {
+      // Update existing entry
+      const currentRow = existingData[existingRowIndex - 1]; // -1 for 0-based array indexing
+
+      // Get current values
+      const currentCourseFee = parseFloat(currentRow[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL]) || 0;
+      const currentTotalDue = parseFloat(currentRow[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL]) || 0;
+
+      // Update Course_Fee by adding the payment amount
+      const newCourseFee = currentCourseFee + paymentAmount;
+      // Update Total_Amount_Due by subtracting the payment amount (assuming this payment reduces the due amount)
+      const newTotalDue = Math.max(0, currentTotalDue - paymentAmount);
+
+      // Update the row
+      sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(newCourseFee);
+      sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL + 1).setValue(newTotalDue);
+      sheet.getRange(existingRowIndex, 1).setValue(new Date()); // Update timestamp
+
+      // Log successful payment update
+      createAuditLogEntry("Course Payment Updated", userIdForAudit, {
+        enrollmentId: data.enrollmentId,
+        studentName: data.Coursepayname,
+        course: data.coursePaySelect,
+        previousCourseFee: currentCourseFee,
+        paymentAmount: paymentAmount,
+        newCourseFee: newCourseFee,
+        previousTotalDue: currentTotalDue,
+        newTotalDue: newTotalDue,
+        paymentMode: data.paySelect || "Cash",
+        row: existingRowIndex
+      });
+
+      return {
+        success: true,
+        message: "Course payment updated successfully",
+        row: existingRowIndex
+      };
+
+    } else {
+      // Create new entry if none exists
+      console.log("No existing entry found for enrollment ID:", enrollmentId, "- creating new entry");
+
+      // Prepare data for the new FeeStructure format
+      const rowData = [
+        new Date(), // TimeStamp (Column A)
+        data.enrollmentId, // Enrollment ID (Column B)
+        data.Coursepayname, // Name (Column C)
+        data.coursePaySelect, // Course_Name (Column D)
+        data.paySelect || "Cash", // Payment Mode (Column E)
+        parseFloat(data.admissionFee) || 0, // Admission_Fee (Column F)
+        parseFloat(data.admissionFeeDue) || 0, // Admission_Fee_Due (Column G)
+        paymentAmount, // Course_Fee (Column H) - the paid amount
+        parseFloat(data.examFee) || 0, // Exam_Fee (Column I)
+        parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column J)
+        parseFloat(data.totalAmountDue) || parseFloat(data.totalFees) || paymentAmount, // Total_Amount_Due (Column K)
+        data.branch || "", // Branch (Column L)
+        userIdForAudit // User_Name (Column M)
+      ];
+
+      // Save payment data
+      sheet.appendRow(rowData);
+
+      const lastRow = sheet.getLastRow();
+
+      // Log successful payment creation
+      createAuditLogEntry("Course Payment Recorded", userIdForAudit, {
+        enrollmentId: data.enrollmentId,
+        studentName: data.Coursepayname,
+        course: data.coursePaySelect,
+        courseFee: paymentAmount,
+        totalAmountDue: data.totalAmountDue || data.totalFees || paymentAmount,
+        paymentMode: data.paySelect || "Cash",
+        row: lastRow
+      });
+
+      return {
+        success: true,
+        message: "Course payment recorded successfully",
+        row: lastRow
+      };
+    }
 
   } catch (error) {
     console.error("Error in saveCoursePayment:", error);
