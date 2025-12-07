@@ -1336,7 +1336,7 @@ function getFeeStructureData(userRole) {
     const newSheet = ss.insertSheet(CONFIG.FEE_STRUCTURE_SHEET_NAME);
     newSheet.appendRow([
       "TimeStamp", "Enrollment ID", "Name", "Course_Name", "Payment Mode",
-      "Admission_Fee", "Admission_Fee_Due", "Course_Fee", "Exam_Fee",
+      "Admission_Fee", "Admission_Fee_Due", "Course_Fee", "Course_Fee_Due", "Exam_Fee",
       "Exam_Fee_Due", "Total_Amount_Due", "Branch", "User_Name"
     ]);
 
@@ -1381,6 +1381,7 @@ function getFeeStructureData(userRole) {
     const admissionFee = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ADMISSION_FEE_COL]).replace(/[^\d.-]/g, "")) || 0;
     const admissionFeeDue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ADMISSION_FEE_DUE_COL]).replace(/[^\d.-]/g, "")) || 0;
     const courseFee = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL]).replace(/[^\d.-]/g, "")) || 0;
+    const courseFeeDue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL]).replace(/[^\d.-]/g, "")) || 0; // NEW
     const examFee = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_COL]).replace(/[^\d.-]/g, "")) || 0;
     const examFeeDue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_DUE_COL]).replace(/[^\d.-]/g, "")) || 0;
     const totalAmountDueValue = parseFloat(String(row[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL]).replace(/[^\d.-]/g, "")) || 0;
@@ -1845,6 +1846,27 @@ function saveCoursePayment(data) {
       console.log("No existing entry found for enrollment ID:", enrollmentId, "- creating new entry");
 
       // Prepare data for the new FeeStructure format
+      // Clean the totalFees string to remove currency symbols and formatting
+      let totalCourseFee = parseFloat(String(data.totalFees).replace(/[^0-9.]/g, ''));
+
+      // If totalFees parsing failed, try to get course fee from totalAmountDue or course data
+      if (isNaN(totalCourseFee) || totalCourseFee === 0) {
+        const totalAmountDue = parseFloat(String(data.totalAmountDue).replace(/[^0-9.]/g, ''));
+        if (!isNaN(totalAmountDue) && totalAmountDue > 0) {
+          totalCourseFee = totalAmountDue; // Use totalAmountDue as course fee
+        } else {
+          // Fallback to course data based on course selection
+          const courseData = {
+            "anm_nursing": { fee: 50000 },
+            "gnm_nursing": { fee: 75000 },
+            "dmlt": { fee: 40000 },
+            "ot_technician": { fee: 45000 },
+            "general_nursing": { fee: 25000 }
+          };
+          totalCourseFee = (data.coursePaySelect && courseData[data.coursePaySelect]) ? courseData[data.coursePaySelect].fee : paymentAmount;
+        }
+      }
+
       const rowData = [
         new Date(), // TimeStamp (Column A)
         data.enrollmentId, // Enrollment ID (Column B)
@@ -1853,10 +1875,10 @@ function saveCoursePayment(data) {
         data.paySelect || "Cash", // Payment Mode (Column E)
         parseFloat(data.admissionFee) || 0, // Admission_Fee (Column F)
         parseFloat(data.admissionFeeDue) || 0, // Admission_Fee_Due (Column G)
-        paymentAmount, // Course_Fee (Column H) - the paid amount
+        totalCourseFee, // Course_Fee (Column H) - the FIXED total course fee
         parseFloat(data.examFee) || 0, // Exam_Fee (Column I)
         parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column J)
-        parseFloat(data.totalAmountDue) || parseFloat(data.totalFees) || paymentAmount, // Total_Amount_Due (Column K)
+        parseFloat(data.totalAmountDue) || (totalCourseFee - paymentAmount), // Total_Amount_Due (Column K)
         data.branch || "", // Branch (Column L)
         userIdForAudit // User_Name (Column M)
       ];
@@ -1946,11 +1968,12 @@ function saveFeeStructureData(data) {
       parseFloat(data.admissionFee) || 0, // Admission_Fee (Column F)
       parseFloat(data.admissionFeeDue) || 0, // Admission_Fee_Due (Column G)
       parseFloat(data.courseFee) || 0, // Course_Fee (Column H)
-      parseFloat(data.examFee) || 0, // Exam_Fee (Column I)
-      parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column J)
-      parseFloat(data.totalAmountDue) || 0, // Total_Amount_Due (Column K)
-      data.branch || "", // Branch (Column L)
-      userIdForAudit // User_Name (Column M)
+      parseFloat(data.courseFeeDue) || parseFloat(data.courseFee) || 0, // Course_Fee_Due (Column I) - NEW
+      parseFloat(data.examFee) || 0, // Exam_Fee (Column J)
+      parseFloat(data.examFeeDue) || 0, // Exam_Fee_Due (Column K)
+      parseFloat(data.totalAmountDue) || 0, // Total_Amount_Due (Column L)
+      data.branch || "", // Branch (Column M)
+      userIdForAudit // User_Name (Column N)
     ];
 
     // Save fee structure data
@@ -2924,7 +2947,8 @@ function getStudentDataByEnrollmentId(enrollmentId) {
 }
 
 /**
- * Updates the Total_Amount_Due in FeeStructure sheet when payment is made
+ * Updates the Course_Fee_Due in FeeStructure sheet when installment payment is made
+ * Also fixes Course_Fee if it's 0 (for backward compatibility)
  * @param {string} enrollmentId The enrollment ID to update
  * @param {number} paymentAmount The amount paid
  * @param {string} userId The user making the update
@@ -2957,33 +2981,46 @@ function updateFeeStructureAmountDue(enrollmentId, paymentAmount, userId) {
       const rowEnrollmentId = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ENROLLMENT_ID_COL] || "").trim(); // Column B
 
       if (rowEnrollmentId === enrollmentId) {
-        // Get current Total_Amount_Due
-        const currentTotalDue = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL]) || 0; // Column K
+        // Get current values
+        const currentCourseFee = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL] || 0); // Column H
+        const currentCourseFeeDue = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL] || 0); // Column I
+        const currentTotalDue = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL] || 0); // Column L
 
-        // Calculate new amount due
-        const newTotalDue = Math.max(0, currentTotalDue - paymentAmount);
+        // Fix Course_Fee if it's 0 (backward compatibility for existing records)
+        let fixedCourseFee = currentCourseFee;
+        if (currentCourseFee === 0 && currentTotalDue > 0) {
+          // If Course_Fee is 0 but Total_Amount_Due has a value, use Total_Amount_Due as Course_Fee
+          fixedCourseFee = currentTotalDue;
+          sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(fixedCourseFee); // Fix Course_Fee
+        }
 
-        // Update the Total_Amount_Due column
-        sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL + 1).setValue(newTotalDue); // +1 for 1-based column index
+        // Calculate new values (only Course_Fee_Due is reduced)
+        const newCourseFeeDue = Math.max(0, currentCourseFeeDue - paymentAmount); // Reduce Course_Fee_Due
+
+        // Update the Course_Fee_Due column only
+        sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL + 1).setValue(newCourseFeeDue); // +1 for 1-based column index
 
         // Update timestamp
         sheet.getRange(i + 1, 1).setValue(new Date()); // Column A: Timestamp
 
         // Log successful update
-        createAuditLogEntry("Fee Structure Amount Updated", userIdForAudit, {
+        createAuditLogEntry("Course Fee Due Updated", userIdForAudit, {
           enrollmentId: enrollmentId,
-          previousAmountDue: currentTotalDue,
           paymentAmount: paymentAmount,
-          newAmountDue: newTotalDue,
+          previousCourseFee: currentCourseFee,
+          fixedCourseFee: fixedCourseFee,
+          previousCourseFeeDue: currentCourseFeeDue,
+          newCourseFeeDue: newCourseFeeDue,
           row: i + 1
         });
 
         return {
           success: true,
-          message: `Fee structure updated successfully. Amount due reduced by ₹${paymentAmount}`,
+          message: `Course fee due updated successfully. Course_Fee_Due reduced by ₹${paymentAmount}${fixedCourseFee !== currentCourseFee ? ' (Course_Fee fixed)' : ''}`,
           row: i + 1,
-          previousAmount: currentTotalDue,
-          newAmount: newTotalDue
+          previousCourseFeeDue: currentCourseFeeDue,
+          newCourseFeeDue: newCourseFeeDue,
+          courseFeeFixed: fixedCourseFee !== currentCourseFee
         };
       }
     }

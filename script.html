@@ -1529,6 +1529,18 @@ function saveInstallmentPaymentShared(installmentNumber, amount, checkbox, statu
   google.script.run
     .withSuccessHandler((result) => {
       if (result.success) {
+        // 🔥 CRITICAL: Update FeeStructure Course_Fee_Due for shared function
+        google.script.run
+          .withSuccessHandler((feeResult) => {
+            if (!feeResult.success) {
+              console.error("Warning: Failed to update Course_Fee_Due:", feeResult.message);
+            }
+          })
+          .withFailureHandler((feeError) => {
+            console.error("Error updating Course_Fee_Due:", feeError);
+          })
+          .updateFeeStructureAmountDue(formData.enrollmentId, parseFloat(amount), formData.loggedInUser);
+
         // Store payment locally for persistence
         storePaymentLocally(formData.receiptNo, formData.installmentNumber, {
           receiptNo: formData.receiptNo,
