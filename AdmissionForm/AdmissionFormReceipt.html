@@ -88,13 +88,31 @@
       display: block !important;
       font-size: 9pt;
     }
-    .undertaking-container .header {
+    .undertaking-container .receipt-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #002147;
-      padding-bottom: 5px;
+      justify-content: space-between;
+      height: 85px;
+      width: 100%;
+      padding: 5px 15px;
     }
+    .undertaking-container .logo-section {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 160px;
+      height: 85px;
+    }
+    .undertaking-container .logo-section img {
+  height: 85px;
+  width: 160px;
+  object-fit: contain;
+  background: transparent !important;
+  padding: 0;
+  margin: 0;
+}
+
     .undertaking-container .title {
       text-align: center;
       margin-top: 5px;
@@ -461,9 +479,24 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
   }
 
+  .undertaking-container .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #002147;
+    padding-bottom: 5px;
+  }
+
+  .undertaking-container .logo {
+    display: flex;
+    align-items: center;
+    background: transparent;
+  }
+
   .undertaking-container .logo img {
     height: 25px;
     margin-right: 10px;
+    background: transparent;
   }
 </style>
 
@@ -608,21 +641,19 @@
 
       <!-- Undertaking Form -->
       <div class="undertaking-container hidden" id="undertakingContainer">
-        <div class="header">
-          <div class="logo">
-            <!-- <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png"> -->
-          <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
-            <!-- <div>
-              <h2 style="margin: 0; color: #002147;">STI</h2>
-              <div>Shelar Training Institute</div>
-            </div> -->
+        <div class="receipt-header">
+          <div class="logo-section">
+            <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" alt="STI Logo" />
           </div>
-          <div style="text-align: right;">
-            <strong>Mob:</strong> +91 9867285184<br />
-            <strong>+91 7400406467</strong><br />
-            <div style="margin-top: 5px; font-size: 12px;">
-              Shelar Training Institute C/24, Bungalow, Near Nandikeshwar Mandir,<br />
-              Kamgar Nagar, Kurla (E)
+          <div class="institute-info">
+            <div style="text-align: center; font-family: 'Georgia', 'Times New Roman', serif; color: #002147; line-height: 1.3;">
+              <div style="margin-top: 5px; font-size: 12px;">
+                Shelar Training Institute C/24, Bungalow, Near Nandikeshwar Mandir,<br />
+                Kamgar Nagar, Kurla (E)
+              </div>
+              <div style="font-size: 11px; margin: 1px 0; font-weight: 500;">
+                Mob.: +91 9867285184 | +91 7400406467
+              </div>
             </div>
           </div>
         </div>

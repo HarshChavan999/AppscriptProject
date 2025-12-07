@@ -21,7 +21,7 @@ function previewPhoto(event) {
   }
 }
 
-function generateAndSaveEnrollment() {
+function generateAndSaveEnrollment(enrollmentId) {
   try {
     // Get student details
     const studentName = [
@@ -34,31 +34,22 @@ function generateAndSaveEnrollment() {
       document.getElementById('courseSelect').selectedIndex
     ].text;
 
-    // Generate proper enrollment ID using server-side function
-    google.script.run
-      .withSuccessHandler((enrollmentID) => {
-        // Show receipt with the proper enrollment ID
-        loadReceipt(enrollmentID, studentName, course);
+    // Use the provided enrollment ID instead of generating a new one
+    loadReceipt(enrollmentId, studentName, course);
 
-        // Save enrollment data after receipt is shown
-        setTimeout(() => {
-          google.script.run
-            .withFailureHandler((error) => {
-              console.error("Save failed:", error);
-            })
-            .saveEnrollment({
-              enrollmentID: enrollmentID,
-              studentName: studentName,
-              course: course,
-              date: new Date().toLocaleDateString()
-            });
-        }, 1000);
-      })
-      .withFailureHandler((error) => {
-        console.error("Failed to generate enrollment ID:", error);
-        loadReceipt("Not Available");
-      })
-      .getNextEnrollmentNumber();
+    // Save enrollment data after receipt is shown
+    setTimeout(() => {
+      google.script.run
+        .withFailureHandler((error) => {
+          console.error("Save failed:", error);
+        })
+        .saveEnrollment({
+          enrollmentID: enrollmentId,
+          studentName: studentName,
+          course: course,
+          date: new Date().toLocaleDateString()
+        });
+    }, 1000);
 
   } catch (error) {
     console.error("Error:", error);
@@ -143,7 +134,7 @@ function loadReceipt(enrollmentID, studentName, course) {
 
                     .receipt {
                         width: 100%;
-                        height: 45%; /* Approximately half the page height for two receipts */
+                        height: 48%; /* Approximately half the page height for two receipts */
                         border: 3px solid #000;
                         border-radius: 15px;
                         padding: 15px;
@@ -176,6 +167,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                         color: #000;
                         flex-grow: 1;
                         letter-spacing: 1px;
+                        text-align: center;
                     }
 
                     .receipt-label {
@@ -213,7 +205,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                         flex-grow: 1;
                         display: flex;
                         flex-direction: column;
-                        gap: 12px;
+                        gap: 8px;
                     }
 
                     .field-row {
@@ -242,7 +234,8 @@ function loadReceipt(enrollmentID, studentName, course) {
 
                     .amount-fields {
                         display: flex;
-                        gap: 20px;
+                        flex-direction: column;
+                        gap: 12px;
                     }
 
                     .amount-field {
@@ -255,11 +248,11 @@ function loadReceipt(enrollmentID, studentName, course) {
                         white-space: normal;
                         word-break: break-all;
                         flex-grow: 1;
+                        padding-left: 0;
                     }
                     .amount-fields .field-label {
-                        min-width: 80px;
+                        min-width: 140px;
                     }
-
                     .footer {
                         margin-top: 15px;
                         display: flex;
@@ -268,7 +261,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                     }
 
                     .note {
-                        font-size: 12px;
+                        font-size: 16px;
                         font-weight: bold;
                         max-width: 60%;
                     }
@@ -285,7 +278,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                     }
 
                     .signature-label {
-                        font-size: 12px;
+                        font-size: 16px;
                         font-weight: bold;
                     }
 
@@ -329,31 +322,22 @@ function loadReceipt(enrollmentID, studentName, course) {
                                     <div class="field-value">${receiptData.proposeToPay}</div>
                                 </div>
 
-                                <div class="field-row amount-fields">
-                                    <div class="amount-field">
-                                        <div class="field-row">
-                                            <div class="field-label">Total Amount :</div>
-                                            <div class="field-value">${receiptData.totalAmount}</div>
-                                        </div>
-                                    </div>
-                                    <div class="amount-field">
-                                        <div class="field-row">
-                                            <div class="field-label">Paid :</div>
-                                            <div class="field-value">${receiptData.paid}</div>
-                                        </div>
-                                    </div>
-                                    <div class="amount-field">
-                                        <div class="field-row">
-                                            <div class="field-label">Balance Amount :</div>
-                                            <div class="field-value">${receiptData.balance}</div>
-                                        </div>
-                                    </div>
+                                <div class="field-row">
+                                    <div class="field-label">Total Amount :</div>
+                                    <div class="field-value">${receiptData.totalAmount}</div>
                                 </div>
 
                                 <div class="field-row">
-                                    <div class="field-label">Exam Fees :</div>
-                                    <div class="field-value">${receiptData.examFees}</div>
+                                    <div class="field-label">Paid :</div>
+                                    <div class="field-value">${receiptData.paid}</div>
                                 </div>
+
+                                <div class="field-row">
+                                    <div class="field-label">Balance Amount :</div>
+                                    <div class="field-value">${receiptData.balance}</div>
+                                </div>
+
+
 
                                 <div class="field-row">
                                     <div class="field-label">Received by :</div>
@@ -366,7 +350,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                             </div>
 
                             <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
+                                <div class="note">• Fees once paid are non-refundable</div>
                                 <div class="signature-area">
                                     <div class="signature-line"></div>
                                     <div class="signature-label">Authority Signature</div>
@@ -403,31 +387,23 @@ function loadReceipt(enrollmentID, studentName, course) {
                                     <div class="field-value">${receiptData.proposeToPay}</div>
                                 </div>
 
-                                <div class="field-row amount-fields">
-                                    <div class="amount-field">
-                                        <div class="field-row">
-                                            <div class="field-label">Total Amount :</div>
-                                            <div class="field-value">${receiptData.totalAmount}</div>
-                                        </div>
-                                    </div>
-                                    <div class="amount-field">
-                                        <div class="field-row">
-                                            <div class="field-label">Paid :</div>
-                                            <div class="field-value">${receiptData.paid}</div>
-                                        </div>
-                                    </div>
-                                    <div class="amount-field">
-                                        <div class="field-row">
-                                            <div class="field-label">Balance Amount :</div>
-                                            <div class="field-value">${receiptData.balance}</div>
-                                        </div>
-                                    </div>
+
+                                <div class="field-row">
+                                    <div class="field-label">Total Amount :</div>
+                                    <div class="field-value">${receiptData.totalAmount}</div>
                                 </div>
 
                                 <div class="field-row">
-                                    <div class="field-label">Exam Fees :</div>
-                                    <div class="field-value">${receiptData.examFees}</div>
+                                    <div class="field-label">Paid :</div>
+                                    <div class="field-value">${receiptData.paid}</div>
                                 </div>
+
+                                <div class="field-row">
+                                    <div class="field-label">Balance Amount :</div>
+                                    <div class="field-value">${receiptData.balance}</div>
+                                </div>
+
+
 
                                 <div class="field-row">
                                     <div class="field-label">Received by :</div>
@@ -440,7 +416,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                             </div>
 
                             <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
+                                <div class="note">• Fees once paid are non-refundable</div>
                                 <div class="signature-area">
                                     <div class="signature-line"></div>
                                     <div class="signature-label">Authority Signature</div>
@@ -547,26 +523,28 @@ async function AdmissionHandle(event) {
         submitButton.disabled = false;
 
         if (response.success) {
-          // Store enrollment ID for transfer to course payment
-          if (response.enrollmentId) {
-            sessionStorage.setItem("enrollmentId", response.enrollmentId);
-            console.log("Enrollment ID stored in sessionStorage:", response.enrollmentId);
-            // Also store in a more persistent way
-            localStorage.setItem("admission_enrollmentId", response.enrollmentId);
-          }
+    // Store enrollment ID for transfer to course payment
+    if (response.enrollmentId) {
+      sessionStorage.setItem("enrollmentId", response.enrollmentId);
+      console.log("Enrollment ID stored in sessionStorage:", response.enrollmentId);
+      // Also store in a more persistent way
+      localStorage.setItem("admission_enrollmentId", response.enrollmentId);
+    }
 
-          // Store form data before resetting for course payment transfer
-          sessionStorage.setItem("first_name", document.getElementById('first_name').value);
-          sessionStorage.setItem("middle_name", document.getElementById('middle_name').value);
-          sessionStorage.setItem("last_name", document.getElementById('last_name').value);
-          sessionStorage.setItem("tempText4", document.getElementById('receipt_number').value);
-          sessionStorage.setItem("tempText5", document.getElementById('courseSelect').value);
+    // Store form data before resetting for course payment transfer
+    sessionStorage.setItem("first_name", document.getElementById('first_name').value);
+    sessionStorage.setItem("middle_name", document.getElementById('middle_name').value);
+    sessionStorage.setItem("last_name", document.getElementById('last_name').value);
+    sessionStorage.setItem("tempText4", document.getElementById('receipt_number').value);
+    sessionStorage.setItem("tempText5", document.getElementById('courseSelect').value);
 
-          generateAndSaveEnrollment();
+    generateAndSaveEnrollment(response.enrollmentId);
 
           // Navigate to course payment after receipt is shown
           setTimeout(() => {
             console.log("Navigating to course payment form after admission submission");
+            // Set flag to indicate user came from admission form
+            sessionStorage.setItem('cameFromAdmissionForm', 'true');
             openCoursePayment();
           }, 1500);
 
