@@ -2208,6 +2208,7 @@ function formatCurrency(amount) {
 function generateInstallmentReceipt(number,amount){
     try {
         console.log("generateInstallmentReceipt called with number:", number, "amount:", amount);
+const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
 
         const receiptNo = "REC" + Math.floor(1000 + Math.random() * 9000);
         const date = new Date().toLocaleDateString('en-GB');
@@ -2313,19 +2314,7 @@ function generateInstallmentReceipt(number,amount){
                         padding-bottom: 10px;
                     }
 
-                    .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #333;
-                        border-radius: 50%;
-                        margin-right: 15px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: white;
-                        font-size: 24px;
-                        font-weight: bold;
-                    }
+.logo img { width: 65px; height: auto;}
 
                     .institute-name {
                         font-size: 28px;
@@ -2333,6 +2322,7 @@ function generateInstallmentReceipt(number,amount){
                         color: #000;
                         flex-grow: 1;
                         letter-spacing: 1px;
+                        text-align: center;
                     }
 
                     .receipt-label {
@@ -2427,7 +2417,7 @@ function generateInstallmentReceipt(number,amount){
                     }
 
                     .note {
-                        font-size: 12px;
+                        font-size: 16px;
                         font-weight: bold;
                         max-width: 60%;
                     }
@@ -2444,7 +2434,7 @@ function generateInstallmentReceipt(number,amount){
                     }
 
                     .signature-label {
-                        font-size: 12px;
+                        font-size: 16px;
                         font-weight: bold;
                     }
                     /* Adjust for printing to ensure two receipts fit nicely */
@@ -2464,7 +2454,9 @@ function generateInstallmentReceipt(number,amount){
                     <!-- First Receipt -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">S</div>
+                           <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -2519,8 +2511,8 @@ function generateInstallmentReceipt(number,amount){
                                 </div>
 
                                 <div class="field-row">
-                                    <div class="field-label">Exam Fees :</div>
-                                    <div class="field-value">${receiptData.examFees}</div>
+                                    <div class="field-label">Balance Amount :</div>
+                                    <div class="field-value">${receiptData.balance}</div>
                                 </div>
 
                                 <div class="field-row">
@@ -2530,7 +2522,7 @@ function generateInstallmentReceipt(number,amount){
                             </div>
 
                             <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
+                                <div class="note">• Fees once paid are non-refundable</div>
                                 <div class="signature-area">
                                     <div class="signature-line"></div>
                                     <div class="signature-label">Authority Signature</div>
@@ -2542,7 +2534,9 @@ function generateInstallmentReceipt(number,amount){
                     <!-- Second Receipt (Copy) -->
                     <div class="receipt">
                         <div class="header">
-                            <div class="logo">S</div>
+                            <div class="logo">
+                        <img src="${logoBase64}">
+                    </div> 
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                             <div class="receipt-label">RECEIPT</div>
                         </div>
@@ -2615,8 +2609,8 @@ function generateInstallmentReceipt(number,amount){
                                 </div>
 
                                 <div class="field-row">
-                                    <div class="field-label">Exam Fees :</div>
-                                    <div class="field-value">${receiptData.examFees}</div>
+                                    <div class="field-label">Balance Amount :</div>
+                                    <div class="field-value">${receiptData.balance}</div>
                                 </div>
 
                                 <div class="field-row">
@@ -2626,7 +2620,7 @@ function generateInstallmentReceipt(number,amount){
                             </div>
 
                             <div class="footer">
-                                <div class="note">• Once you pay fees for course not refundable.</div>
+                                <div class="note">• Fees once paid are non-refundable</div>
                                 <div class="signature-area">
                                     <div class="signature-line"></div>
                                     <div class="signature-label">Authority Signature</div>
@@ -3223,16 +3217,12 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
         // openexamfees();
         examfeeTakenBy();
 
-        // Admin UI if role = admin
-        if (resp.role === "admin") {
-          document
-            .getElementById("manageStudentsBtn")
-            .classList.remove("hidden");
-          document.getElementById("analyticsBtn").classList.remove("hidden");
-          document
-            .getElementById("classMonthDashboardBtn")
-            .classList.remove("hidden");
-          document.getElementById("dueFeesBtn").classList.remove("hidden");
+        // For regular users, hide only the Fees Structure button
+        if (resp.role !== "admin") {
+          const feesStructureBtn = document.getElementById("dueFeeStructureBtn");
+          if (feesStructureBtn) {
+            feesStructureBtn.style.display = "none";
+          }
         }
 
         // Load dropdown data
