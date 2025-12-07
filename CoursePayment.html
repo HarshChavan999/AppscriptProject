@@ -1618,6 +1618,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
   // Function to generate installment receipt (similar to exam receipt)
   function generateInstallmentReceipt(installmentNumber, amount) {
     console.log("generateInstallmentReceipt called with:", installmentNumber, amount);
+     const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
 
     try {
       // Generate receipt number
@@ -1708,7 +1709,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
                    align-items: center; justify-content: center; overflow: hidden; }
             .logo img { width: 100%; height: auto; object-fit: contain; display: block; }
             .institute-name { font-size: 28px; font-weight: bold; color: #000;
-                            flex-grow: 1; letter-spacing: 1px; }
+                            flex-grow: 1; letter-spacing: 1px; text-align: center; }
             .receipt-label { background: #333; color: white; padding: 5px 15px;
                             border-radius: 20px; font-size: 14px; font-weight: bold; }
             .receipt-content { display: flex; flex-direction: column; height: calc(100% - 100px); }
@@ -1721,10 +1722,10 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
                          min-height: 20px; color: #0066cc; white-space: nowrap;
                          overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 140px); }
             .footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .note { font-size: 12px; font-weight: bold; max-width: 60%; }
+            .note { font-size: 16px; font-weight: bold; max-width: 60%; }
             .signature-area { text-align: center; min-width: 150px; }
             .signature-line { border-bottom: 1px solid #000; height: 40px; margin-bottom: 5px; }
-            .signature-label { font-size: 12px; font-weight: bold; }
+            .signature-label { font-size: 16px; font-weight: bold; }
             @media print {
               .page-container { height: 297mm; padding: 0.5in; }
               .receipt { margin-bottom: 5mm; }
@@ -1737,15 +1738,8 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
             <div class="receipt">
               <div class="header">
                 <div class="logo">
-                  <img src="data:image/svg+xml;utf8,
-<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-  <circle cx='80' cy='80' r='75' fill='%232c3e50'/>
-  <text x='50%' y='55%' font-size='80' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>S</text>
-</svg>"
-alt="Logo"
-style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
-
-                </div>
+                        <img src="${logoBase64}">
+                    </div> 
                 <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                 <div class="receipt-label">INSTALLMENT RECEIPT</div>
               </div>
@@ -1789,15 +1783,8 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
             <div class="receipt">
               <div class="header">
                 <div class="logo">
-                  <img src="data:image/svg+xml;utf8,
-<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-  <circle cx='80' cy='80' r='75' fill='%232c3e50'/>
-  <text x='50%' y='55%' font-size='80' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>S</text>
-</svg>"
-alt="Logo"
-style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
-
-                </div>
+                        <img src="${logoBase64}">
+                    </div>
                 <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
                 <div class="receipt-label">INSTALLMENT RECEIPT</div>
               </div>
@@ -2277,9 +2264,26 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
   }
 
   function goBackToAdmission() {
-    console.log("Back button clicked - going back to admission form");
-    // Navigate back to admission form
-    openAdmissionFormSection();
+    console.log("Back button clicked - determining where to go back");
+
+    // Check if user came from admission analytics (admission structure page)
+    const cameFromAdmissionAnalytics = sessionStorage.getItem('admissionDataForPayment') !== null;
+    // Check if user came from admission form
+    const cameFromAdmissionForm = sessionStorage.getItem('cameFromAdmissionForm') === 'true';
+
+    if (cameFromAdmissionAnalytics) {
+      console.log("User came from Admission Analytics - going back to Admission Structure");
+      // Go back to Admission Analytics (Admission Structure page)
+      toggleAdmissionAnalytics();
+    } else if (cameFromAdmissionForm) {
+      console.log("User came from Admission Form - going back to Admission Form");
+      // Go back to Admission Form
+      openAdmissionForm();
+    } else {
+      console.log("Unknown origin - defaulting to Admission Form");
+      // Default fallback
+      openAdmissionForm();
+    }
   }
 
   // // Initialize when page loads
