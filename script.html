@@ -4800,6 +4800,9 @@ html2pdf()
     hideAllSections();
     document.getElementById("ifId").classList.remove("hidden"); // Assuming ifId is the inquiry form itself
 
+    // Clear all form fields to ensure fresh start
+    clearInquiryFormFields(false);
+
     // 1. Get the stored branch from the hidden input
     const userBranch = document.getElementById("userBranch").value;
 
@@ -4826,7 +4829,7 @@ html2pdf()
     } else {
         inquiryTakenByInput.value = ""; // Or some default value like "Anonymous"
     }
-   
+
 }
 
   const { jsPDF } = window.jspdf;
