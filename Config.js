@@ -262,11 +262,12 @@ const CONFIG = {
     ADMISSION_FEE: 4,        // Corresponds to Col F in sheet (Admission_Fee)
     ADMISSION_FEE_DUE: 5,    // Corresponds to Col G in sheet (Admission_Fee_Due)
     COURSE_FEE: 6,           // Corresponds to Col H in sheet (Course_Fee)
-    EXAM_FEE: 7,             // Corresponds to Col I in sheet (Exam_Fee)
-    EXAM_FEE_DUE: 8,         // Corresponds to Col J in sheet (Exam_Fee_Due)
-    TOTAL_AMOUNT_DUE: 9,     // Corresponds to Col K in sheet (Total_Amount_Due)
-    BRANCH: 10,              // Corresponds to Col L in sheet (Branch)
-    USER_NAME: 11            // Corresponds to Col M in sheet (User_Name)
+    COURSE_FEE_DUE: 7,       // Corresponds to Col I in sheet (Course_Fee_Due) - NEW
+    EXAM_FEE: 8,             // Corresponds to Col J in sheet (Exam_Fee)
+    EXAM_FEE_DUE: 9,         // Corresponds to Col K in sheet (Exam_Fee_Due)
+    TOTAL_AMOUNT_DUE: 10,    // Corresponds to Col L in sheet (Total_Amount_Due)
+    BRANCH: 11,              // Corresponds to Col M in sheet (Branch)
+    USER_NAME: 12            // Corresponds to Col N in sheet (User_Name)
   },
 
   // --- Column Mappings for Fee Structure Lookup ---
@@ -285,10 +286,11 @@ const CONFIG = {
     ADMISSION_FEE_COL: 5,         // Column F (Admission_Fee)
     ADMISSION_FEE_DUE_COL: 6,     // Column G (Admission_Fee_Due)
     COURSE_FEE_COL: 7,            // Column H (Course_Fee)
-    EXAM_FEE_COL: 8,              // Column I (Exam_Fee)
-    EXAM_FEE_DUE_COL: 9,          // Column J (Exam_Fee_Due)
-    TOTAL_AMOUNT_DUE_COL: 10,     // Column K (Total_Amount_Due)
-    BRANCH_COL: 11,               // Column L (Branch)
-    USER_NAME_COL: 12             // Column M (User_Name)
+    COURSE_FEE_DUE_COL: 8,        // Column I (Course_Fee_Due) - NEW
+    EXAM_FEE_COL: 9,              // Column J (Exam_Fee)
+    EXAM_FEE_DUE_COL: 10,         // Column K (Exam_Fee_Due)
+    TOTAL_AMOUNT_DUE_COL: 11,     // Column L (Total_Amount_Due)
+    BRANCH_COL: 12,               // Column M (Branch)
+    USER_NAME_COL: 13             // Column N (User_Name)
   }
 };

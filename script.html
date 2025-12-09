@@ -987,50 +987,101 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
-// Update course details when selection changes
+  // Update course details when selection changes
 function updateCoursePayDetails() {
-  // Get branch from course payment section, fallback to user branch or default
-  let branch24 = document.getElementById("branch22")?.value;
-  if (!branch24) {
-    branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    // Get branch from course payment section, fallback to user branch or default
+    let branch24 = document.getElementById("branch22")?.value;
+    if (!branch24) {
+      branch24 = sessionStorage.getItem("userBranch") || "kurla"; // Default to kurla if no branch set
+    }
+    const courseData = getCourseDataByLocation(branch24);
+
+    const select = document.getElementById("coursePaySelect");
+    selectedCourse = select.value;
+
+    console.log("updateCoursePayDetails called:");
+    console.log("Branch:", branch24);
+    console.log("Selected course:", selectedCourse);
+    console.log("Course data for branch:", courseData);
+
+    if (selectedCourse && courseData[selectedCourse]) {
+      const course = courseData[selectedCourse];
+
+      console.log("Course found:", course);
+
+      // Update displayed information
+      document.getElementById("courseDuration").textContent = course.duration;
+      document.getElementById("coursePayFees").textContent = formatCurrency(
+        course.fees
+      );
+
+      // Calculate total fees based on duration
+      const years = course.duration.includes("year")
+        ? parseInt(course.duration.split(" ")[0])
+        : 1;
+      const totalFees = years * course.fees;
+      document.getElementById("totalFees").textContent =
+        formatCurrency(totalFees);
+
+      // Update installment dropdowns based on course duration
+      updateInstallmentDropdowns(years);
+
+      console.log("Updated course duration to:", course.duration);
+      console.log("Updated total fees to:", formatCurrency(totalFees));
+
+      // Update all payment options
+      updatePaymentOptions(totalFees);
+    } else {
+      console.log("Course not found or not selected");
+    }
   }
-  const courseData = getCourseDataByLocation(branch24);
 
-  const select = document.getElementById("coursePaySelect");
-  selectedCourse = select.value;
+// Update installment dropdowns based on course duration
+function updateInstallmentDropdowns(years) {
+  const maxMonths = years * 12; // Convert years to months
 
-  console.log("updateCoursePayDetails called:");
-  console.log("Branch:", branch24);
-  console.log("Selected course:", selectedCourse);
-  console.log("Course data for branch:", courseData);
+  // Update partial tenure dropdown
+  const partialTenureSelect = document.getElementById("partialTenure");
+  if (partialTenureSelect) {
+    // Clear all existing options
+    partialTenureSelect.innerHTML = '';
 
-  if (selectedCourse && courseData[selectedCourse]) {
-    const course = courseData[selectedCourse];
-
-    console.log("Course found:", course);
-
-    // Update displayed information
-    document.getElementById("courseDuration").textContent = course.duration;
-    document.getElementById("coursePayFees").textContent = formatCurrency(
-      course.fees
-    );
-
-    // Calculate total fees based on duration
-    const years = course.duration.includes("year")
-      ? parseInt(course.duration.split(" ")[0])
-      : 1;
-    const totalFees = years * course.fees;
-    document.getElementById("totalFees").textContent =
-      formatCurrency(totalFees);
-
-    console.log("Updated course duration to:", course.duration);
-    console.log("Updated total fees to:", formatCurrency(totalFees));
-
-    // Update all payment options
-    updatePaymentOptions(totalFees);
-  } else {
-    console.log("Course not found or not selected");
+    // Add options from 3 to maxMonths without any default selection
+    for (let i = 3; i <= maxMonths; i++) {
+      const option = document.createElement("option");
+      option.value = i.toString();
+      option.textContent = i.toString();
+      partialTenureSelect.appendChild(option);
+    }
   }
+
+  // Update EMI tenure dropdown
+  const emiTenureSelect = document.getElementById("emiTenure");
+  if (emiTenureSelect) {
+    // Clear all existing options
+    emiTenureSelect.innerHTML = '';
+
+    // Add options from 1 to maxMonths without any default selection
+    for (let i = 1; i <= maxMonths; i++) {
+      const option = document.createElement("option");
+      option.value = i.toString();
+      option.textContent = i.toString();
+      emiTenureSelect.appendChild(option);
+    }
+
+    // Add additional common options if they fit within maxMonths (avoid duplicates)
+    const additionalOptions = [18, 24, 36];
+    additionalOptions.forEach(num => {
+      if (num <= maxMonths && num > 12) { // Only add if > 12 to avoid duplicates
+        const option = document.createElement("option");
+        option.value = num.toString();
+        option.textContent = num.toString();
+        emiTenureSelect.appendChild(option);
+      }
+    });
+  }
+
+  console.log(`Updated installment dropdowns for ${years} year course (max ${maxMonths} months)`);
 }
 
 // Update all payment options with the current total fees
@@ -1478,6 +1529,18 @@ function saveInstallmentPaymentShared(installmentNumber, amount, checkbox, statu
   google.script.run
     .withSuccessHandler((result) => {
       if (result.success) {
+        // 🔥 CRITICAL: Update FeeStructure Course_Fee_Due for shared function
+        google.script.run
+          .withSuccessHandler((feeResult) => {
+            if (!feeResult.success) {
+              console.error("Warning: Failed to update Course_Fee_Due:", feeResult.message);
+            }
+          })
+          .withFailureHandler((feeError) => {
+            console.error("Error updating Course_Fee_Due:", feeError);
+          })
+          .updateFeeStructureAmountDue(formData.enrollmentId, parseFloat(amount), formData.loggedInUser);
+
         // Store payment locally for persistence
         storePaymentLocally(formData.receiptNo, formData.installmentNumber, {
           receiptNo: formData.receiptNo,
@@ -1725,12 +1788,13 @@ function openCoursePayment() {
 
   // Check if user came from admission structure (only show installment schedule)
   const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
-  
+
   // Load saved payment details
   const savedPaymentDetails = JSON.parse(sessionStorage.getItem('coursePaymentDetails') || 'null');
-  
+
   if (admissionData && admissionData.name && admissionData.receipt) {
-    // User came from admission structure - show only installment schedule
+    // User came from admission structure - reset previous details first, then show only installment schedule
+    clearCoursePaymentForm();
     document.getElementById("paymentOptionsSection").classList.add("hidden");
     document.getElementById("installmentScheduleSection").classList.remove("hidden");
 
@@ -1864,75 +1928,7 @@ function setPaymentDetails(paymentDetails) {
     }, 200);
   }
 }
-// Function to reset Course Payment form and show payment options for normal users
-// function resetCoursePaymentForm() {
-//   console.log("resetCoursePaymentForm() called - resetting to payment options view");
 
-//   // Clear all form fields
-//   const fieldsToClear = [
-//     "ID", "std_Coursepayname", "enrollmentId", "coursePaySelect",
-//     "courseDuration", "coursePayFees", "totalFees", "pay-select"
-//   ];
-
-//   fieldsToClear.forEach(fieldId => {
-//     const field = document.getElementById(fieldId);
-//     if (field) {
-//       if (field.tagName === "SELECT") {
-//         field.selectedIndex = 0; // Reset select to first option
-//       } else {
-//         field.value = ""; // Clear input values
-//       }
-//     }
-//   });
-
-//   // Clear installment table if it exists
-//   const installmentTable = document.getElementById("installmentTable");
-//   if (installmentTable) {
-//     installmentTable.innerHTML = "";
-//   }
-
-//   // Clear all radio button selections - NO payment option should be pre-selected
-//   const paymentRadios = document.querySelectorAll('input[name="Coursepayment_type"]');
-//   paymentRadios.forEach(radio => {
-//     radio.checked = false;
-//   });
-
-//   // Reset UI - show all payment cards without any selection
-//   document.getElementById("fullPaymentCard").classList.remove("selected");
-//   document.getElementById("partialPaymentCard").classList.remove("selected");
-//   document.getElementById("emiPaymentCard").classList.remove("selected");
-
-//   // Show all payment cards
-//   console.log("Setting display block for all payment cards");
-//   const fullCard = document.getElementById("fullPaymentCard");
-//   const partialCard = document.getElementById("partialPaymentCard");
-//   const emiCard = document.getElementById("emiPaymentCard");
-
-//   console.log("fullCard:", fullCard);
-//   console.log("partialCard:", partialCard);
-//   console.log("emiCard:", emiCard);
-
-//   if (fullCard) fullCard.style.display = 'block';
-//   if (partialCard) partialCard.style.display = 'block';
-//   if (emiCard) emiCard.style.display = 'block';
-
-//   // Reset selectedPaymentType to null
-//   selectedPaymentType = null;
-
-//   // Show payment options section and hide installment schedule
-//   document.getElementById("paymentOptionsSection").classList.remove("hidden");
-//   document.getElementById("installmentScheduleSection").classList.add("hidden");
-
-//   // Clear all sessionStorage keys that copyAdmission() might use
-//   sessionStorage.removeItem('admissionDataForPayment');
-//   sessionStorage.removeItem('first_name');
-//   sessionStorage.removeItem('last_name');
-//   sessionStorage.removeItem('tempText4');
-//   sessionStorage.removeItem('tempText5');
-//   sessionStorage.removeItem('enrollmentId');
-
-//   console.log("Course Payment form reset to show payment options");
-// }
 function resetCoursePaymentForm() {
   console.log("resetCoursePaymentForm() called - resetting to payment options view");
 

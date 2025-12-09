@@ -108,6 +108,30 @@ function saveToSheet(formData) {
       console.error("Error saving enrollment:", enrollmentError);
     }
 
+    // Save initial fee structure entry with paid admission fee
+    try {
+      const feeStructureResponse = saveFeeStructureData({
+        enrollmentId: enrollmentId,
+        name: fullName,
+        courseName: formData.courseSelect,
+        paymentMode: "Cash", // Default payment mode
+        admissionFee: parseFloat(formData.totalCourseFees) || 0,
+        admissionFeeDue: 0, // Paid in full during admission
+        courseFee: 0, // To be set later during course payment
+        examFee: 0, // To be set later
+        examFeeDue: 0, // To be set later
+        totalAmountDue: parseFloat(formData.totalCourseFees) || 0, // Initially the admission fee amount
+        branch: "", // Can be set if branch info is available
+        loggedInUserId: userIdForAudit
+      });
+      if (!feeStructureResponse.success) {
+        console.warn("Warning: Failed to save fee structure data:", feeStructureResponse.message);
+        // Don't fail the whole submission for this
+      }
+    } catch (feeStructureError) {
+      console.error("Error saving fee structure:", feeStructureError);
+    }
+
     // Log successful submission
     createAuditLogEntry("Admission Form Submission", userIdForAudit, {
       receiptNumber: formData.receipt_number,

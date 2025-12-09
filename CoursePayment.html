@@ -53,11 +53,12 @@
               >General ID</label
             >
             <input
-              type="text"
-              id="ID"
-              placeholder="Enter your name"
-              class="w-full px-4 py-2 border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style="text-align: left"
+              type="radio"
+              id="emi"
+              name="Coursepayment_type"
+              value="emi"
+              class="h-5 w-5 text-blue-500"
+              onchange="handlePaymentOptionChange(this)"
             />
           </div>
           <div class="max-w-md mx-auto mt-6">
@@ -107,7 +108,7 @@
             <option value="gnm_nursing">GNM Nursing Diploma</option>
             <option value="dmlt">DMLT Diploma</option>
             <option value="ot_technician">OT Technician</option>
-            <option value="general_nursing">General Nursing Assistant</option>
+            <option value="general_nursing">General Nursing and Midwifery Assistant</option>
           </select>
         </div>
         <div>
@@ -154,10 +155,12 @@
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
           id="fullPaymentCard"
+          onclick="document.getElementById('full').click()"
         >
           <div class="flex items-center mb-2">
             <input
               type="radio"
+              id="full"
               name="Coursepayment_type"
               value="full"
               class="h-5 w-5 text-blue-500"
@@ -201,10 +204,12 @@
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
           id="partialPaymentCard"
+          onclick="document.getElementById('partial').click()"
         >
           <div class="flex items-center mb-2">
             <input
               type="radio"
+              id="partial"
               name="Coursepayment_type"
               value="partial"
               class="h-5 w-5 text-blue-500"
@@ -262,10 +267,12 @@
         <div
           class="payment-card border-2 rounded-lg p-4 cursor-pointer"
           id="emiPaymentCard"
+          onclick="document.getElementById('emi').click()"
         >
           <div class="flex items-center mb-2">
             <input
               type="radio"
+              id="emi"
               name="Coursepayment_type"
               value="emi"
               class="h-5 w-5 text-blue-500"
@@ -306,8 +313,30 @@
                 <option value="10">10</option>
                 <option value="11">11</option>
                 <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
                 <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
                 <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+                <option value="32">32</option>
+                <option value="33">33</option>
+                <option value="34">34</option>
+                <option value="35">35</option>
+                <option value="36">36</option>
               </select>
             </div>
             <div class="flex justify-between py-1">
@@ -326,6 +355,24 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Payment Confirmation -->
+      <div id="paymentConfirmationSection" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            id="paymentConfirmationCheckbox"
+            class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            onchange="handlePaymentConfirmation(this)"
+          />
+          <label for="paymentConfirmationCheckbox" class="text-sm font-medium text-gray-700">
+            I confirm my payment option selection and agree to proceed with the payment plan.
+          </label>
+        </div>
+        <p class="mt-2 text-xs text-gray-600">
+          Checking this box will lock your payment selection and generate the installment schedule.
+        </p>
       </div>
     </div>
 
@@ -402,6 +449,18 @@
 
   input[type="number"].no-spinner {
     -moz-appearance: textfield;
+  }
+
+  /* Payment card selected state */
+  .payment-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  /* Allow JavaScript to control payment card visibility */
+  .payment-card {
+    /* Removed !important to allow dynamic display changes */
   }
 </style>
 <!-- Add this receipt container (if missing) -->
@@ -498,7 +557,7 @@
           amount: initialPayment,
           dueDate: startDate.toISOString().split('T')[0],
           status: "Pending",
-          type: "Initial Payment"
+          type: "Initial Payement"
         });
       }
 
@@ -559,8 +618,92 @@
     const paymentType = radio.value;
     console.log("Payment option selected:", paymentType);
 
-    // Show the installment schedule section
-    document.getElementById("installmentScheduleSection").classList.remove("hidden");
+    // Ensure confirmation checkbox is enabled
+    const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
+    if (confirmationCheckbox) {
+      confirmationCheckbox.disabled = false;
+    }
+
+    // Store the selected payment type
+    window.selectedPaymentType = paymentType;
+
+    // Remove selected class from all cards
+    document.getElementById("fullPaymentCard").classList.remove("selected");
+    document.getElementById("partialPaymentCard").classList.remove("selected");
+    document.getElementById("emiPaymentCard").classList.remove("selected");
+
+    // Add selected class to the chosen card
+    const selectedCard = document.getElementById(`${paymentType}PaymentCard`);
+    if (selectedCard) {
+      selectedCard.classList.add("selected");
+    }
+
+    // Check if the confirmation checkbox is checked
+    // confirmationCheckbox is already declared above
+    if (confirmationCheckbox.checked) {
+      // Hide other payment options if confirmation is checked
+      document.getElementById("fullPaymentCard").style.display = paymentType === 'full' ? 'block' : 'none';
+      document.getElementById("partialPaymentCard").style.display = paymentType === 'partial' ? 'block' : 'none';
+      document.getElementById("emiPaymentCard").style.display = paymentType === 'emi' ? 'block' : 'none';
+    } else {
+      // Ensure all payment cards remain visible if not confirmed
+      document.getElementById("fullPaymentCard").style.display = 'block';
+      document.getElementById("partialPaymentCard").style.display = 'block';
+      document.getElementById("emiPaymentCard").style.display = 'block';
+    }
+
+    // Uncheck and re-enable the confirmation checkbox when changing selection
+    if (confirmationCheckbox) {
+      confirmationCheckbox.checked = false;
+      confirmationCheckbox.disabled = false;
+    }
+
+    console.log("Payment option selected, waiting for confirmation");
+  }
+
+  // Function to handle payment confirmation
+  function handlePaymentConfirmation(checkbox) {
+    if (!checkbox.checked) {
+      console.log("Confirmation unchecked - showing all payment options");
+      // Show all payment cards when confirmation is unchecked
+      document.getElementById("fullPaymentCard").style.display = 'block';
+      document.getElementById("partialPaymentCard").style.display = 'block';
+      document.getElementById("emiPaymentCard").style.display = 'block';
+      return;
+    }
+
+    const paymentType = window.selectedPaymentType;
+    if (!paymentType) {
+      console.log("No payment type selected");
+      checkbox.checked = false;
+      return;
+    }
+
+    // Show confirmation dialog (swirl/modal as requested)
+    const confirmed = confirm(`Are you sure you want to proceed with ${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)} Payment?\n\nThis will lock your payment selection and generate the installment schedule.`);
+
+    if (!confirmed) {
+      // Uncheck if not confirmed
+      checkbox.checked = false;
+      return;
+    }
+
+    console.log("Payment confirmed, proceeding with:", paymentType);
+
+    // Lock the radio buttons - disable all radio buttons
+    const radioButtons = document.querySelectorAll('input[name="Coursepayment_type"]');
+    radioButtons.forEach(radio => {
+      radio.disabled = true;
+    });
+
+    // Lock the confirmation checkbox - disable it so it can't be unchecked
+    checkbox.disabled = true;
+
+    // Hide the other payment options after confirmation
+    document.getElementById("fullPaymentCard").style.display = paymentType === 'full' ? 'block' : 'none';
+    document.getElementById("partialPaymentCard").style.display = paymentType === 'partial' ? 'block' : 'none';
+    document.getElementById("emiPaymentCard").style.display = paymentType === 'emi' ? 'block' : 'none';
+
 
     // Get the total fee
     const totalFeeElement = document.getElementById("totalFees");
@@ -575,14 +718,8 @@
     // Generate the installment schedule based on payment type
     const installmentSchedule = generateInstallmentScheduleForPaymentType(paymentType, totalFee);
 
-    // Clear the existing table
-    const tableBody = document.getElementById("installmentTable");
-    tableBody.innerHTML = "";
 
-    // Populate the table with the generated schedule
-    generateInstallmentTableRowsFromScheduleShared(tableBody, installmentSchedule, [], true, true);
-
-    console.log("Installment schedule populated for payment type:", paymentType);
+    console.log("Installment schedule populated for confirmed payment type:", paymentType);
   }
 
  function proceedToAdmissionReceipt() {
@@ -1084,7 +1221,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
         dueDate: today.toISOString().split('T')[0],
         amount: initialPayment,
         status: "Pending",
-        type: "Initial Payment"
+        type: "Initial Payement"
       });
 
       // EMI installments
@@ -2054,9 +2191,10 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     // Clear payment option fields first
     document.getElementById("fullDiscountRupees").value = "";
     document.getElementById("partialInitialInput").value = "";
-    document.getElementById("partialTenure").value = "6";
+    // Remove default values for tenure dropdowns
+    // document.getElementById("partialTenure").value = "6";
+    // document.getElementById("emiTenure").value = "12";
     document.getElementById("emiDownPaymentInput").value = "";
-    document.getElementById("emiTenure").value = "12";
 
     // Show all payment cards without any selection
     document.getElementById("fullPaymentCard").classList.remove("selected");
@@ -2095,6 +2233,14 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     document.getElementById("receiptContainer").innerHTML = "";
     document.getElementById("receiptContainer").classList.add("hidden");
     document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+
+
+    // Uncheck confirmation checkbox
+    const confirmationCheckbox = document.getElementById("paymentConfirmationCheckbox");
+    if (confirmationCheckbox) {
+      confirmationCheckbox.checked = false;
+    }
 
     // Show payment options section
     document.getElementById("paymentOptionsSection").classList.remove("hidden");
@@ -2227,15 +2373,15 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
       // Determine display text for installment column
       let installmentDisplay = '';
       if (installment.installmentNumber === 0) {
-        if (installment.type === "Initial Payment") {
-          installmentDisplay = "Installment 1 (Initial Payment)";
+        if (installment.type === "Initial Payement") {
+          installmentDisplay = "Installment 1 (Initial Payement)";
         } else if (installment.type === "Down Payment") {
           installmentDisplay = "Installment 1 (Down Payment)";
         } else {
           installmentDisplay = installment.type || "Full Payment";
         }
-      } else if (installment.type === "Initial Payment") {
-        installmentDisplay = "Installment 1 (Initial Payment)";
+      } else if (installment.type === "Initial Payement") {
+        installmentDisplay = "Installment 1 (Initial Payement)";
       } else if (installment.type === "Down Payment") {
         installmentDisplay = "Installment 1 (Down Payment)";
       } else {
