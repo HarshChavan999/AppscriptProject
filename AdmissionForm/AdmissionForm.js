@@ -108,6 +108,13 @@ function saveToSheet(formData) {
       console.error("Error saving enrollment:", enrollmentError);
     }
 
+    // Get branch and course data from getCourseDataByLocation function
+    const branch = PropertiesService.getUserProperties().getProperty("branch") || "kurla";
+    const courseData = getCourseDataByLocation(branch);
+
+    // Get admission fee for the selected course
+    const admissionFeeAmount = courseData[formData.courseSelect]?.admission_fee || 5000;
+
     // Save initial fee structure entry with paid admission fee
     try {
       const feeStructureResponse = saveFeeStructureData({
@@ -115,13 +122,14 @@ function saveToSheet(formData) {
         name: fullName,
         courseName: formData.courseSelect,
         paymentMode: "Cash", // Default payment mode
-        admissionFee: parseFloat(formData.totalCourseFees) || 0,
+        admissionFee: admissionFeeAmount,
         admissionFeeDue: 0, // Paid in full during admission
         courseFee: 0, // To be set later during course payment
+        courseFeeDue: 0, // To be set later
         examFee: 0, // To be set later
         examFeeDue: 0, // To be set later
-        totalAmountDue: parseFloat(formData.totalCourseFees) || 0, // Initially the admission fee amount
-        branch: "", // Can be set if branch info is available
+        totalAmountDue: admissionFeeAmount, // Initially the admission fee amount
+        branch: branch, // Set the branch from user properties
         loggedInUserId: userIdForAudit
       });
       if (!feeStructureResponse.success) {

@@ -1809,28 +1809,40 @@ function saveCoursePayment(data) {
 
       // Get current values
       const currentCourseFee = parseFloat(currentRow[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL]) || 0;
+      const currentCourseFeeDue = parseFloat(currentRow[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL]) || 0;
       const currentTotalDue = parseFloat(currentRow[CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL]) || 0;
 
-      // Update Course_Fee by adding the payment amount
-      const newCourseFee = currentCourseFee + paymentAmount;
-      // Update Total_Amount_Due by subtracting the payment amount (assuming this payment reduces the due amount)
-      const newTotalDue = Math.max(0, currentTotalDue - paymentAmount);
+      // Special handling for installment confirmation (when paymentType indicates installment setup)
+      if (data.paymentType === 'full' || data.paymentType === 'partial' || data.paymentType === 'emi') {
+        // This is installment confirmation - set Course_Fee to the total amount and initialize Course_Fee_Due
+        const newCourseFee = paymentAmount; // Set to total course fee
+        const newCourseFeeDue = paymentAmount; // Initialize Course_Fee_Due to total course fee
+        const newTotalDue = Math.max(0, currentTotalDue); // Keep existing Total_Amount_Due
 
-      // Update the row
-      sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(newCourseFee);
-      sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL + 1).setValue(newTotalDue);
-      sheet.getRange(existingRowIndex, 1).setValue(new Date()); // Update timestamp
+        // Update the row
+        sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(newCourseFee);
+        sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL + 1).setValue(newCourseFeeDue);
+        sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL + 1).setValue(newTotalDue);
+        sheet.getRange(existingRowIndex, 1).setValue(new Date()); // Update timestamp
+      } else {
+        // Regular payment update - add to Course_Fee and reduce Course_Fee_Due
+        const newCourseFee = currentCourseFee + paymentAmount;
+        const newCourseFeeDue = Math.max(0, currentCourseFeeDue - paymentAmount);
+        const newTotalDue = Math.max(0, currentTotalDue - paymentAmount);
+
+        // Update the row
+        sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(newCourseFee);
+        sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL + 1).setValue(newCourseFeeDue);
+        sheet.getRange(existingRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.TOTAL_AMOUNT_DUE_COL + 1).setValue(newTotalDue);
+        sheet.getRange(existingRowIndex, 1).setValue(new Date()); // Update timestamp
+      }
 
       // Log successful payment update
       createAuditLogEntry("Course Payment Updated", userIdForAudit, {
         enrollmentId: data.enrollmentId,
         studentName: data.Coursepayname,
         course: data.coursePaySelect,
-        previousCourseFee: currentCourseFee,
         paymentAmount: paymentAmount,
-        newCourseFee: newCourseFee,
-        previousTotalDue: currentTotalDue,
-        newTotalDue: newTotalDue,
         paymentMode: data.paySelect || "Cash",
         row: existingRowIndex
       });
@@ -2626,7 +2638,12 @@ function saveAdmissionReceipt(data) {
 function saveInstallmentSchedule(data) {
   const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
 
+  // Acquire lock to prevent concurrency issues until the complete schedule is filled
+  const lock = LockService.getScriptLock();
   try {
+    // Try to acquire lock with 5 second timeout
+    lock.waitLock(5000);
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
     // Get or create "InstallmentSchedules" sheet
@@ -2728,6 +2745,9 @@ function saveInstallmentSchedule(data) {
       success: false,
       message: `Failed to save installment schedule: ${error.message}`
     };
+  } finally {
+    // Always release the lock to prevent deadlocks
+    lock.releaseLock();
   }
 }
 
@@ -3049,6 +3069,163 @@ function updateFeeStructureAmountDue(enrollmentId, paymentAmount, userId) {
     return {
       success: false,
       message: `Failed to update FeeStructure: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Updates FeeStructure for installment payment: adds total course fee to course_fee as fixed fee and reduces course_fee_due
+ * @param {string} enrollmentId The enrollment ID to update
+ * @param {number} paymentAmount The amount paid
+ * @param {number} totalCourseFee The total course fee to add to Course_Fee
+ * @returns {Object} Operation result
+ */
+function updateFeeStructureForInstallmentPayment(enrollmentId, paymentAmount, totalCourseFee) {
+  const userIdForAudit = PropertiesService.getUserProperties().getProperty("loggedInUser") || "Anonymous";
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+
+    if (!sheet) {
+      createAuditLogEntry("Fee Structure Update Error", userIdForAudit, {
+        error: "FeeStructure sheet not found",
+        enrollmentId: enrollmentId,
+        paymentAmount: paymentAmount,
+        totalCourseFee: totalCourseFee
+      });
+      return {
+        success: false,
+        message: "FeeStructure sheet not found"
+      };
+    }
+
+    const data = sheet.getDataRange().getValues();
+
+    // Find the row for this enrollment ID (skip header row)
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowEnrollmentId = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ENROLLMENT_ID_COL] || "").trim(); // Column B
+
+      if (rowEnrollmentId === enrollmentId) {
+        // Get current values
+        const currentCourseFee = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL] || 0); // Column H
+        const currentCourseFeeDue = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL] || 0); // Column I
+
+        // Add the total course fee to Course_Fee as fixed fee
+        const newCourseFee = currentCourseFee + totalCourseFee;
+
+        // 🔥 FIX: If Course_Fee_Due is 0 or empty, initialize it to the new Course_Fee first
+        let actualCourseFeeDue = currentCourseFeeDue;
+        if (actualCourseFeeDue === 0 && newCourseFee > 0) {
+          actualCourseFeeDue = newCourseFee;
+          // Update the Course_Fee_Due column to initialize it
+          sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL + 1).setValue(actualCourseFeeDue);
+        }
+
+        // Calculate new values: keep Course_Fee fixed and reduce Course_Fee_Due
+        const newCourseFeeDue = Math.max(0, actualCourseFeeDue - paymentAmount); // Reduce Course_Fee_Due
+
+        // Update Course_Fee column with the added total course fee
+        sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(newCourseFee);
+
+        // Update Course_Fee_Due column
+        sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL + 1).setValue(newCourseFeeDue);
+
+        // Update timestamp
+        sheet.getRange(i + 1, 1).setValue(new Date()); // Column A: Timestamp
+
+        // Log successful update
+        createAuditLogEntry("Fee Structure Updated for Installment Payment", userIdForAudit, {
+          enrollmentId: enrollmentId,
+          paymentAmount: paymentAmount,
+          totalCourseFee: totalCourseFee,
+          previousCourseFee: currentCourseFee,
+          newCourseFee: newCourseFee,
+          previousCourseFeeDue: actualCourseFeeDue,
+          newCourseFeeDue: newCourseFeeDue,
+          row: i + 1
+        });
+
+        return {
+          success: true,
+          message: `Fee structure updated successfully. Course_Fee set to ₹${newCourseFee} (added ₹${totalCourseFee}), Course_Fee_Due reduced by ₹${paymentAmount}`,
+          row: i + 1,
+          fixedCourseFee: newCourseFee,
+          previousCourseFeeDue: actualCourseFeeDue,
+          newCourseFeeDue: newCourseFeeDue
+        };
+      }
+    }
+
+    // Enrollment ID not found in FeeStructure
+    createAuditLogEntry("Fee Structure Update Warning", userIdForAudit, {
+      warning: "Enrollment ID not found in FeeStructure sheet for installment payment update",
+      enrollmentId: enrollmentId,
+      paymentAmount: paymentAmount,
+      totalCourseFee: totalCourseFee
+    });
+
+    return {
+      success: false,
+      message: `Enrollment ID ${enrollmentId} not found in FeeStructure sheet`
+    };
+
+  } catch (error) {
+    console.error("Error in updateFeeStructureForInstallmentPayment:", error);
+
+    createAuditLogEntry("Fee Structure Update Error for Installment Payment", userIdForAudit, {
+      error: error.message,
+      enrollmentId: enrollmentId,
+      paymentAmount: paymentAmount,
+      totalCourseFee: totalCourseFee
+    });
+
+    return {
+      success: false,
+      message: `Failed to update FeeStructure for installment payment: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Gets course data by location (branch) for admission fees
+ * @param {string} branch The branch location (kurla, thane, nalasapora)
+ * @returns {Object} Course data with admission fees
+ */
+function getCourseDataByLocation(branch) {
+  if (branch === "kurla") {
+    return {
+      anm_nursing: { duration: "1 year", fees: 90000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 70000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+    };
+  } else if (branch === "nalasapora") {
+    return {
+      anm_nursing: { duration: "1 year", fees: 90000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 90000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+    };
+  } else if (branch === "karad") {
+    return {
+      anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+    };
+  } else {
+    // Default to kurla if branch not found
+    return {
+      anm_nursing: { duration: "1 year", fees: 90000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
     };
   }
 }

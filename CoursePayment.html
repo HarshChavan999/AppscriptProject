@@ -718,6 +718,38 @@
     // Generate the installment schedule based on payment type
     const installmentSchedule = generateInstallmentScheduleForPaymentType(paymentType, totalFee);
 
+    // 🔥 CRITICAL FIX: Save course payment data to FeeStructure when installment is confirmed
+    // This ensures the fixed course fee is added to the fee structure sheet
+    const coursePaymentData = {
+      ID: document.getElementById("ID").value,
+      Coursepayname: document.getElementById("std_Coursepayname").value,
+      enrollmentId: document.getElementById("enrollmentId").value,
+      coursePaySelect: document.getElementById("coursePaySelect").value,
+      courseDuration: document.getElementById("courseDuration").textContent || "",
+      coursePayFees: totalFee.toString(), // Set entire course fee when confirming installment
+      totalFees: totalFee.toString(),
+      paySelect: document.getElementById("pay-select").value,
+      paymentType: paymentType,
+      loggedInUserId: document.getElementById("loggedInUserId")?.value || "Admin"
+    };
+
+    console.log("Saving course payment data to FeeStructure on installment confirmation:", coursePaymentData);
+
+    // Save to FeeStructure - this will create/update the entry with fixed course fee
+    google.script.run
+      .withSuccessHandler((result) => {
+        if (result.success) {
+          console.log("Course payment data saved successfully to FeeStructure");
+        } else {
+          console.error("Failed to save course payment data:", result.message);
+          alert("Warning: Failed to update fee structure. Please contact admin.");
+        }
+      })
+      .withFailureHandler((error) => {
+        console.error("Error saving course payment data:", error);
+        alert("Warning: Error updating fee structure. Please contact admin.");
+      })
+      .saveCoursePayment(coursePaymentData);
 
     console.log("Installment schedule populated for confirmed payment type:", paymentType);
   }
@@ -1530,6 +1562,23 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     google.script.run
       .withSuccessHandler((result) => {
         if (result.success) {
+          // Update feeStructure: add to course fee and reduce course_fee_due
+          const enrollmentId = document.getElementById("enrollmentId").value;
+          if (enrollmentId) {
+            google.script.run
+              .withSuccessHandler((feeUpdateResult) => {
+                if (!feeUpdateResult.success) {
+                  console.error("Warning: Failed to update fee structure:", feeUpdateResult.message);
+                  // Don't fail the payment, just log the warning
+                }
+              })
+              .withFailureHandler((feeError) => {
+                console.error("Error updating fee structure:", feeError);
+                // Don't fail the payment, just log the error
+              })
+              .updateFeeStructureForInstallmentPayment(enrollmentId, amount, totalCourseFee);
+          }
+
           // Update status to Paid
           const statusSpan = document.getElementById(statusId);
           if (statusSpan) {

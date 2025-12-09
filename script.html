@@ -820,39 +820,67 @@ function getCourseDataByLocation(branch) {
   // console.log(branch);
   if (branch === "thane") {
     const courseData = {
-      anm_nursing: { duration: "1 year", fees: 8500, total: 650 },
-      gnm_nursing: { duration: "3 years", fees: 100000, total: 300000 }, // Fixed total (100000 * 3)
-      dmlt: { duration: "1 year", fees: 700, total: 7000 }, // Fixed "1 years" to "1 year"
-      ot_technician: { duration: "1 year", fees: 30000, total: 30000 },
-      general_nursing: { duration: "1 year", fees: 30000, total: 3000 }, // Fixed "1 years" to "1 year"
+      anm_nursing: { duration: "1 year", fees: 8500, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 700, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
     };
+
+    // Auto-calculate totals
+    Object.keys(courseData).forEach(course => {
+      const years = parseInt(courseData[course].duration.split(" ")[0]);
+      courseData[course].total = courseData[course].fees * years;
+    });
+
     return courseData;
   } else if (branch === "kurla") {
     const courseData = {
-      anm_nursing: { duration: "1 year", fees: 65000, total: 6500 },
-      gnm_nursing: { duration: "3 years", fees: 100000, total: 300000 }, // Fixed total (100000 * 3)
-      dmlt: { duration: "1 year", fees: 70000, total: 70000 }, // Fixed "1 years" to "1 year"
-      ot_technician: { duration: "1 year", fees: 30000, total: 30000 },
-      general_nursing: { duration: "1 year", fees: 30000, total: 30000 }, // Fixed "1 years" to "1 year"
+      anm_nursing: { duration: "1 year", fees: 65000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 70000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
     };
+
+    // Auto-calculate totals
+    Object.keys(courseData).forEach(course => {
+      const years = parseInt(courseData[course].duration.split(" ")[0]);
+      courseData[course].total = courseData[course].fees * years;
+    });
+
     return courseData;
   } else if (branch === "nalasapora") {
     const courseData = {
-      anm_nursing: { duration: "1 year", fees: 55000, total: 5500 },
-      gnm_nursing: { duration: "3 years", fees: 90000, total: 270000 }, // Fixed total (90000 * 3)
-      dmlt: { duration: "1 year", fees: 30000, total: 30000 }, // Fixed "1 years" to "1 year"
-      ot_technician: { duration: "1 year", fees: 30000, total: 30000 },
-      general_nursing: { duration: "1 year", fees: 30000, total: 30000 }, // Fixed "1 years" to "1 year"
+      anm_nursing: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 90000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
     };
+
+    // Auto-calculate totals
+    Object.keys(courseData).forEach(course => {
+      const years = parseInt(courseData[course].duration.split(" ")[0]);
+      courseData[course].total = courseData[course].fees * years;
+    });
+
     return courseData;
   } else {
     const courseData = {
-      anm_nursing: { duration: "1 year", fees: 60000, total: 60000 },
-      gnm_nursing: { duration: "3 years", fees: 95000, total: 285000 }, // Fixed total (95000 * 3)
-      dmlt: { duration: "1 year", fees: 55000, total: 55000 }, // Fixed fees and total from 55 to 55000
-      ot_technician: { duration: "1 year", fees: 30000, total: 30000 },
-      general_nursing: { duration: "1 year", fees: 30000, total: 30000 }, // Fixed "1 years" to "1 year"
+      anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 5000, exam_fee: 500 },
+      gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
     };
+
+    // Auto-calculate totals
+    Object.keys(courseData).forEach(course => {
+      const years = parseInt(courseData[course].duration.split(" ")[0]);
+      courseData[course].total = courseData[course].fees * years;
+    });
+
     return courseData;
   }
 }
@@ -2477,6 +2505,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
                                 <div class="date">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
                             <div class="receipt-no">
                               Installment No. ${installmentno}
@@ -2557,6 +2586,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
                                 <div class="date">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
                             <div class="receipt-no">
                               Installment No. ${installmentno}
@@ -2733,7 +2763,16 @@ function generateReceipt() {
         // Primary: Admission, Fallback: Inquiry, Last: Current form
         const studentName = admissionData.studentName || inquiryData.firstName + ' ' + (inquiryData.middleName || '') + ' ' + inquiryData.lastName || document.getElementById('std_Coursepayname')?.value || "N/A";
         const courseName = coursePayData.courseName || admissionData.courseSelect || inquiryData.interestedCourse || document.getElementById('coursePaySelect')?.value || "N/A";
-        const totalAmount = coursePayData.totalFees ? parseFloat(coursePayData.totalFees.replace(/[^0-9.]/g, '')) : parseFloat((document.getElementById('totalFees')?.textContent || "₹0").replace(/[^0-9.]/g, ''));
+
+        // 🔥 CRITICAL: Use ONLY admission fee as total amount for admission receipt
+        const branch = sessionStorage.getItem("userBranch") || sessionStorage.getItem("branch") || admissionData.branch || "kurla";
+        const courseData = getCourseDataByLocation(branch);
+        let totalAmount = 0;
+        if (courseName && courseData[courseName]) {
+            totalAmount = courseData[courseName].admission_fee || 0;
+            console.log(`Using only admission fee ₹${totalAmount} for admission receipt`);
+        }
+
         const paidAmount = coursePayData.paidAmount || calculatePaidAmount();
         const balanceAmount = coursePayData.balanceAmount || (totalAmount - paidAmount);
 
@@ -2992,6 +3031,7 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
                                 <div class="date">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
 
                             <div class="form-fields">
@@ -4696,6 +4736,8 @@ html2pdf()
         : " ";
       document.getElementById("receiptReceivedBy").textContent =
         data.userName || "Administrator";
+      document.getElementById("receiptBranch").textContent =
+        data.branch || "N/A";
 
       // // Show receipt
       // hideAllSections();

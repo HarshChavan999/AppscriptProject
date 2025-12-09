@@ -74,8 +74,24 @@ function loadReceipt(enrollmentID, studentName, course) {
         // Get course details
         const courseSelect = document.getElementById('courseSelect');
         const courseName = courseSelect?.options[courseSelect.selectedIndex]?.text || "N/A";
-        const totalAmountText = document.getElementById('totalCourseFees').value || "₹0";
-        const totalAmount = parseFloat(totalAmountText.replace(/[^0-9.]/g, '')) || 0;
+
+        // Map display names to internal course keys
+        const courseKeyMap = {
+            "ANM Nursing Diploma Course": "anm_nursing",
+            "GNM Nursing Diploma Course": "gnm_nursing",
+            "DMLT Diploma Course": "dmlt",
+            "OT Technician": "ot_technician",
+            "General Nursing and Midwifery Assistant": "general_nursing"
+        };
+
+        const courseKey = courseKeyMap[courseName];
+
+        // Get branch and course data from getCourseDataByLocation function
+        const branch = sessionStorage.getItem("userBranch") || sessionStorage.getItem("branch") || "kurla";
+        const courseData = typeof getCourseDataByLocation === 'function' ? getCourseDataByLocation(branch) : {};
+
+        // Use ONLY admission fee for the receipt amount
+        const totalAmount = courseData[courseKey]?.admission_fee || 5000; // Default to 5000 if not found
          // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
         const loggedInUser = sessionStorage.getItem("loggedInUser") ||
                             document.getElementById("loggedInUserId")?.value ||
@@ -93,7 +109,8 @@ function loadReceipt(enrollmentID, studentName, course) {
             balance: formatCurrency(0), // Zero balance
             examFees: "-",
             receivedBy: loggedInUser,
-            enrollmentID: enrollmentID || "Not Generated" // Added enrollment ID with fallback
+            enrollmentID: enrollmentID || "Not Generated", // Added enrollment ID with fallback
+            branch: branch // Added branch
         };
 
         // Format currency function
@@ -309,6 +326,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
                                 <div class="date">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
 
                             <div class="form-fields">
@@ -374,6 +392,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
                                 <div class="date">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
 
                             <div class="form-fields">

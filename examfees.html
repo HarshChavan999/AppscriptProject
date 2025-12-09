@@ -1,407 +1,4 @@
-<!-- heth -->
 
-
-<!-- <div class="flex items-center justify-center bg-gray-100 p-4">
-  <form id="feeReceiptForm" class="receipt-form-container" onsubmit="FeeReceiptFormHandle(event)">
-    <div class="form-wrapper">
-      <div class="form-card">
-        <div class="form-header">
-          <div class="header-main-content">
-            <div class="header-logo-title">
-              <div class="logo-container"
-                style="width: 180px; height: auto; display: flex; justify-content: center; align-items: center;">
-                <img
-                                    src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png"
-                                    alt="Logo"
-                                    style="width: 100%; max-width: 160px; height: auto; padding: 5px;"
-                                />
-              </div>
-            </div>
-            <div class="header-contact-info">
-              <p class="receipt-label">
-                <i class="fas fa-file-invoice-dollar"></i> EXAM RECEIPT
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-body">
-          <div id="FeeReceiptForm" class="form-fields-grid">
-            <div class="form-row">
-              <div>
-                <label for="receiptDate" class="form-label"><i class="fas fa-calendar-alt"></i>Date</label>
-                <input type="date" id="receiptDate" name="receiptDate" required class="form-input">
-              </div>
-              <div>
-                <label for="ExamReceiptNumber" class="form-label"><i class="fas fa-hashtag"></i>Receipt No</label>
-                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div>
-                <label for="studentName" class="form-label"><i class="fas fa-user-graduate"></i>Student Name</label>
-                <input type="text" id="studentName" name="studentName" required class="form-input">
-              </div>
-              <div>
-                <label for="courseName" class="form-label"><i class="fas fa-book"></i>Course Name</label>
-                <input type="text" id="courseName" name="courseName" required class="form-input">
-              </div>
-            </div>
-
-            <div class="payment-info-box">
-              <h3 class="payment-info-title">
-                <i class="fas fa-money-bill-wave"></i>Payment Information
-              </h3>
-              <div class="payment-info-grid">
-                <div>
-                  <label for="totalAmount" class="form-label">Total Amount (₹)</label>
-                  <input type="number" id="totalAmount" name="totalAmount" value="500" required class="form-input" readonly>
-                </div>
-
-                <div>
-                                    <label for="paidAmount" class="form-label">Amount Paid (₹)</label>
-                                    <input type="number" id="paidAmount" name="paidAmount" required class="form-input">
-                                </div>
-                                <div>
-                                    <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
-                                    <input type="number" id="balanceAmount" name="balanceAmount" readonly class="form-input">
-                                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div>
-                <label for="paymentMode" class="form-label"><i class="fas fa-credit-card"></i>Payment Mode</label>
-                <select id="paymentMode" name="paymentMode" required class="form-select">
-                                    <option value="" disabled selected>Select Payment Mode</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <!-- <option value="Bank Transfer">Bank Transfer</option> -->
-                                    <!-- <option value="UPI">UPI</option>
-                                    <option value="Credit/Debit Card">Credit/Debit Card</option>
-                                </select>
-              </div>
-              <div>
-                                <label for="transactionDetails" class="form-label"><i class="fas fa-info-circle"></i>Transaction Details</label>
-                                <input type="text" id="transactionDetails" name="transactionDetails" class="form-input" placeholder="Cheque/UTR/UPI ID">
-                            </div>
-            </div>
-
-             <div class="form-row">
-              <div>
-                <label for="receivedBy" class="form-label"><i class="fas fa-user-tie"></i>Received By</label>
-                <input type="text" id="receivedBy" name="receivedBy" required class="form-input">
-              </div>
-              <div>
-                <label for="branch" class="form-label"><i class="fas fa-building"></i>Branch</label>
-                <input type="text" id="branch" name="branch" required class="form-input">
-              </div>
-            </div>
-
-            <div class="terms-section">
-              <h3 class="terms-title">
-                <i class="fas fa-exclamation-circle"></i>Terms & Conditions
-              </h3>
-              <ul class="terms-list">
-                <li>Fees once paid are non-refundable and non-transferable.</li>
-                <li>Original receipt must be produced for any fee-related queries.</li>
-                <li>Installments must be paid before the due date.</li>
-                <li>Certificate will be issued only after full payment of fees.</li>
-              </ul>
-            </div>
-
-            <div class="form-footer">
-              <div class="footer-actions">
-                <div class="terms-checkbox">
-                  <label>
-                                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                                        <span>I acknowledge the above payment details</span>
-                                    </label>
-                  <div id="agreeError" class="error-message"></div>
-                </div>
-
-                <div class="flex justify-end space-x-4">
-                  <button type="button" onclick="generatePDFReceipt()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium">
-                                        <i class="fas fa-file-pdf mr-2"></i>Download PDF
-                                    </button> 
-                  <button onclick="generateexamReceipt()"
- class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
-      >Save & Generate Receipt</button>
-
-                  <button type="submit" id="submitReceipt" class="submit-btn text-blue-600 px-8 py-2 rounded-lg font-medium">
-                                        <i class="fas fa-save mr-2"></i>Save Receipt
-                                    </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- <div class="signature-section">
-          <div class="signature-line-container">
-            <div class="signature-line">______________________</div>
-            <div class="signature-title">AUTHORIZED SIGNATURE</div>
-          </div>
-        </div> -->
-      <!-- </div>
-    </div>
-  </form>
-</div> --> 
-
-<!-- <div class="flex items-center justify-center bg-gray-100 p-4">
-    <form id="feeReceiptForm" class="receipt-form-container" onsubmit="FeeReceiptFormHandle(event)">
-        <div class="form-wrapper">
-            <div class="form-card">
-                <div class="form-header">
-                    <div class="header-main-content">
-                        <div class="header-logo-title">
-                            <div class="logo-container" style="width: 180px; height: auto; display: flex; justify-content: center; align-items: center;">
-                                <img 
-                                    src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" 
-                                    alt="Logo" 
-                                    style="width: 100%; max-width: 160px; height: auto; padding: 5px;"
-                                />
-                            </div>
-                        </div>
-                        <div class="header-contact-info">
-                            <p class="receipt-label">
-                                <i class="fas fa-file-invoice-dollar"></i> FEE RECEIPT
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-body">
-                    <div id="FeeReceiptForm" class="form-fields-grid">
-                        <div class="form-row">
-                            <div>
-                                <label for="receiptDate" class="form-label"><i class="fas fa-calendar-alt"></i>Date</label>
-                                <input type="date" id="receiptDate" name="receiptDate" required class="form-input">
-                            </div>
-                            <div>
-                                <label for="ExamReceiptNumber" class="form-label"><i class="fas fa-hashtag"></i>Receipt No</label>
-                                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div>
-                                <label for="studentNameInput" class="form-label"><i class="fas fa-user-graduate"></i>Student Name</label>
-                                <input type="text" id="studentNameInput" name="studentName" required class="form-input">
-                            </div>
-                            <div>
-                                <label for="courseNameInput" class="form-label"><i class="fas fa-book"></i>Course Name</label>
-                                <input type="text" id="courseNameInput" name="courseName" required class="form-input">
-                            </div>
-                        </div>
-                        
-                        <div class="payment-info-box">
-                            <h3 class="payment-info-title">
-                                <i class="fas fa-money-bill-wave"></i>Payment Information
-                            </h3>
-                            <div class="payment-info-grid">
-                                <div>
-                                    <label for="totalAmount" class="form-label">Total Amount (₹)</label>
-                                    <input type="number" id="totalAmount" name="totalAmount" value="500" class="form-input">
-                                </div> -->
-                                <!-- <div>
-                                    <label for="paidAmount" class="form-label">Amount Paid (₹)</label>
-                                    <input type="number" id="paidAmount" name="paidAmount" required class="form-input">
-                                </div> -->
-                                <!-- <div>
-                                    <label for="balanceAmount" class="form-label">Balance Amount (₹)</label>
-                                    <input type="number" id="balanceAmount" name="balanceAmount" readonly class="form-input">
-                                </div> -->
-                            <!-- </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div>
-                                <label for="paymentModeInput" class="form-label"><i class="fas fa-credit-card"></i>Payment Mode</label>
-                                <select id="paymentModeInput" name="paymentMode" required class="form-select">
-                                    <option value="" disabled selected>Select Payment Mode</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="UPI">UPI</option>
-                                    <option value="Credit/Debit Card">Credit/Debit Card</option>
-                                </select>
-                            </div> -->
-                            <!-- <div>
-                                <label for="transactionDetails" class="form-label"><i class="fas fa-info-circle"></i>Transaction Details</label>
-                                <input type="text" id="transactionDetails" name="transactionDetails" class="form-input" placeholder="Cheque/UTR/UPI ID">
-                            </div> -->
-                        <!-- </div>
-                        
-                        <div class="form-row"> -->
-                            <!-- <div>
-                                <label for="receivedBy" class="form-label"><i class="fas fa-user-tie"></i>Received By</label>
-                                <input type="text" id="receivedBy" name="receivedBy" required class="form-input">
-                            </div> -->
-                            <!-- <div>
-                                <label for="branch" class="form-label"><i class="fas fa-building"></i>Branch</label>
-                                <input type="text" id="branch" name="branch" required class="form-input">
-                            </div> -->
-                        <!-- </div> -->
-                        
-                        <!-- <div class="terms-section">
-                            <h3 class="terms-title">
-                                <i class="fas fa-exclamation-circle"></i>Terms & Conditions
-                            </h3>
-                            <ul class="terms-list">
-                                <li>Fees once paid are non-refundable and non-transferable.</li>
-                                <li>Original receipt must be produced for any fee-related queries.</li>
-                                <li>Installments must be paid before the due date.</li>
-                                <li>Certificate will be issued only after full payment of fees.</li>
-                            </ul>
-                        </div> -->
-                        
-                        <!-- <div class="form-footer">
-                            <div class="footer-actions">
-                                <div class="terms-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                                        <span>I acknowledge the above payment details</span>
-                                    </label>
-                                    <div id="agreeError" class="error-message"></div>
-                                </div>
-                                
-                                <div class="flex justify-end space-x-4">
-                                   <button type="button" onclick="generateexamReceipt()" class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
-    <i class="fas fa-receipt mr-2"></i>Generate Receipt
-</button>
-
-                                    <button type="submit" id="submitReceipt" class="submit-btn text-blue-600 px-8 py-2 rounded-lg font-medium">
-                                        <i class="fas fa-save mr-2"></i>Save Receipt
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="signature-section">
-                    <div class="signature-line-container">
-                        <div class="signature-line">______________________</div>
-                        <div class="signature-title">AUTHORIZED SIGNATURE</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-</div> -->
-<!-- <div class="flex items-center justify-center bg-gray-100 p-4">
-    <form id="feeReceiptForm" class="receipt-form-container w-full max-w-4xl" onsubmit="FeeReceiptFormHandle(event)">
-        <div class="form-wrapper bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="form-card p-6">
-                <div class="form-header mb-6">
-                    <div class="header-main-content flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div class="header-logo-title">
-                            <div class="logo-container" style="width: 180px; height: auto;">
-                                <img 
-                                    src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png" 
-                                    alt="Logo" 
-                                    class="w-full max-w-[160px] h-auto p-1"
-                                />
-                            </div>
-                        </div>
-                        <div class="header-contact-info">
-                            <p class="receipt-label text-xl font-bold text-yellow-300">
-                                <i class="fas fa-file-invoice-dollar mr-2"></i> FEE RECEIPT
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-body">
-                    <div id="FeeReceiptForm" class="form-fields-grid space-y-6">
-                        <div class="form-row grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label for="receiptDate" class="form-label block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-calendar-alt mr-2"></i>Date
-                                </label>
-                                <input type="date" id="receiptDate" name="receiptDate" required class="form-input w-full p-2 border border-gray-300 rounded-md">
-                            </div>
-                            <div class="form-group">
-                                <label for="ExamReceiptNumber" class="form-label block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-hashtag mr-2"></i>Receipt No
-                                </label>
-                                <input type="text" id="ExamReceiptNumber" name="receiptNumber" required class="form-input w-full p-2 border border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label for="studentNameInput" class="form-label block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-user-graduate mr-2"></i>Student Name
-                                </label>
-                                <input type="text" id="studentNameInput" name="studentName" required class="form-input w-full p-2 border border-gray-300 rounded-md">
-                            </div>
-                            <div class="form-group">
-                                <label for="courseNameInput" class="form-label block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-book mr-2"></i>Course Name
-                                </label>
-                                <input type="text" id="courseNameInput" name="courseName" required class="form-input w-full p-2 border border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                        
-                       <div class="payment-info-box">
-                            <h3 class="payment-info-title">
-                                <i class="fas fa-money-bill-wave"></i> Payment Information
-                            </h3>
-                            <div class="payment-info-grid grid grid-cols-1 md:grid-cols-1 gap-4">
-                                <div class="form-group">
-                                    <label for="totalAmount" class="form-label block text-sm font-medium text-gray-700 mb-1">Total Amount (₹)</label>
-                                    <input type="number" id="totalAmount" name="totalAmount" value="500" class="form-input w-full p-2 border border-gray-300 rounded-md">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label for="paymentModeInput" class="form-label block text-sm font-medium text-gray-700 mb-1">
-                                    <i class="fas fa-credit-card mr-2"></i>Payment Mode
-                                </label>
-                                <select id="paymentModeInput" name="paymentMode" required class="form-select w-full p-2 border border-gray-300 rounded-md">
-                                    <option value="" disabled selected>Select Payment Mode</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="UPI">UPI</option>
-                                    <option value="Credit/Debit Card">Credit/Debit Card</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-footer mt-8">
-                            <div class="footer-actions">
-                                <div class="terms-checkbox mb-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required class="mr-2">
-                                        <span class="text-sm text-gray-700">I acknowledge the above payment details</span>
-                                    </label>
-                                    <div id="agreeError" class="error-message text-red-500 text-xs mt-1"></div>
-                                </div>
-                                
-                                <div class="flex flex-col sm:flex-row justify-end gap-4">
-                                    <button type="button" onclick="generateexamReceipt()" class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium py-2.5 px-6 rounded-md shadow-lg hover:scale-105 transition duration-300 flex items-center justify-center">
-                                        <i class="fas fa-receipt mr-2"></i>Generate Receipt
-                                    </button>
-                                    <button type="submit" id="submitReceipt" class="bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-2.5 px-6 rounded-md shadow-lg hover:scale-105 transition duration-300 flex items-center justify-center">
-                                        <i class="fas fa-save mr-2"></i>Save Receipt
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                
-            </div>
-        </div>
-    </form>
-</div> -->
 
 <div class="exam-receipt-container hidden" id="feeReceiptForm">
     <div class="exam-receipt-wrapper">
@@ -517,7 +114,7 @@
                                 <label for="totalAmount" class="block text-sm font-medium text-gray-700 flex items-center">
                                     <i class="fas fa-rupee-sign mr-2 text-green-500"></i>Total Amount (₹) <span class="text-red-500 ml-1">*</span>
                                 </label>
-                                <input type="number" id="totalAmount" name="totalAmount" value="6000" readonly
+                                <input type="number" id="totalAmount" name="totalAmount" value="500" readonly
                                        style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: #f3f4f6; color: #111827; font-size: 0.875rem; font-weight: 600; outline: none; cursor: not-allowed;"
                                        class="transition-colors duration-200 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                             </div>
@@ -746,6 +343,9 @@
                                 document.getElementById('studentNameInput').value = studentData.studentName || '';
                                 document.getElementById('courseNameInput').value = studentData.courseName || '';
 
+                                // Set exam fee based on course and branch
+                                setExamFeeFromCourse(studentData.courseName);
+
                                 showNotification("Student data loaded successfully!", "success");
                                 console.log("Student data loaded:", studentData);
                             } else {
@@ -760,6 +360,44 @@
                         .getStudentDataByEnrollmentId(enrollmentId);
                 }
             });
+        }
+    }
+
+    // Function to set exam fee based on course and branch
+    function setExamFeeFromCourse(courseName) {
+        if (!courseName) return;
+
+        // Map display course names to internal course keys
+        const courseKeyMap = {
+            "ANM Nursing Diploma Course": "anm_nursing",
+            "GNM Nursing Diploma Course": "gnm_nursing",
+            "DMLT Diploma Course": "dmlt",
+            "OT Technician": "ot_technician",
+            "General Nursing and Midwifery Assistant": "general_nursing"
+        };
+
+        const courseKey = courseKeyMap[courseName];
+
+        if (courseKey) {
+            // Get branch from session storage
+            const branch = sessionStorage.getItem("userBranch") || sessionStorage.getItem("branch") || "kurla";
+
+            // Get course data from getCourseDataByLocation function
+            // Since this is client-side, we need to call the server-side function
+            google.script.run
+                .withSuccessHandler(function(courseData) {
+                    const examFee = courseData[courseKey]?.exam_fee || 500; // Default to 500 if not found
+                    document.getElementById('totalAmount').value = examFee;
+                    console.log(`Set exam fee to ₹${examFee} for course: ${courseName}, branch: ${branch}`);
+                })
+                .withFailureHandler(function(error) {
+                    console.error("Error getting course data:", error);
+                    document.getElementById('totalAmount').value = 500; // Default fallback
+                })
+                .getCourseDataByLocation(branch);
+        } else {
+            console.warn("Course not found in mapping:", courseName);
+            document.getElementById('totalAmount').value = 500; // Default fallback
         }
     }
 function openexamfees() {
@@ -900,6 +538,9 @@ function generateexamReceipt() {
         };
 
         // Prepare receipt data
+        // Get branch from session storage
+        const branch = sessionStorage.getItem("userBranch") || sessionStorage.getItem("branch") || "kurla";
+
         const receiptData = {
             receiptNo: receiptNo,
             date: date,
@@ -910,7 +551,8 @@ function generateexamReceipt() {
             // balanceAmount: formatCurrency(balanceAmount),
             paymentMode: paymentMode,
             // transactionDetails: transactionDetails,
-            // receivedBy: receivedBy
+            // receivedBy: receivedBy,
+            branch: branch
         };
 
         // Generate the receipt HTML
@@ -974,8 +616,9 @@ function generateexamReceipt() {
                         </div>
                         <div class="receipt-content">
                             <div class="receipt-info">
-                                <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
+                                <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
                                 <div class="date">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
                             <div class="form-fields">
                                 <div class="field-row">
@@ -998,8 +641,8 @@ function generateexamReceipt() {
                                     <div class="field-label">Payment Mode:</div>
                                     <div class="field-value">${receiptData.paymentMode}</div>
                                 </div>
-                                
-                                
+
+
                             </div>
                             <div class="footer">
                                 <div class="note">• Fees once paid are non-refundable</div>
@@ -1024,9 +667,10 @@ function generateexamReceipt() {
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
-                                <div class="date">Date: ${receiptData.date}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
+                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                             </div>
-                            <div class="form-fields">
+                            <div class="form-fields"> 
                                 <div class="field-row">
                                     <div class="field-label">Student Name:</div>
                                     <div class="field-value">${receiptData.studentName}</div>
@@ -1047,8 +691,13 @@ function generateexamReceipt() {
                                     <div class="field-label">Payment Mode:</div>
                                     <div class="field-value">${receiptData.paymentMode}</div>
                                 </div>
-                                
-                                
+
+                                <div class="field-row">
+                                    <div class="field-label">Branch:</div>
+                                    <div class="field-value">${receiptData.branch}</div>
+                                </div>
+
+
                             </div>
                             <div class="footer">
                                 <div class="note">• Fees once paid are non-refundable</div>

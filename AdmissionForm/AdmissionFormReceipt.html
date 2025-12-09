@@ -603,7 +603,7 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>Total Course Fee</label>
+                <label>Admission Fee</label>
                 <input type="number" id="totalFee" name="totalFee" onchange="generateInstallmentTables()">
               </div>
               <div class="form-group">
@@ -725,14 +725,97 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-  // Course data mapping - global scope for all functions
-  const courseData = {
-    anm_nursing: { duration: "1 year", fees: 55000 },
-    gnm_nursing: { duration: "3 years", fees: 270000 },
-    dmlt: { duration: "1 year", fees: 30000 },
-    ot_technician: { duration: "1 year", fees: 30000 },
-    general_nursing: { duration: "1 year", fees: 30000 },
-  };
+  // Function to get course data by location (imported from script.html)
+  function getCourseDataByLocation(branch) {
+    if (branch === "thane") {
+      const courseData = {
+        anm_nursing: { duration: "1 year", fees: 8500, admission_fee: 5000, exam_fee: 500 },
+        gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
+        dmlt: { duration: "1 year", fees: 700, admission_fee: 5000, exam_fee: 500 },
+        ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+        general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      };
+
+      // Auto-calculate totals
+      Object.keys(courseData).forEach(course => {
+        const years = parseInt(courseData[course].duration.split(" ")[0]);
+        courseData[course].total = courseData[course].fees * years;
+      });
+
+      return courseData;
+    } else if (branch === "kurla") {
+      const courseData = {
+        anm_nursing: { duration: "1 year", fees: 65000, admission_fee: 5000, exam_fee: 500 },
+        gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
+        dmlt: { duration: "1 year", fees: 70000, admission_fee: 5000, exam_fee: 500 },
+        ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+        general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      };
+
+      // Auto-calculate totals
+      Object.keys(courseData).forEach(course => {
+        const years = parseInt(courseData[course].duration.split(" ")[0]);
+        courseData[course].total = courseData[course].fees * years;
+      });
+
+      return courseData;
+    } else if (branch === "nalasapora") {
+      const courseData = {
+        anm_nursing: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+        gnm_nursing: { duration: "3 years", fees: 90000, admission_fee: 5000, exam_fee: 500 },
+        dmlt: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+        ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+        general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      };
+
+      // Auto-calculate totals
+      Object.keys(courseData).forEach(course => {
+        const years = parseInt(courseData[course].duration.split(" ")[0]);
+        courseData[course].total = courseData[course].fees * years;
+      });
+
+      return courseData;
+    } else {
+      const courseData = {
+        anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 5000, exam_fee: 500 },
+        gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
+        dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+        ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
+        general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      };
+
+      // Auto-calculate totals
+      Object.keys(courseData).forEach(course => {
+        const years = parseInt(courseData[course].duration.split(" ")[0]);
+        courseData[course].total = courseData[course].fees * years;
+      });
+
+      return courseData;
+    }
+  }
+
+  // Helper function to get current branch
+  function getCurrentBranch() {
+    // Try to get branch from various sources
+    let branch = sessionStorage.getItem("userBranch") ||
+                 sessionStorage.getItem("branch") ||
+                 localStorage.getItem("userBranch") ||
+                 "kurla"; // Default to kurla
+
+    // Also check if there's branch info in completeReceiptData
+    const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
+    if (completeReceiptData.branch) {
+      branch = completeReceiptData.branch;
+    }
+
+    return branch;
+  }
+
+  // Get course data for current branch
+  function getCurrentCourseData() {
+    const branch = getCurrentBranch();
+    return getCourseDataByLocation(branch);
+  }
 
   document.getElementById('receiptDateAF').valueAsDate = new Date();
   document.getElementById('startDate').valueAsDate = new Date();
@@ -770,21 +853,28 @@
   // Add course change event listener to update fee and duration dynamically
   document.getElementById('courseName').addEventListener('change', function () {
     const selected = this.value;
-    if (courseData[selected]) {
+    const currentCourseData = getCurrentCourseData();
+    if (currentCourseData[selected]) {
       // Only update duration if it wasn't set from course payment workflow
       const completeReceiptData = JSON.parse(sessionStorage.getItem('completeReceiptData') || '{}');
       console.log('Course change event - completeReceiptData:', completeReceiptData);
       console.log('Course change event - courseDuration from workflow:', completeReceiptData.courseDuration);
 
       if (!completeReceiptData.courseDuration || completeReceiptData.courseDuration.trim() === '') {
-        document.getElementById('receiptCourseDuration').value = courseData[selected].duration;
-        console.log('Updated duration from courseData:', courseData[selected].duration);
+        document.getElementById('receiptCourseDuration').value = currentCourseData[selected].duration;
+        console.log('Updated duration from courseData:', currentCourseData[selected].duration);
       } else {
         // If we have workflow data, preserve the workflow duration but update fee
         console.log('Preserving workflow duration:', completeReceiptData.courseDuration);
         document.getElementById('receiptCourseDuration').value = completeReceiptData.courseDuration;
       }
-      document.getElementById('totalFee').value = courseData[selected].fees;
+
+      // Set total fee including admission fee
+      const courseFee = currentCourseData[selected].fees;
+      const admissionFee = currentCourseData[selected].admission_fee || 0;
+      const totalFeeWithAdmission = courseFee + admissionFee;
+      document.getElementById('totalFee').value = totalFeeWithAdmission;
+
       populateCourseYearDropdown(); // Update course year options based on duration
       generateInstallmentTables(); // refresh table
     }
@@ -1101,10 +1191,15 @@
 
       // Pre-fill if coming from session
       const storedCourse = sessionStorage.getItem("STUD_Course");
-      if (storedCourse && courseData[storedCourse]) {
+      const currentCourseData = getCurrentCourseData();
+      if (storedCourse && currentCourseData[storedCourse]) {
         document.getElementById("courseName").value = storedCourse;
-        document.getElementById("receiptCourseDuration").value = courseData[storedCourse].duration;
-        document.getElementById("totalFee").value = courseData[storedCourse].fees;
+        document.getElementById("receiptCourseDuration").value = currentCourseData[storedCourse].duration;
+        // Set total fee including admission fee
+        const courseFee = currentCourseData[storedCourse].fees;
+        const admissionFee = currentCourseData[storedCourse].admission_fee || 0;
+        const totalFeeWithAdmission = courseFee + admissionFee;
+        document.getElementById("totalFee").value = totalFeeWithAdmission;
         populateCourseYearDropdown(); // Update course year options based on duration
       }
     }
