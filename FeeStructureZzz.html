@@ -35,9 +35,9 @@
         <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
           <i class="fas fa-calculator text-purple-600 text-sm"></i>
         </div>
-        <p class="text-sm font-medium text-gray-700">Average Fee</p>
+        <p class="text-sm font-medium text-gray-700">Due Total Fees</p>
       </div>
-      <p id="fsAverageFees" class="text-xl font-bold text-gray-900">0</p>
+      <p id="fsTotalDueFees" class="text-xl font-bold text-gray-900">0</p>
     </div>
   </div>
 
@@ -51,9 +51,24 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="flex flex-col sm:flex-row flex-wrap gap-4">
+      <!-- Search by Name or Enrollment ID -->
+      <div class="flex-1 min-w-0 sm:flex-none sm:w-80">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name or Enrollment ID</label>
+        <div class="flex gap-2">
+          <input type="text" id="fsSearchInput"
+                 oninput="filterFeeStructure()"
+                 class="flex-1 px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 placeholder="Enter name or enrollment ID">
+          <button onclick="handleSearch()"
+                  class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg flex items-center gap-2 transition-colors">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+
       <!-- Payment Mode Filter -->
-      <div>
+      <div class="flex-1 min-w-0 sm:flex-none sm:w-48">
         <label class="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
         <select id="fsPaymentModeSelect"
                 onchange="filterFeeStructure()"
@@ -67,26 +82,23 @@
       </div>
 
       <!-- Course Filter -->
-      <div>
+      <div class="flex-1 min-w-0 sm:flex-none sm:w-48">
         <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
         <select id="fsCourseSelect"
+                onchange="filterFeeStructure()"
                 class="w-full px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">All Courses</option>
         </select>
       </div>
 
-      <!-- Search by Name/ID -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name/ID</label>
-        <div class="flex gap-2">
-          <input type="text" id="fsSearchInput"
-                 class="flex-1 px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                 placeholder="Enter name or admission ID">
-          <button onclick="handleSearch()"
-                  class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg flex items-center gap-2 transition-colors">
-            <i class="fas fa-search"></i> Search
-          </button>
-        </div>
+      <!-- Branch Filter -->
+      <div class="flex-1 min-w-0 sm:flex-none sm:w-48">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+        <select id="fsBranchSelect"
+                onchange="filterFeeStructure()"
+                class="w-full px-3 py-2 border rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">All Branches</option>
+        </select>
       </div>
     </div>
   </div>
@@ -126,13 +138,20 @@
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TimeStamp</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollment ID</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pay Fees</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course_Name</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Mode</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission_Fee</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission_Fee_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course_Fee</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course_Fee_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam_Fee</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam_Fee_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total_Amount_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User_Name</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -238,6 +257,19 @@ function loadFeeStructure() {
       feeStructureData = response.data;
       filteredData = [...feeStructureData];
 
+      // Populate branch dropdown
+      const branches = [...new Set(feeStructureData.map(d => d.branch).filter(b => b))].sort();
+      const branchSel = document.getElementById("fsBranchSelect");
+      if (branchSel) {
+        branchSel.innerHTML = `<option value="">All Branches</option>`;
+        branches.forEach(b => {
+          const opt = document.createElement("option");
+          opt.value = b;
+          opt.textContent = b;
+          branchSel.appendChild(opt);
+        });
+      }
+
       // Initialize pagination
       currentPage = 1;
       updatePagination();
@@ -276,27 +308,33 @@ document.addEventListener('DOMContentLoaded', function() {
 function filterFeeStructure() {
   const paymentMode = document.getElementById("fsPaymentModeSelect").value.toLowerCase();
   const selectedCourse = document.getElementById("fsCourseSelect").value;
+  const selectedBranch = document.getElementById("fsBranchSelect").value;
   const searchTerm = document.getElementById("fsSearchInput").value.trim();
 
   // Filter the global dataset
   filteredData = feeStructureData.filter(d => {
     // Payment mode filter
-    if (paymentMode && d.payMode.toLowerCase() !== paymentMode) {
+    if (paymentMode && d.paymentMode && d.paymentMode.toLowerCase() !== paymentMode) {
       return false;
     }
 
     // Course filter
-    if (selectedCourse && d.course !== selectedCourse) {
+    if (selectedCourse && d.courseName !== selectedCourse) {
       return false;
     }
 
-    // Search filter (by name or ID)
+    // Branch filter
+    if (selectedBranch && d.branch !== selectedBranch) {
+      return false;
+    }
+
+    // Search filter (by name or enrollment ID)
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       const nameMatch = d.name && d.name.toLowerCase().includes(searchLower);
-      const idMatch = d.id && d.id.toString().toLowerCase().includes(searchLower);
+      const enrollmentIdMatch = d.enrollmentId && d.enrollmentId.toString().toLowerCase().includes(searchLower);
 
-      if (!nameMatch && !idMatch) {
+      if (!nameMatch && !enrollmentIdMatch) {
         return false;
       }
     }
@@ -315,6 +353,7 @@ function filterFeeStructure() {
 function resetFilters() {
   document.getElementById("fsPaymentModeSelect").value = "";
   document.getElementById("fsCourseSelect").value = "";
+  document.getElementById("fsBranchSelect").value = "";
   document.getElementById("fsSearchInput").value = "";
 
   filteredData = [...feeStructureData];
@@ -325,12 +364,23 @@ function resetFilters() {
 
 function updateFsSummaryCards(data) {
   const totalRecords = data.length;
-  const totalFees = data.reduce((sum, item) => sum + (item.totalFees || 0), 0);
-  const averageFees = totalRecords > 0 ? totalFees / totalRecords : 0;
+  const totalFeesCollected = data.reduce((sum, item) => {
+    // Calculate total fees collected (paid amounts)
+    const admissionPaid = (item.admissionFee || 0) - (item.admissionFeeDue || 0);
+    const coursePaid = (item.courseFee || 0) - (item.courseFeeDue || 0);
+    const examPaid = (item.examFee || 0) - (item.examFeeDue || 0);
+    return sum + Math.max(0, admissionPaid) + Math.max(0, coursePaid) + Math.max(0, examPaid);
+  }, 0);
+  const totalDueFees = data.reduce((sum, item) => {
+    const admissionDue = item.admissionFeeDue || 0;
+    const courseDue = item.courseFeeDue || 0;
+    const examDue = item.examFeeDue || 0;
+    return sum + admissionDue + courseDue + examDue;
+  }, 0);
 
   document.getElementById("fsTotalRecords").textContent = totalRecords.toLocaleString();
-  document.getElementById("fsTotalFees").textContent = "₹" + totalFees.toLocaleString();
-  document.getElementById("fsAverageFees").textContent = "₹" + averageFees.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  document.getElementById("fsTotalFees").textContent = "₹" + totalFeesCollected.toLocaleString();
+  document.getElementById("fsTotalDueFees").textContent = "₹" + totalDueFees.toLocaleString();
 }
 
 function updatePagination() {
@@ -419,13 +469,20 @@ function renderFeeStructureTable(dataArray) {
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TimeStamp</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollment ID</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pay Fees</th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fees</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course_Name</th>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Mode</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission_Fee</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission_Fee_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course_Fee</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course_Fee_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam_Fee</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam_Fee_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total_Amount_Due</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User_Name</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
@@ -434,13 +491,20 @@ function renderFeeStructureTable(dataArray) {
   dataArray.forEach(d => {
     h += `
       <tr class="hover:bg-gray-50 transition-colors">
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.id || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.timestamp || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.enrollmentId || ''}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${d.name || ''}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.course || ''}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.duration || ''}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.payFees || 0).toLocaleString()}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">₹${(d.totalFees || 0).toLocaleString()}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.payMode || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.courseName || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.paymentMode || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.admissionFee || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.admissionFeeDue || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.courseFee || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.courseFeeDue || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.examFee || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">₹${(d.examFeeDue || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">₹${(d.totalAmountDue || 0).toLocaleString()}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.branch || ''}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${d.userName || ''}</td>
       </tr>
     `;
   });
