@@ -794,8 +794,8 @@ function openAdmissionFormFromInquiry(data) {
   // Set flag to indicate we came from inquiry analytics
   sessionStorage.setItem('cameFromInquiryAnalytics', 'true');
 
-  // Close analytics and open admission form
-  closeInquiryAnalytics();
+  // Hide all sections and open admission form
+  hideAllSections();
   document.getElementById("admissionFormSection").classList.remove("hidden");
 
   // Pre-fill the form with selected inquiry data (includes course pre-filling)
