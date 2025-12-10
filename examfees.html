@@ -1,188 +1,126 @@
 
 
-<div class="exam-receipt-container hidden" id="feeReceiptForm">
-    <div class="exam-receipt-wrapper">
-        <!-- Header Section -->
-        <div class="exam-receipt-card">
-            <div class="exam-receipt-header">
-                <!-- <div class="header-main-content flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="header-logo-title">
-                        <div class="logo-container">
-                            <img src="https://i.postimg.cc/FzvwbhS3/Untitled-1.png"
-                                 alt="Shelar Training Institute Logo"
-                                 class="logo-image">
-                        </div>
-                    </div>
-                    <div class="header-contact-info">
-                        <p class="exam-receipt-label">
-                            <i class="fas fa-receipt mr-2"></i>EXAM RECEIPT
-                        </p>
-                    </div>
-                </div> -->
-                 <div class="flex flex-col items-center">
-    <div class="text-center">
+<div class="bg-white rounded-xl shadow-lg border border-gray-200 mt-6 ml-64 hidden" id="feeReceiptForm">
+  <div class="bg-white text-gray-900 p-6 border-b border-gray-200">
+    <div class="flex flex-col items-center">
       <p class="text-3xl font-bold text-gray-700"><i class="fas fa-file-alt mr-1"></i>EXAM RECEIPT</p>
     </div>
-    </div>
-            </div>
+  </div>
 
-            <form id="examReceiptForm" class="exam-receipt-body" onsubmit="FeeReceiptFormHandle(event)">
-                <div id="FeeReceiptForm" class="space-y-8">
+  <form id="examReceiptForm" class="inquiry-form-container" onsubmit="FeeReceiptFormHandle(event)">
+    <div class="p-6 space-y-4 max-w-4xl mx-auto">
 
-                    <!-- Invoice Details Section -->
-                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-file-invoice-dollar mr-2 text-blue-500"></i>Invoice Details
-                        </h2>
-                        <div class="grid grid-cols-1 gap-6">
-                            <!-- First Row: Enrollment ID (Left), Date (Middle), Receipt Number (Right) -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <!-- Enrollment ID Field (Left) -->
-                                <div class="space-y-2">
-                                    <label for="enrollmentIdInput" class="block text-sm font-medium text-gray-700 flex items-center">
-                                        <i class="fas fa-id-card mr-2 text-blue-500"></i>Enrollment ID <span class="text-red-500 ml-1">*</span>
-                                    </label>
-                                    <input type="text" id="enrollmentIdInput" name="enrollmentId"
-                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           placeholder="Enter enrollment ID">
-                                </div>
+      <h2 class="text-xl font-semibold text-gray-800">Invoice Details</h2>
+      <div class="grid grid-cols-1 gap-6">
+          <!-- First Row: Enrollment ID (Left), Date (Middle), Receipt Number (Right) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Enrollment ID Field (Left) -->
+              <div>
+                  <label for="enrollmentIdInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <i class="fas fa-id-card text-blue-900 mr-2"></i>Enrollment ID <span class="text-red-500 ml-1">*</span>
+                  </label>
+                  <input type="text" id="enrollmentIdInput" name="enrollmentId"
+                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                         placeholder="Enter enrollment ID">
+              </div>
 
-                                <!-- Date Field (Middle) -->
-                                <div class="space-y-2">
-                                    <label for="receiptDate" class="block text-sm font-medium text-gray-700 flex items-center">
-                                        <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date <span class="text-red-500 ml-1">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <div id="receiptDateDisplay"
-                                             style="width: 100%; padding: 0.75rem 3rem 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background-color: #f9f9f9; color: #111827; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
-                                            Loading...
-                                        </div>
-                                        <input type="hidden" id="receiptDate" name="receiptDate" value="">
-                                        <i class="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                                    </div>
-                                </div>
+              <!-- Date Field (Middle) -->
+              <div>
+                  <label for="receiptDate" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <i class="fas fa-calendar-alt text-blue-900 mr-2"></i>Date <span class="text-red-500 ml-1">*</span>
+                  </label>
+                  <div class="relative">
+                      <div id="receiptDateDisplay"
+                           class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed flex items-center">
+                          Loading...
+                      </div>
+                      <input type="hidden" id="receiptDate" name="receiptDate" value="">
+                      <i class="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                  </div>
+              </div>
 
-                                <!-- Receipt Number Field (Right) -->
-                                <div class="space-y-2">
-                                    <label for="ExamReceiptNumber" class="block text-sm font-medium text-gray-700 flex items-center">
-                                        <i class="fas fa-hashtag mr-2 text-blue-500"></i>Receipt Number <span class="text-red-500 ml-1">*</span>
-                                    </label>
-                                    <input type="text" id="ExamReceiptNumber" name="receiptNumber"
-                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           readonly>
-                                </div>
-                            </div>
+              <!-- Receipt Number Field (Right) -->
+              <div>
+                  <label for="ExamReceiptNumber" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <i class="fas fa-hashtag text-blue-900 mr-2"></i>Receipt Number <span class="text-red-500 ml-1">*</span>
+                  </label>
+                  <input type="text" id="ExamReceiptNumber" name="receiptNumber"
+                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                         readonly>
+              </div>
+          </div>
 
-                            <!-- Second Row: Student Name and Course Name -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Student Name Field -->
-                                <div class="space-y-2">
-                                    <label for="studentNameInput" class="block text-sm font-medium text-gray-700 flex items-center">
-                                        <i class="fas fa-user-graduate mr-2 text-blue-500"></i>Student Name <span class="text-red-500 ml-1">*</span>
-                                    </label>
-                                    <input type="text" id="studentNameInput" name="studentName"
-                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           required placeholder="Enter student name">
-                                </div>
+          <!-- Second Row: Student Name and Course Name -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Student Name Field -->
+              <div>
+                  <label for="studentNameInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <i class="fas fa-user-graduate text-blue-900 mr-2"></i>Student Name <span class="text-red-500 ml-1">*</span>
+                  </label>
+                  <input type="text" id="studentNameInput" name="studentName"
+                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                         required placeholder="Enter student name">
+              </div>
 
-                                <!-- Course Name Field -->
-                                <div class="space-y-2">
-                                    <label for="courseNameInput" class="block text-sm font-medium text-gray-700 flex items-center">
-                                        <i class="fas fa-book mr-2 text-blue-500"></i>Course Name <span class="text-red-500 ml-1">*</span>
-                                    </label>
-                                    <input type="text" id="courseNameInput" name="courseName"
-                                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                           class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                           required placeholder="Enter course name">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+              <!-- Course Name Field -->
+              <div>
+                  <label for="courseNameInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <i class="fas fa-book text-blue-900 mr-2"></i>Course Name <span class="text-red-500 ml-1">*</span>
+                  </label>
+                  <input type="text" id="courseNameInput" name="courseName"
+                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                         required placeholder="Enter course name">
+              </div>
+          </div>
+      </div>
 
-                    <!-- Payment Information Section -->
-                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-money-bill-wave mr-2 text-green-500"></i>Payment Information
-                        </h2>
+      <h2 class="text-xl font-semibold text-gray-800">Payment Information</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Total Amount Field -->
+          <div>
+              <label for="totalAmount" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <i class="fas fa-rupee-sign text-blue-900 mr-2"></i>Total Amount (₹) <span class="text-red-500 ml-1">*</span>
+              </label>
+              <input type="number" id="totalAmount" name="totalAmount" value="500" readonly
+                     class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed">
+          </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Total Amount Field -->
-                            <div class="space-y-2">
-                                <label for="totalAmount" class="block text-sm font-medium text-gray-700 flex items-center">
-                                    <i class="fas fa-rupee-sign mr-2 text-green-500"></i>Total Amount (₹) <span class="text-red-500 ml-1">*</span>
-                                </label>
-                                <input type="number" id="totalAmount" name="totalAmount" value="500" readonly
-                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: #f3f4f6; color: #111827; font-size: 0.875rem; font-weight: 600; outline: none; cursor: not-allowed;"
-                                       class="transition-colors duration-200 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                            </div>
+          <!-- Payment Mode Field -->
+          <div>
+              <label for="paymentModeInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <i class="fas fa-credit-card text-blue-900 mr-2"></i>Payment Mode <span class="text-red-500 ml-1">*</span>
+              </label>
+              <select id="paymentModeInput" name="paymentMode"
+                      class="form-select w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                      required>
+                  <option value="" disabled selected>Select Payment Mode</option>
+                  <option value="Cash">💵 Cash</option>
+                  <option value="Cheque">📝 Cheque</option>
+                  <option value="Bank Transfer">🏦 Bank Transfer</option>
+                  <option value="UPI">📱 UPI</option>
+                  <option value="Credit/Debit Card">💳 Credit/Debit Card</option>
+              </select>
+          </div>
+      </div>
 
-                            <!-- Payment Mode Field -->
-                            <div class="space-y-2">
-                                <label for="paymentModeInput" class="block text-sm font-medium text-gray-700 flex items-center">
-                                    <i class="fas fa-credit-card mr-2 text-blue-500"></i>Payment Mode <span class="text-red-500 ml-1">*</span>
-                                </label>
-                                <select id="paymentModeInput" name="paymentMode"
-                                        style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); background-color: white; color: #111827; font-size: 0.875rem; outline: none;"
-                                        class="transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required>
-                                    <option value="" disabled selected>Select Payment Mode</option>
-                                    <option value="Cash">💵 Cash</option>
-                                    <option value="Cheque">📝 Cheque</option>
-                                    <option value="Bank Transfer">🏦 Bank Transfer</option>
-                                    <option value="UPI">📱 UPI</option>
-                                    <option value="Credit/Debit Card">💳 Credit/Debit Card</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Terms and Actions Section -->
-                    <div class="bg-white rounded-xl p-6 border border-gray-200">
-                        <div class="flex items-start space-x-3 mb-6">
-                            <input type="checkbox" id="agreeTerms" name="agreeTerms"
-                                   class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-0.5"
-                                   required>
-                            <div class="flex-1">
-                                <label for="agreeTerms" class="text-sm font-medium text-gray-700 cursor-pointer">
-                                    I acknowledge and agree to the payment details above
-                                </label>
-                                <p class="text-xs text-gray-600 mt-1">
-                                    By checking this box, I confirm that all payment information is accurate and complete.
-                                </p>
-                            </div>
-                        </div>
-                        <div id="agreeError" class="text-red-600 text-sm font-medium mb-4 hidden">
-                            Please accept the terms and conditions to proceed.
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-4 justify-end">
-                            <button type="button" onclick="generateexamReceipt()"
-                                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <i class="fas fa-print"></i>
-                                Generate Receipt
-                            </button>
-
-                            <button type="submit" id="submitReceipt"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <i class="fas fa-save"></i>
-                                Save Receipt
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-            </form>
+      <div class="border-t border-gray-200 pt-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div class="mb-4 md:mb-0">
+            <label class="inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="agreeTerms" name="agreeTerms" required class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+              <span class="ml-2 text-sm text-gray-700">I acknowledge and agree to the payment details above</span>
+            </label>
+            <div id="agreeError" class="text-red-500 text-xs italic mt-1"></div>
+          </div>
+          <div class="flex justify-end space-x-4">
+            <button type="button" onclick="generateAndSaveReceipt()" id="generateReceiptBtn" class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
+              <i class="fas fa-print mr-2"></i>Generate Receipt
+            </button>
+          </div>
         </div>
-
-        <!-- Footer
-        <div class="bg-gray-800 text-white text-center py-4 rounded-b-xl">
-            <p class="text-sm opacity-75">© 2025 Shelar Training Institute. All rights reserved.</p>
-        </div> -->
+      </div>
     </div>
+  </form>
 </div>
 
 <script>
@@ -225,7 +163,7 @@
   };
 
   // Show loading state
-  const submitBtn = document.getElementById('submitReceipt');
+  const submitBtn = document.getElementById('generateReceiptBtn');
   const originalText = submitBtn.innerHTML;
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
   submitBtn.disabled = true;
@@ -516,20 +454,20 @@ function openexamfees() {
 //     }
 // }
 
-function generateexamReceipt() {
+function generateexamReceipt(formData = null) {
     try {
       const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
 
-        // Get values from the form
-        const receiptNo = document.getElementById('ExamReceiptNumber').value || "REC" + Math.floor(1000 + Math.random() * 9000);
-        const date = document.getElementById('receiptDate').value || new Date().toLocaleDateString('en-GB');
-        const studentName = document.getElementById('studentNameInput').value || "N/A";
-        const courseName = document.getElementById('courseNameInput').value || "N/A";
-        const totalAmount = parseFloat(document.getElementById('totalAmount').value) || 0;
+        // Get values from formData parameter if provided, otherwise from form fields
+        const receiptNo = formData?.receiptNumber || document.getElementById('ExamReceiptNumber').value || "REC" + Math.floor(1000 + Math.random() * 9000);
+        const date = formData?.receiptDate || document.getElementById('receiptDate').value || new Date().toLocaleDateString('en-GB');
+        const studentName = formData?.studentName || document.getElementById('studentNameInput').value || "N/A";
+        const courseName = formData?.courseName || document.getElementById('courseNameInput').value || "N/A";
+        const totalAmount = parseFloat(formData?.totalAmount || document.getElementById('totalAmount').value) || 0;
         // const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
         // const balanceAmount = totalAmount - paidAmount;
         // const receivedBy = document.getElementById('receivedBy').value || "Admin";
-        const paymentMode = document.getElementById('paymentModeInput').value || "Cash";
+        const paymentMode = formData?.paymentMode || document.getElementById('paymentModeInput').value || "Cash";
         // const transactionDetails = document.getElementById('transactionDetails').value || "-";
 
         // Format currency
@@ -733,9 +671,99 @@ function generateexamReceipt() {
 }
 
 
+function generateAndSaveReceipt() {
+  // First validate the form
+  const form = document.getElementById('examReceiptForm');
+  const formData = new FormData(form);
+
+  const receiptNumber = formData.get('receiptNumber');
+
+  // Validate that receipt number is loaded
+  if (!receiptNumber || receiptNumber === 'Generating...' || receiptNumber === '') {
+    showNotification("Please wait for the receipt number to load before proceeding.", "error");
+    return;
+  }
+
+  // Check if terms are agreed
+  if (!document.getElementById('agreeTerms').checked) {
+    document.getElementById('agreeError').classList.remove('hidden');
+    showNotification("Please agree to the terms and conditions.", "error");
+    return;
+  } else {
+    document.getElementById('agreeError').classList.add('hidden');
+  }
+
+  // Get current date in a format that Google Apps Script can handle
+  const now = new Date();
+  const dateString = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+
+  const data = {
+    receiptDate: dateString, // Current date as MM/DD/YYYY string
+    receiptNumber: receiptNumber,
+    enrollmentId: formData.get('enrollmentId'),
+    studentName: formData.get('studentName'),
+    courseName: formData.get('courseName'),
+    totalAmount: formData.get('totalAmount'),
+    paymentMode: formData.get('paymentMode'),
+    agreeTerms: formData.get('agreeTerms') ? 'Yes' : 'No'
+  };
+
+  // Show loading state
+  const btn = document.getElementById('generateReceiptBtn');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+  btn.disabled = true;
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result && result.success) {
+        // Success notification
+        showNotification(result.message || "Receipt saved successfully! Generating receipt...", "success");
+
+        // Store current form values before resetting
+        const currentFormData = {
+          receiptNumber: formData.get('receiptNumber'),
+          studentName: formData.get('studentName'),
+          courseName: formData.get('courseName'),
+          totalAmount: formData.get('totalAmount'),
+          paymentMode: formData.get('paymentMode'),
+          receiptDate: formData.get('receiptDate')
+        };
+
+        // Reset form but keep the date
+        form.reset();
+
+        // Reload only receipt number for next entry (without resetting date)
+        loadexamfeeOnly();
+
+        // Now generate the receipt with stored values
+        setTimeout(() => {
+          generateexamReceipt(currentFormData);
+        }, 1000); // Small delay to ensure save is complete
+
+      } else {
+        // Error notification
+        showNotification(result.message || "Failed to save receipt. Please try again.", "error");
+        // Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    })
+    .withFailureHandler(function(error) {
+      // Reset button
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+
+      // Error notification
+      showNotification("Error saving receipt: " + error.message, "error");
+      console.error("Save receipt error:", error);
+    })
+    .saveReceiptData(data);
+}
+
 function loadexamfee(){
   const receiptInput = document.getElementById("ExamReceiptNumber");
-  const submitBtn = document.getElementById("submitReceipt");
+  const submitBtn = document.getElementById("generateReceiptBtn");
 
   if (!receiptInput) {
     console.error("Receipt number input field not found!");
@@ -767,7 +795,7 @@ function loadexamfee(){
       // Enable submit button now that receipt number is loaded
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+        submitBtn.innerHTML = '<i class="fas fa-print mr-2"></i>Generate Receipt';
       }
 
       // 5. Set a 5-second timer. If it completes, the field becomes read-only.
@@ -803,7 +831,7 @@ function loadexamfee(){
 
 function loadexamfeeOnly(){
   const receiptInput = document.getElementById("ExamReceiptNumber");
-  const submitBtn = document.getElementById("submitReceipt");
+  const submitBtn = document.getElementById("generateReceiptBtn");
 
   if (!receiptInput) {
     console.error("Receipt number input field not found!");
@@ -833,7 +861,7 @@ function loadexamfeeOnly(){
       // Enable submit button
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+        submitBtn.innerHTML = '<i class="fas fa-print mr-2"></i>Generate Receipt';
       }
 
       // Set a 5-second timer to lock the field
@@ -849,7 +877,7 @@ function loadexamfeeOnly(){
       // Re-enable submit button even on error
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
+        submitBtn.innerHTML = '<i class="fas fa-print mr-2"></i>Generate Receipt';
       }
     })
     .getNextReceiptNumberEF();
