@@ -107,7 +107,10 @@
             <option value="anm_nursing">ANM Nursing Diploma</option>
             <option value="gnm_nursing">GNM Nursing Diploma</option>
             <option value="dmlt">DMLT Diploma</option>
-            <option value="ot_technician">OT Technician</option>
+            <option value="ot_technician">OT Technician Diploma Course</option>
+            <option value="electrician">Electrician Diploma Course</option>
+            <option value="ac_refrigerator">AC & Refrigerator Diploma Course</option>
+            <option value="basic_parlour">Basic Parlour Course</option>
             <option value="general_nursing">General Nursing and Midwifery Assistant</option>
           </select>
         </div>
@@ -664,11 +667,22 @@
   // Function to handle payment confirmation
   function handlePaymentConfirmation(checkbox) {
     if (!checkbox.checked) {
-      console.log("Confirmation unchecked - showing all payment options");
+      console.log("Confirmation unchecked - showing all payment options and enabling dropdowns");
       // Show all payment cards when confirmation is unchecked
       document.getElementById("fullPaymentCard").style.display = 'block';
       document.getElementById("partialPaymentCard").style.display = 'block';
       document.getElementById("emiPaymentCard").style.display = 'block';
+
+      // Re-enable dropdowns when confirmation is unchecked
+      document.getElementById("partialTenure").disabled = false;
+      document.getElementById("emiTenure").disabled = false;
+
+      // Re-enable radio buttons
+      const radioButtons = document.querySelectorAll('input[name="Coursepayment_type"]');
+      radioButtons.forEach(radio => {
+        radio.disabled = false;
+      });
+
       return;
     }
 
@@ -695,6 +709,10 @@
     radioButtons.forEach(radio => {
       radio.disabled = true;
     });
+
+    // Lock the dropdowns in payment cards
+    document.getElementById("partialTenure").disabled = true;
+    document.getElementById("emiTenure").disabled = true;
 
     // Lock the confirmation checkbox - disable it so it can't be unchecked
     checkbox.disabled = true;
@@ -961,9 +979,9 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
       startDate: coursePaymentData.startDate,
       installmentSchedule: coursePaymentData.installmentSchedule, // Add the installment schedule
 
-      // Guardian Info (critical for agreement section) - FIXED: Use correct property names
-      guardianName: admissionData.guardianName || admissionData.guardian_name || admissionData.guardianName || "",
-      studentRelation: admissionData.studentRelation || admissionData.guardian_relation || admissionData.studentRelation || "",
+      // Guardian Info (critical for agreement section) - Get from sessionStorage
+      guardianName: sessionStorage.getItem("guardian_name") || "",
+      studentRelation: sessionStorage.getItem("guardian_relation") || "",
 
       // Student Photo from admission form (check both sessionStorage and localStorage)
       studentPhoto: sessionStorage.getItem('studentPhoto') || localStorage.getItem('admission_studentPhoto') || "",
@@ -1078,9 +1096,39 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
               // Use the shared function with the correct paid installments
               generateInstallmentTableRowsFromScheduleShared(tableBody, savedSchedule, serverPayments, true, true);
             } else {
-              // No saved schedule - generate default schedule with payment data
-              console.log("No saved schedule found, generating default schedule with payment data");
-              generateDefaultInstallmentScheduleWithAdmissionFunctionality(serverPayments, hasAdmissionData);
+              // No saved schedule - check if user came from admission structure
+              console.log("No saved schedule found, checking if user came from admission structure");
+
+              // Check if user came from admission analytics (admission structure page)
+              const admissionAnalyticsData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+              const firstName = sessionStorage.getItem('first_name');
+              const lastName = sessionStorage.getItem('last_name');
+              const receiptNumber = sessionStorage.getItem('tempText4');
+              const hasAdmissionFormData = (firstName || lastName) && receiptNumber;
+
+              if (admissionAnalyticsData || hasAdmissionFormData) {
+                // User came from admission structure - show payment options instead of default table
+                console.log("User came from admission structure, showing payment options instead of default table");
+                document.getElementById("paymentOptionsSection").classList.remove("hidden");
+                document.getElementById("installmentScheduleSection").classList.add("hidden");
+
+                // Update payment calculations when showing payment options
+                if (typeof updateFullPaymentDiscount === 'function') {
+                  updateFullPaymentDiscount();
+                }
+                if (typeof updatePartialPayment === 'function') {
+                  updatePartialPayment();
+                }
+                if (typeof updateEMIPayment === 'function') {
+                  updateEMIPayment();
+                }
+
+                return;
+              } else {
+                // User accessed course payment directly - generate default schedule
+                console.log("User accessed directly, generating default schedule with payment data");
+                generateDefaultInstallmentScheduleWithAdmissionFunctionality(serverPayments, hasAdmissionData);
+              }
             }
           })
           .withFailureHandler((error) => {
@@ -1564,6 +1612,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
         if (result.success) {
           // Update feeStructure: add to course fee and reduce course_fee_due
           const enrollmentId = document.getElementById("enrollmentId").value;
+          const totalCourseFee = document.getElementById("totalFees").value;
           if (enrollmentId) {
             google.script.run
               .withSuccessHandler((feeUpdateResult) => {

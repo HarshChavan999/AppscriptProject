@@ -3113,7 +3113,7 @@ function updateFeeStructureForInstallmentPayment(enrollmentId, paymentAmount, to
         const currentCourseFeeDue = parseFloat(row[CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL] || 0); // Column I
 
         // Add the total course fee to Course_Fee as fixed fee
-        const newCourseFee = currentCourseFee + totalCourseFee;
+        const newCourseFee = totalCourseFee;
 
         // 🔥 FIX: If Course_Fee_Due is 0 or empty, initialize it to the new Course_Fee first
         let actualCourseFeeDue = currentCourseFeeDue;
@@ -3126,8 +3126,6 @@ function updateFeeStructureForInstallmentPayment(enrollmentId, paymentAmount, to
         // Calculate new values: keep Course_Fee fixed and reduce Course_Fee_Due
         const newCourseFeeDue = Math.max(0, actualCourseFeeDue - paymentAmount); // Reduce Course_Fee_Due
 
-        // Update Course_Fee column with the added total course fee
-        sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_COL + 1).setValue(newCourseFee);
 
         // Update Course_Fee_Due column
         sheet.getRange(i + 1, CONFIG.FEE_STRUCTURE_LOOKUP.COURSE_FEE_DUE_COL + 1).setValue(newCourseFeeDue);
@@ -3212,11 +3210,13 @@ function getCourseDataByLocation(branch) {
     };
   } else if (branch === "karad") {
     return {
-      anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 5000, exam_fee: 500 },
+      anm_nursing: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
       gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
       dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
-      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
-      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      ot_technician: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
+      electrician: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      ac_refrigerator: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, monthly_fee: 2500, exam_fee: 1000 }
     };
   } else {
     // Default to kurla if branch not found

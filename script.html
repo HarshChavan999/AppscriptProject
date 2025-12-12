@@ -866,13 +866,15 @@ function getCourseDataByLocation(branch) {
     });
 
     return courseData;
-  } else {
+  } else if (branch === "karad") {
     const courseData = {
-      anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 5000, exam_fee: 500 },
+      anm_nursing: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
       gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
-      dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
-      ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
-      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      dmlt: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      ot_technician: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
+      electrician: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      ac_refrigerator: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, monthly_fee: 2500, exam_fee: 1000 }
     };
 
     // Auto-calculate totals
@@ -2289,6 +2291,12 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                             document.getElementById("userName")?.value ||
                             "Admin";
 
+        // ✅ FIX: Get the branch from localStorage, sessionStorage, or default
+        const branch = localStorage.getItem("userBranch") ||
+                      sessionStorage.getItem("userBranch") ||
+                      sessionStorage.getItem("branch") ||
+                      "kurla";
+
         // Prepare data for the new HTML structure
         const receiptData = {
             receiptNo: receiptNo.replace('REC', ''), // Remove 'REC' prefix as per the target image
@@ -2299,7 +2307,8 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
             paid: formatCurrency(paidAmount),
             balance: formatCurrency(balanceAmount),
             examFees: "-", // Hardcoded as per the provided HTML
-            receivedBy: loggedInUser // Hardcoded as per the provided HTML
+            receivedBy: loggedInUser, // Hardcoded as per the provided HTML
+            branch: branch // Add branch to receipt data
         };
 
         console.log("Generated receipt data:", receiptData);
@@ -3259,6 +3268,8 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
         document.getElementById("userRole").value = resp.userName;
         document.getElementById("userRoleDisplay").textContent = resp.role;
         document.getElementById("userBranch").value = resp.branch;
+        // Store branch in localStorage for persistence across sessions
+        localStorage.setItem("userBranch", resp.branch);
 
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("appSection").classList.remove("hidden");
@@ -3308,6 +3319,7 @@ function logout() {
   document.getElementById("loginPassword").value = "";
   document.getElementById("loggedInUserId").value = "";
   sessionStorage.removeItem("loggedInUser"); // Clear client-side session storage too
+  localStorage.removeItem("userBranch"); // Clear stored branch information
 
   // Show a "logging out" message immediately
   Swal.fire({

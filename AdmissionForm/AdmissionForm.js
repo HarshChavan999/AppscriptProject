@@ -108,8 +108,10 @@ function saveToSheet(formData) {
       console.error("Error saving enrollment:", enrollmentError);
     }
 
-    // Get branch and course data from getCourseDataByLocation function
-    const branch = PropertiesService.getUserProperties().getProperty("branch") || "kurla";
+    // Determine branch based on course selection - karad courses should be in karad branch
+    const karadCourses = ["electrician", "ac_refrigerator", "basic_parlour"];
+    const branch = karadCourses.includes(formData.courseSelect) ? "karad" :
+                   PropertiesService.getUserProperties().getProperty("branch") || "kurla";
     const courseData = getCourseDataByLocation(branch);
 
     // Get admission fee for the selected course

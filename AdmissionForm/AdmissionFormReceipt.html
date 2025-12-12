@@ -565,14 +565,7 @@
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
               <label>Course Name</label>
-              <select id="courseName" name="courseName">
-                <option value="" disabled selected>Select a course</option>
-                <option value="anm_nursing">ANM Nursing Diploma</option>
-                <option value="gnm_nursing">GNM Nursing Diploma</option>
-                <option value="dmlt">DMLT Diploma</option>
-                <option value="ot_technician">OT Technician</option>
-                <option value="general_nursing">General Nursing Assistant</option>
-              </select>
+              <input type="text" id="courseName" name="courseName" readonly style="background: transparent; border-bottom: 1px solid #ccc;">
             </div>
             <div class="form-group">
               <label>Course Year</label>
@@ -607,8 +600,8 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>Admission Fee</label>
-                <input type="number" id="totalFee" name="totalFee" onchange="generateInstallmentTables()">
+                <label>Course Fee</label>
+                <input type="text" id="totalFee" name="totalFee" readonly style="background: transparent; border-bottom: 1px solid #ccc;">
               </div>
               <div class="form-group">
                 <label>Start Date</label>
@@ -620,7 +613,7 @@
         </div>
 
         <div class="agreement-section">
-          <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 120px; border: none; border-bottom: 1px solid #ccc;"> <strong>Mother / Father / Husband / Sister / Brother of</strong> <input type="text" id="studentRelation" name="studentRelation" style="width: 120px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
+          <p><strong>I Am Mr./Ms.</strong> <input type="text" id="guardianName" name="guardianName" style="width: 120px; border: none; border-bottom: 1px solid #ccc;"> <input type="text" id="guardianRelation" name="guardianRelation" style="width: 120px; border: none; border-bottom: 1px solid #ccc;"> <strong>of Mr./Ms.</strong> <input type="text" id="agreementStudentName" name="agreementStudentName" style="width: 120px; border: none; border-bottom: 1px solid #ccc;">. <strong>I Agree with all Terms And Conditions.</strong></p>
         </div>
 
         <div class="signature-section">
@@ -720,7 +713,6 @@
       </div>
 
       <div class="download-section">
-        <button type="button" class="btn" onclick="downloadPdfWithHtml2Pdf()">Download PDF</button>
         <button type="button" class="btn btn-print" onclick="prepareForPrint()">Print Receipt</button>
       </div>
     </form>
@@ -779,14 +771,16 @@
       });
 
       return courseData;
-    } else {
-      const courseData = {
-        anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 5000, exam_fee: 500 },
-        gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
-        dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
-        ot_technician: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 },
-        general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
-      };
+  } else if (branch === "karad") {
+    const courseData = {
+      anm_nursing: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
+      gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      ot_technician: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
+      electrician: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      ac_refrigerator: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, monthly_fee: 2500, exam_fee: 1000 }
+    };
 
       // Auto-calculate totals
       Object.keys(courseData).forEach(course => {
@@ -1159,11 +1153,34 @@
 
     window.print();
 
-    // Reset after printing
+    // Reset after printing and clear photo
     setTimeout(() => {
       document.getElementById('receiptContainer').classList.remove('compact-mode');
       document.getElementById('undertakingContainer').classList.add('hidden');
+      clearPhotoAfterPrint();
     }, 1000);
+  }
+
+  function clearPhotoAfterPrint() {
+    const photoSection = document.querySelector('#receiptFormSection .photo-section');
+    const photoPlaceholder = document.getElementById('photoPlaceholderAF');
+    const photoImg = photoSection.querySelector('img');
+
+    // Remove the uploaded photo image if it exists
+    if (photoImg) {
+      photoImg.remove();
+    }
+
+    // Show the placeholder text again
+    if (photoPlaceholder) {
+      photoPlaceholder.style.display = 'block';
+    }
+
+    // Clear the file input
+    const photoInput = document.getElementById('photoInputAF');
+    if (photoInput) {
+      photoInput.value = '';
+    }
   }
 
   function openreceiptFormSection() {
@@ -1280,15 +1297,17 @@
 
       // Critical: Guardian agreement section - FIXED property names
       const guardianNameField = document.getElementById("guardianName");
-      const studentRelationField = document.getElementById("studentRelation");
+      const guardianRelationField = document.getElementById("guardianRelation");
+      const agreementStudentNameField = document.getElementById("agreementStudentName");
 
-      if (guardianNameField && studentRelationField) {
-        // Use guardianName and studentRelation from completeReceiptData
+      if (guardianNameField && guardianRelationField && agreementStudentNameField) {
+        // Use guardianName, studentRelation, and studentName from completeReceiptData
         guardianNameField.value = completeReceiptData.guardianName || "";
-        studentRelationField.value = completeReceiptData.studentRelation || "";
-        console.log("Prefilled guardian fields:", completeReceiptData.guardianName, completeReceiptData.studentRelation);
+        guardianRelationField.value = completeReceiptData.studentRelation || "";
+        agreementStudentNameField.value = completeReceiptData.studentName || "";
+        console.log("Prefilled agreement fields:", completeReceiptData.guardianName, completeReceiptData.studentRelation, completeReceiptData.studentName);
       } else {
-        console.warn("Guardian fields not found in form.");
+        console.warn("Agreement fields not found in form.");
       }
 
       console.log("Admission receipt prefill completed successfully - duration set to:", document.getElementById("receiptCourseDuration").value);
