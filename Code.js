@@ -2124,6 +2124,74 @@ function saveReceiptData(data) {
       row: lastRow
     });
 
+    // Update FeeStructure sheet with exam fee
+    try {
+      const feeSheet = ss.getSheetByName(CONFIG.FEE_STRUCTURE_SHEET_NAME);
+      if (feeSheet) {
+        const feeData = feeSheet.getDataRange().getValues();
+        let enrollmentRowIndex = -1;
+
+        // Find the row for this enrollment ID (skip header row)
+        for (let i = 1; i < feeData.length; i++) {
+          const row = feeData[i];
+          const rowEnrollmentId = String(row[CONFIG.FEE_STRUCTURE_LOOKUP.ENROLLMENT_ID_COL] || "").trim();
+
+          if (rowEnrollmentId === data.enrollmentId) {
+            enrollmentRowIndex = i + 1; // +1 for 1-based sheet indexing
+            break;
+          }
+        }
+
+        if (enrollmentRowIndex > 0) {
+          // Get current exam fee values
+          const currentExamFee = parseFloat(feeData[enrollmentRowIndex - 1][CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_COL]) || 0;
+          const currentExamFeeDue = parseFloat(feeData[enrollmentRowIndex - 1][CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_DUE_COL]) || 0;
+
+          // Add exam fee amount to Exam_Fee and reduce Exam_Fee_Due
+          const newExamFee = currentExamFee + amount;
+          const newExamFeeDue = Math.max(0, currentExamFeeDue - amount);
+
+          // Update the FeeStructure sheet
+          feeSheet.getRange(enrollmentRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_COL + 1).setValue(newExamFee);
+          feeSheet.getRange(enrollmentRowIndex, CONFIG.FEE_STRUCTURE_LOOKUP.EXAM_FEE_DUE_COL + 1).setValue(newExamFeeDue);
+          feeSheet.getRange(enrollmentRowIndex, 1).setValue(new Date()); // Update timestamp
+
+          // Log fee structure update
+          createAuditLogEntry("Exam Fee Updated in Fee Structure", userIdForAudit, {
+            enrollmentId: data.enrollmentId,
+            studentName: data.studentName,
+            examFeeAmount: amount,
+            previousExamFee: currentExamFee,
+            newExamFee: newExamFee,
+            previousExamFeeDue: currentExamFeeDue,
+            newExamFeeDue: newExamFeeDue,
+            row: enrollmentRowIndex
+          });
+        } else {
+          // Enrollment ID not found in FeeStructure - log warning but don't fail
+          createAuditLogEntry("Exam Fee Update Warning", userIdForAudit, {
+            warning: "Enrollment ID not found in FeeStructure sheet for exam fee update",
+            enrollmentId: data.enrollmentId,
+            examFeeAmount: amount
+          });
+        }
+      } else {
+        // FeeStructure sheet not found - log warning but don't fail
+        createAuditLogEntry("Exam Fee Update Error", userIdForAudit, {
+          error: "FeeStructure sheet not found for exam fee update",
+          enrollmentId: data.enrollmentId,
+          examFeeAmount: amount
+        });
+      }
+    } catch (feeError) {
+      // Log error but don't fail the receipt generation
+      createAuditLogEntry("Exam Fee Update Error", userIdForAudit, {
+        error: feeError.message,
+        enrollmentId: data.enrollmentId,
+        examFeeAmount: amount
+      });
+    }
+
     return {
       success: true,
       message: "Receipt data saved successfully",
