@@ -1814,6 +1814,8 @@ function formatDate(date) {
 
 function openCoursePayment() {
   hideAllSections();
+  window.selectedPaymentType = null;
+  clearCoursePaymentForm();
   document.getElementById("coursePaymentSection").classList.remove("hidden");
 
   // Check if user came from admission structure (only show installment schedule)
