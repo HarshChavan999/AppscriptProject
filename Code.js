@@ -8,12 +8,19 @@ var ss = SpreadsheetApp.getActiveSpreadsheet();
 
 function doGet(e) {
   try {
-    return HtmlService.createTemplateFromFile("index").evaluate();
+    return HtmlService.createTemplateFromFile("index")
+      .evaluate()
+      .setTitle('STI')
+      .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setFaviconUrl('https://www.gstatic.com/script/favicon/favicon.ico');
   } catch (error) {
     // Return error message for debugging
     return HtmlService
       .createHtmlOutput("Script error: " + error.toString())
-      .setTitle("Error");
+      .setTitle("Error")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 }
 
