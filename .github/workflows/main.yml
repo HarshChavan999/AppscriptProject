@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - hitanshu  # or change to your desired branch
+      - main  # trigger on main branch pushes
 
 jobs:
   deploy:
