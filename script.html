@@ -1814,6 +1814,8 @@ function formatDate(date) {
 
 function openCoursePayment() {
   hideAllSections();
+  window.selectedPaymentType = null;
+  clearCoursePaymentForm();
   document.getElementById("coursePaymentSection").classList.remove("hidden");
 
   // Check if user came from admission structure (only show installment schedule)
@@ -4846,12 +4848,32 @@ html2pdf()
         const dateInput23 = document.getElementById('date3334');
         dateInput23.valueAsDate = new Date();
         dateInput23.setAttribute('readonly', true);
-    console.log("Inquiry Form button clicked");
+    console.log("Inquiry Form button clicked - resetting all forms");
     hideAllSections();
     document.getElementById("ifId").classList.remove("hidden"); // Assuming ifId is the inquiry form itself
 
-    // Clear all form fields to ensure fresh start
+    // Clear all form fields in all forms to ensure fresh start
     clearInquiryFormFields(false);
+    clearAdmissionForm();
+    clearCoursePaymentForm();
+    clearAdmissionReceiptForm();
+
+    // Clear sessionStorage data from previous workflows
+    sessionStorage.removeItem('inquiryDataForAdmission');
+    sessionStorage.removeItem('admissionData');
+    sessionStorage.removeItem('coursePaymentData');
+    sessionStorage.removeItem('completeReceiptData');
+    sessionStorage.removeItem('admissionDataForPayment');
+    sessionStorage.removeItem('cameFromAdmissionForm');
+    sessionStorage.removeItem('first_name');
+    sessionStorage.removeItem('last_name');
+    sessionStorage.removeItem('tempText4');
+    sessionStorage.removeItem('tempText5');
+    sessionStorage.removeItem('enrollmentId');
+    sessionStorage.removeItem('coursePaymentDetails');
+
+    // Clear localStorage admission photo if exists
+    localStorage.removeItem('admission_studentPhoto');
 
     // 1. Get the stored branch from the hidden input
     const userBranch = document.getElementById("userBranch").value;
@@ -5468,6 +5490,120 @@ function copyadmissionreceipt(){
       document.getElementById("std_Coursepayname").value
     );
     document.getElementById("studentNameInput").value=sessionStorage.getItem("tempText69");
+}
+
+// Function to clear admission form fields
+function clearAdmissionForm() {
+    console.log("Clearing admission form fields");
+
+    // Clear basic info fields
+    const fieldsToClear = [
+        "receipt_number", "first_name", "middle_name", "last_name",
+        "courseSelect", "courseDurationText", "totalCourseFees",
+        "guardian_relation", "guardian_name"
+    ];
+
+    fieldsToClear.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            if (field.tagName === "SELECT") {
+                field.selectedIndex = 0; // Reset select to first option
+            } else {
+                field.value = "";
+            }
+        }
+    });
+
+    // Clear photo preview
+    const photoPreview = document.getElementById("photo_preview");
+    const noPhotoText = document.getElementById("no_photo_text");
+    if (photoPreview) {
+        photoPreview.style.display = "none";
+        photoPreview.src = "#";
+    }
+    if (noPhotoText) {
+        noPhotoText.style.display = "block";
+    }
+
+    // Clear file input
+    const photoInput = document.getElementById("student_photo");
+    if (photoInput) {
+        photoInput.value = "";
+    }
+
+    // Reset checkbox
+    const agreeCheckbox = document.getElementById("agree");
+    if (agreeCheckbox) {
+        agreeCheckbox.checked = false;
+    }
+
+    // Clear any error messages
+    const agreeError = document.getElementById("agreeError");
+    if (agreeError) {
+        agreeError.textContent = "";
+    }
+}
+
+// Function to clear admission receipt form fields
+function clearAdmissionReceiptForm() {
+    console.log("Clearing admission receipt form fields");
+
+    // Clear basic fields
+    const fieldsToClear = [
+        "receiptNoAF", "receiptDateAF", "enrollmentNoAF", "studentNameAF",
+        "courseName", "receiptCourseDuration", "totalFee",
+        "guardianName", "guardianRelation", "agreementStudentName"
+    ];
+
+    fieldsToClear.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            if (field.tagName === "SELECT") {
+                field.selectedIndex = 0; // Reset select to first option
+            } else {
+                field.value = "";
+            }
+        }
+    });
+
+    // Clear course year dropdown
+    const courseYear = document.getElementById("courseYear");
+    if (courseYear) {
+        courseYear.innerHTML = ""; // Clear all options
+    }
+
+    // Clear installment tables container
+    const installmentTablesContainer = document.getElementById("installmentTablesContainer");
+    if (installmentTablesContainer) {
+        installmentTablesContainer.innerHTML = "";
+    }
+
+    // Clear receipt container
+    const receiptContainer = document.getElementById("receiptContainer");
+    if (receiptContainer) {
+        receiptContainer.innerHTML = "";
+        receiptContainer.classList.add("hidden");
+    }
+
+    // Clear photo in receipt form
+    const photoSection = document.querySelector('#receiptFormSection .photo-section');
+    const photoPlaceholder = document.getElementById('photoPlaceholderAF');
+    if (photoSection) {
+        // Remove any uploaded images
+        const uploadedImg = photoSection.querySelector('img');
+        if (uploadedImg) {
+            uploadedImg.remove();
+        }
+    }
+    if (photoPlaceholder) {
+        photoPlaceholder.style.display = 'block';
+    }
+
+    // Clear file input for receipt photo
+    const photoInputAF = document.getElementById('photoInputAF');
+    if (photoInputAF) {
+        photoInputAF.value = '';
+    }
 }
 
 
