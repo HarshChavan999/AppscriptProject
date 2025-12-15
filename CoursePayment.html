@@ -553,14 +553,14 @@
 
       let installmentCounter = 1;
 
-        // Initial payment
+      // Initial payment
       if (initialPayment > 0) {
         schedule.push({
           installmentNumber: installmentCounter++,
           amount: initialPayment,
           dueDate: startDate.toISOString().split('T')[0],
           status: "Pending",
-          type: "Initial Payment"
+          type: "Initial Payement"
         });
       }
 
@@ -1178,18 +1178,8 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
       const checkboxChecked = isPaid ? "checked disabled" : "";
       const receiptBtnHidden = isPaid ? "" : "hidden";
 
-      // Determine display text for installment column
-      let installmentDisplay = `Installment ${installment.installmentNumber}`;
-      if (installment.type && installment.type.includes("Initial")) {
-        installmentDisplay += " (Initial Payment)";
-      } else if (installment.type && installment.type.includes("Down")) {
-        installmentDisplay += " (Down Payment)";
-      } else if (installment.installmentNumber === 0) {
-        installmentDisplay = installment.type || "Full Payment";
-      }
-
       row.innerHTML = `
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${installmentDisplay}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${installment.installmentNumber}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">${new Date(installment.dueDate).toLocaleDateString('en-IN')}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-green-600">₹${installment.amount.toLocaleString()}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm">
@@ -1311,7 +1301,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
         dueDate: today.toISOString().split('T')[0],
         amount: initialPayment,
         status: "Pending",
-        type: "Initial Payment"
+        type: "Initial Payement"
       });
 
       // EMI installments
@@ -2480,12 +2470,18 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
 
       // Determine display text for installment column
       let installmentDisplay = '';
-      if (installment.type === "partial") {
-        installmentDisplay = `Installment ${installment.installmentNumber} (Initial Payment)`;
-      } else if (installment.type === "emi") {
-        installmentDisplay = `Installment ${installment.installmentNumber} (Down Payment)`;
-      } else if (installment.installmentNumber === 0) {
-        installmentDisplay = installment.type || "Full Payment";
+      if (installment.installmentNumber === 0) {
+        if (installment.type === "Initial Payement") {
+          installmentDisplay = "Installment 1 (Initial Payement)";
+        } else if (installment.type === "Down Payment") {
+          installmentDisplay = "Installment 1 (Down Payment)";
+        } else {
+          installmentDisplay = installment.type || "Full Payment";
+        }
+      } else if (installment.type === "Initial Payement") {
+        installmentDisplay = "Installment 1 (Initial Payement)";
+      } else if (installment.type === "Down Payment") {
+        installmentDisplay = "Installment 1 (Down Payment)";
       } else {
         installmentDisplay = `Installment ${installment.installmentNumber}`;
       }

@@ -1045,8 +1045,11 @@ function updateCoursePayDetails() {
         course.fees
       );
 
-      // Use the total fee directly from course data (already represents total for duration)
-      const totalFees = course.fees;
+      // Calculate total fees based on duration
+      const years = course.duration.includes("year")
+        ? parseInt(course.duration.split(" ")[0])
+        : 1;
+      const totalFees = years * course.fees;
       document.getElementById("totalFees").textContent =
         formatCurrency(totalFees);
 
@@ -1276,8 +1279,11 @@ function getTotalFees() {
   if (!selectedCourse) return 0;
 
   const course = courseData[selectedCourse];
-  // Use the fee directly (already represents total for duration)
-  return course.fees;
+  const years = course.duration.includes("year")
+    ? parseInt(course.duration.split(" ")[0])
+    : 1;
+
+  return years * course.fees;
 }
 
   // Select payment type
@@ -1369,23 +1375,23 @@ function generatePaymentInstallmentSchedule(paymentType) {
     const remainingAmount = Math.max(0, totalFees - initialPayment);
     const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
 
-    // Initial payment as first installment
+    // Initial payment
     if (initialPayment > 0) {
-      addInstallmentRowShared(table, 1, "Today", initialPayment, "Installment 1 (Initial Payment)", initialPayment);
+      addInstallmentRowShared(table, 0, "Today", initialPayment, "Initial Payment", initialPayment);
     }
 
-    // Remaining installments starting from 2
+    // Installments
     const today = new Date();
     let remaining = totalFees - initialPayment;
 
-    for (let i = 2; i <= tenure + 1; i++) {
+    for (let i = 1; i <= tenure; i++) {
       const dueDate = new Date();
-      dueDate.setMonth(today.getMonth() + (i - 1));
+      dueDate.setMonth(today.getMonth() + i);
 
-      const amount = i === tenure + 1 ? remaining : emiAmount;
+      const amount = i === tenure ? remaining : emiAmount;
       remaining -= amount;
 
-      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "Installment " + i, amount);
+      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "EMI Installment", amount);
     }
   } else if (paymentType === "emi") {
     // EMI payment - down payment + installments
@@ -1410,13 +1416,7 @@ function generatePaymentInstallmentSchedule(paymentType) {
       const amount = i === tenure ? remaining : emiAmount;
       remaining -= amount;
 
-      // Check if down payment > 0 and this is the first installment
-      let installmentLabel = "EMI Installment";
-      if (downPayment > 0 && i === 1) {
-        installmentLabel = "Installment 1 (Down Payment)";
-      }
-
-      addInstallmentRowShared(table, i, formatDate(dueDate), amount, installmentLabel, amount);
+      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "EMI Installment", amount);
     }
   }
 
@@ -1466,7 +1466,7 @@ function addInstallmentRowShared(table, number, date, amount, type, installmentA
   const receiptBtnId = `receiptBtn-${number}`;
 
   row.innerHTML = `
-    <td class="px-4 py-2 whitespace-nowrap">${number === 0 ? type : (type.startsWith('Installment') ? type : `Installment ${number}`)}</td>
+    <td class="px-4 py-2 whitespace-nowrap">${number === 0 ? type : `Installment ${number}`}</td>
     <td class="px-4 py-2 whitespace-nowrap">${date}</td>
     <td class="px-4 py-2 whitespace-nowrap">${formatCurrency(amount)}</td>
     <td class="px-4 py-2 whitespace-nowrap">
@@ -2284,8 +2284,33 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
         const paymentTypeEl = document.querySelector('input[name="Coursepayment_type"]:checked');
         const paymentType = paymentTypeEl?.value || "full";
 
-        let paidAmount = Amount; // For installment, paid amount is the installment amount
-        let balanceAmount = totalAmount - paidAmount;
+        // ✅ FIX: Calculate total paid amount including current installment
+        // Get receipt number to identify the student
+        const studentReceiptNo = document.getElementById('ID')?.value || admissionData?.receipt || '';
+
+        // Calculate total paid amount by summing all completed installments
+        let totalPaidAmount = parseFloat(Amount); // Start with current installment amount
+
+        // Check localStorage for previously paid installments
+        if (studentReceiptNo) {
+            for (let i = 1; i <= 36; i++) { // Check installments 1-36
+                const paymentKey = `payment_${studentReceiptNo}_${i}`;
+                const storedPayment = localStorage.getItem(paymentKey);
+                if (storedPayment) {
+                    try {
+                        const paymentData = JSON.parse(storedPayment);
+                        if (i !== parseInt(number)) { // Don't double-count current installment
+                            totalPaidAmount += parseFloat(paymentData.installmentAmount || 0);
+                        }
+                    } catch (e) {
+                        console.warn(`Error parsing payment data for ${paymentKey}:`, e);
+                    }
+                }
+            }
+        }
+
+        console.log("Total paid amount calculated:", totalPaidAmount);
+        let balanceAmount = Math.max(0, totalAmount - totalPaidAmount); // Ensure balance doesn't go negative
 
         // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
         const loggedInUser = sessionStorage.getItem("loggedInUser") ||
@@ -2299,6 +2324,9 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                       sessionStorage.getItem("branch") ||
                       "kurla";
 
+        // ✅ ADD: Get the payment method from course payment form
+        const paymentMethod = document.getElementById("pay-select")?.value || "Cash";
+
         // Prepare data for the new HTML structure
         const receiptData = {
             receiptNo: receiptNo.replace('REC', ''), // Remove 'REC' prefix as per the target image
@@ -2309,6 +2337,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
             paid: formatCurrency(paidAmount),
             balance: formatCurrency(balanceAmount),
             examFees: "-", // Hardcoded as per the provided HTML
+            paymentMethod: paymentMethod, // Add payment method
             receivedBy: loggedInUser, // Hardcoded as per the provided HTML
             branch: branch // Add branch to receipt data
         };
@@ -2385,11 +2414,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                         font-weight: bold;
                     }
 
-                    .receipt-content {
-                        display: flex;
-                        flex-direction: column;
-                        height: calc(100% - 100px); /* Adjust height based on header/footer */
-                    }
+                    
 
                     .receipt-info {
                         display: flex;
@@ -2460,34 +2485,46 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                         min-width: 80px; /* Adjust label width for amount fields */
                     }
 
-                    .footer {
-                        margin-top: 15px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-end;
-                    }
+                   .footer {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap; /* ADD THIS LINE */
+    gap: 10px; /* ADD THIS LINE */
+}
 
-                    .note {
-                        font-size: 16px;
-                        font-weight: bold;
-                        max-width: 60%;
-                    }
+.note {
+    font-size: 14px; /* REDUCE from 16px to 14px */
+    font-weight: bold;
+    max-width: 55%; /* REDUCE from 60% to 55% */
+    word-break: break-word; /* ADD THIS LINE */
+}
 
-                    .signature-area {
-                        text-align: center;
-                        min-width: 150px;
-                    }
+.signature-area {
+    text-align: center;
+    min-width: 130px; /* REDUCE from 150px to 130px */
+    flex-shrink: 0; /* ADD THIS LINE - prevents shrinking */
+}
 
-                    .signature-line {
-                        border-bottom: 1px solid #000;
-                        height: 40px;
-                        margin-bottom: 5px;
-                    }
+.signature-line {
+    border-bottom: 1px solid #000;
+    height: 35px; /* REDUCE from 40px to 35px */
+    margin-bottom: 5px;
+}
 
-                    .signature-label {
-                        font-size: 16px;
-                        font-weight: bold;
-                    }
+.signature-label {
+    font-size: 14px; /* REDUCE from 16px to 14px */
+    font-weight: bold;
+}
+
+/* Add this new rule at the end */
+.receipt-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 130px);
+    justify-content: space-between; /* ADD THIS LINE - spreads content evenly */
+}
                     /* Adjust for printing to ensure two receipts fit nicely */
                     @media print {
                         .page-container {
@@ -2515,8 +2552,8 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                <div class="date">Date: ${receiptData.date}</div>
                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
                             <div class="receipt-no">
                               Installment No. ${installmentno}
@@ -2568,6 +2605,11 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                                 </div>
 
                                 <div class="field-row">
+                                    <div class="field-label">Payment Method :</div>
+                                    <div class="field-value">${receiptData.paymentMethod}</div>
+                                </div>
+
+                                <div class="field-row">
                                     <div class="field-label">Received by :</div>
                                     <div class="field-value">${receiptData.receivedBy}</div>
                                 </div>
@@ -2596,8 +2638,8 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                <div class="date">Date: ${receiptData.date}</div>
-                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
                             <div class="receipt-no">
                               Installment No. ${installmentno}
@@ -2664,6 +2706,11 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                                 <div class="field-row">
                                     <div class="field-label">Balance Amount :</div>
                                     <div class="field-value">${receiptData.balance}</div>
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field-label">Payment Method :</div>
+                                    <div class="field-value">${receiptData.paymentMethod}</div>
                                 </div>
 
                                 <div class="field-row">
@@ -3041,8 +3088,8 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                <div class="date">Date: ${receiptData.date}</div>
-                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                              <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
 
                             <div class="form-fields">
@@ -3121,7 +3168,8 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                <div class="date">Date: ${receiptData.date}</div>
+                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
 
                             <div class="form-fields">
