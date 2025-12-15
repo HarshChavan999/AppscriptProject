@@ -310,10 +310,7 @@
             "ANM Nursing Diploma Course": "anm_nursing",
             "GNM Nursing Diploma Course": "gnm_nursing",
             "DMLT Diploma Course": "dmlt",
-            "OT Technician Diploma Course": "ot_technician",
-            "Electrician Diploma Course": "electrician",
-            "AC & Refrigerator Diploma Course": "ac_refrigerator",
-            "Basic Parlour Course": "basic_parlour",
+            "OT Technician": "ot_technician",
             "General Nursing and Midwifery Assistant": "general_nursing"
         };
 
@@ -558,8 +555,8 @@ function generateexamReceipt(formData = null) {
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                <div class="date">Date: ${receiptData.date}</div>
-                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
                             <div class="form-fields">
                                 <div class="field-row">
@@ -608,8 +605,9 @@ function generateexamReceipt(formData = null) {
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No: ${receiptData.receiptNo}</div>
-                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
+                                <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
+                            
                             </div>
                             <div class="form-fields"> 
                                 <div class="field-row">
