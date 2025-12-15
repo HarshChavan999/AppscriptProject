@@ -1045,11 +1045,8 @@ function updateCoursePayDetails() {
         course.fees
       );
 
-      // Calculate total fees based on duration
-      const years = course.duration.includes("year")
-        ? parseInt(course.duration.split(" ")[0])
-        : 1;
-      const totalFees = years * course.fees;
+      // Use the total fee directly from course data (already represents total for duration)
+      const totalFees = course.fees;
       document.getElementById("totalFees").textContent =
         formatCurrency(totalFees);
 
@@ -1279,11 +1276,8 @@ function getTotalFees() {
   if (!selectedCourse) return 0;
 
   const course = courseData[selectedCourse];
-  const years = course.duration.includes("year")
-    ? parseInt(course.duration.split(" ")[0])
-    : 1;
-
-  return years * course.fees;
+  // Use the fee directly (already represents total for duration)
+  return course.fees;
 }
 
   // Select payment type
@@ -1375,23 +1369,23 @@ function generatePaymentInstallmentSchedule(paymentType) {
     const remainingAmount = Math.max(0, totalFees - initialPayment);
     const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
 
-    // Initial payment
+    // Initial payment as first installment
     if (initialPayment > 0) {
-      addInstallmentRowShared(table, 0, "Today", initialPayment, "Initial Payment", initialPayment);
+      addInstallmentRowShared(table, 1, "Today", initialPayment, "Installment 1 (Initial Payment)", initialPayment);
     }
 
-    // Installments
+    // Remaining installments starting from 2
     const today = new Date();
     let remaining = totalFees - initialPayment;
 
-    for (let i = 1; i <= tenure; i++) {
+    for (let i = 2; i <= tenure + 1; i++) {
       const dueDate = new Date();
-      dueDate.setMonth(today.getMonth() + i);
+      dueDate.setMonth(today.getMonth() + (i - 1));
 
-      const amount = i === tenure ? remaining : emiAmount;
+      const amount = i === tenure + 1 ? remaining : emiAmount;
       remaining -= amount;
 
-      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "EMI Installment", amount);
+      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "Installment " + i, amount);
     }
   } else if (paymentType === "emi") {
     // EMI payment - down payment + installments
@@ -1416,7 +1410,13 @@ function generatePaymentInstallmentSchedule(paymentType) {
       const amount = i === tenure ? remaining : emiAmount;
       remaining -= amount;
 
-      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "EMI Installment", amount);
+      // Check if down payment > 0 and this is the first installment
+      let installmentLabel = "EMI Installment";
+      if (downPayment > 0 && i === 1) {
+        installmentLabel = "Installment 1 (Down Payment)";
+      }
+
+      addInstallmentRowShared(table, i, formatDate(dueDate), amount, installmentLabel, amount);
     }
   }
 
@@ -1466,7 +1466,7 @@ function addInstallmentRowShared(table, number, date, amount, type, installmentA
   const receiptBtnId = `receiptBtn-${number}`;
 
   row.innerHTML = `
-    <td class="px-4 py-2 whitespace-nowrap">${number === 0 ? type : `Installment ${number}`}</td>
+    <td class="px-4 py-2 whitespace-nowrap">${number === 0 ? type : (type.startsWith('Installment') ? type : `Installment ${number}`)}</td>
     <td class="px-4 py-2 whitespace-nowrap">${date}</td>
     <td class="px-4 py-2 whitespace-nowrap">${formatCurrency(amount)}</td>
     <td class="px-4 py-2 whitespace-nowrap">
