@@ -641,11 +641,19 @@
       selectedCard.classList.add("selected");
     }
 
-    // Ensure all payment cards remain visible during option selection
-    // Card hiding should only happen after confirmation, not during selection
-    document.getElementById("fullPaymentCard").style.display = 'block';
-    document.getElementById("partialPaymentCard").style.display = 'block';
-    document.getElementById("emiPaymentCard").style.display = 'block';
+    // Check if the confirmation checkbox is checked
+    // confirmationCheckbox is already declared above
+    if (confirmationCheckbox.checked) {
+      // Hide other payment options if confirmation is checked
+      document.getElementById("fullPaymentCard").style.display = paymentType === 'full' ? 'block' : 'none';
+      document.getElementById("partialPaymentCard").style.display = paymentType === 'partial' ? 'block' : 'none';
+      document.getElementById("emiPaymentCard").style.display = paymentType === 'emi' ? 'block' : 'none';
+    } else {
+      // Ensure all payment cards remain visible if not confirmed
+      document.getElementById("fullPaymentCard").style.display = 'block';
+      document.getElementById("partialPaymentCard").style.display = 'block';
+      document.getElementById("emiPaymentCard").style.display = 'block';
+    }
 
     // Uncheck and re-enable the confirmation checkbox when changing selection
     if (confirmationCheckbox) {
@@ -2297,10 +2305,10 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     document.getElementById("emiPaymentCard").style.display = 'block';
 
     // Clear all radio button selections - NO payment option should be pre-selected
-    const paymentRadios = document.querySelectorAll('input[name="Coursepayment_type"]');
-    paymentRadios.forEach(radio => {
-        radio.checked = false;
-    });
+      const radioButtons = document.querySelectorAll('input[name="Coursepayment_type"]');
+      radioButtons.forEach(radio => {
+        radio.disabled = false;
+      });
 
     // Reset selectedPaymentType to null
     if (typeof selectedPaymentType !== 'undefined') {
