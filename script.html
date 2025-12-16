@@ -1479,10 +1479,10 @@ function addInstallmentRowShared(table, number, date, amount, type, installmentA
       </span>
     </td>
     <td class="px-4 py-2 whitespace-nowrap text-center">
-      <input type="checkbox" data-installment="${number === 0 ? 1 : number}" data-amount="${installmentAmount}" class="installment-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" onchange="handleInstallmentPaymentShared(this, '${statusId}', '${receiptBtnId}')">
+      <input type="checkbox" data-installment="${number}" data-amount="${installmentAmount}" class="installment-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" onchange="handleInstallmentPaymentShared(this, '${statusId}', '${receiptBtnId}')">
     </td>
     <td class="px-4 py-2 whitespace-nowrap text-center">
-      <button id="${receiptBtnId}" onclick="generateInstallmentReceipt(${number === 0 ? 1 : number}, ${installmentAmount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded hidden hover:bg-green-700 transition-colors">Receipt</button>
+      <button id="${receiptBtnId}" onclick="generateInstallmentReceipt(${number}, ${installmentAmount})" class="text-sm px-3 py-1 bg-green-600 text-white rounded hidden hover:bg-green-700 transition-colors">Receipt</button>
     </td>
   `;
 
@@ -1824,13 +1824,13 @@ function openCoursePayment() {
   // Load saved payment details
   const savedPaymentDetails = JSON.parse(sessionStorage.getItem('coursePaymentDetails') || 'null');
 
-  if (admissionData && admissionData.name && admissionData.receipt) {
+  if (admissionData && (admissionData.name || admissionData.firstName) && (admissionData.receipt || admissionData.receiptNumber)) {
     // User came from admission structure - reset previous details first, then show only installment schedule
     clearCoursePaymentForm();
     document.getElementById("paymentOptionsSection").classList.add("hidden");
     document.getElementById("installmentScheduleSection").classList.remove("hidden");
 
-    // Populate with admission data
+    // Populate with admission data - handle both admission form and admission analytics data formats
     copyAdmission();
     // Load saved payment details if available
     if (savedPaymentDetails) {
@@ -2191,7 +2191,16 @@ function resetCoursePaymentForm() {
       nameField.readOnly = true; // Lock the field
     }
 
-    let receiptNumber = sessionStorage.getItem('tempText4') || document.getElementById("receipt_number")?.value || '';
+    // Check multiple sources for receipt number
+    let receiptNumber = sessionStorage.getItem('tempText4') ||
+                       document.getElementById("receipt_number")?.value || '';
+
+    // Also check admission analytics data
+    const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
+    if (admissionData && (admissionData.receiptNumber || admissionData.receipt)) {
+        receiptNumber = admissionData.receiptNumber || admissionData.receipt;
+        console.log('Using receipt number from admission analytics:', receiptNumber);
+    }
     const idField = document.getElementById("ID");
     if (receiptNumber && idField) {
       idField.value = receiptNumber;
@@ -2263,12 +2272,67 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
         const admissionData = JSON.parse(sessionStorage.getItem('admissionDataForPayment') || 'null');
         let studentName, courseName, totalAmount;
 
-        if (admissionData && admissionData.name && admissionData.receipt) {
+        if (admissionData && (admissionData.name || admissionData.firstName) && (admissionData.receipt || admissionData.receiptNumber)) {
             // Coming from admission structure - use admission data
             console.log("Using admission data for receipt:", admissionData);
-            studentName = admissionData.name || admissionData.studentName || "N/A";
-            courseName = admissionData.course || admissionData.courseSelect || "N/A";
-            totalAmount = parseFloat(admissionData.totalFees || admissionData.fees || "0");
+            // Handle both admission form (name) and admission analytics (firstName/middleName/lastName) data formats
+            if (admissionData.firstName) {
+                // Admission Analytics format
+                studentName = `${admissionData.firstName} ${admissionData.middleName || ''} ${admissionData.lastName || ''}`.trim();
+            } else {
+                // Admission Form format
+                studentName = admissionData.name || admissionData.studentName || "N/A";
+            }
+            courseName = admissionData.courseName || admissionData.course || admissionData.courseSelect || "N/A";
+            
+            // ✅ FIX: Use totalFees from admission data if available, otherwise calculate from course data
+            if (admissionData.totalFees) {
+                // Direct totalFees from admission analytics
+                totalAmount = parseFloat(admissionData.totalFees);
+                console.log("Using totalFees from admission data:", totalAmount);
+            } else if (admissionData.fees) {
+                // Legacy admission form data
+                totalAmount = parseFloat(admissionData.fees);
+                console.log("Using fees from admission data:", totalAmount);
+            } else {
+                // Fallback: calculate from course data
+                console.log("Calculating totalAmount from course data. Course:", courseName);
+
+                const branch = localStorage.getItem("userBranch") ||
+                              sessionStorage.getItem("userBranch") ||
+                              sessionStorage.getItem("branch") ||
+                              "kurla";
+                const courseData = getCourseDataByLocation(branch);
+
+                // Map courseName to course key - handle different course name formats
+                const courseKeyMap = {
+                    "ANM Nursing Diploma": "anm_nursing",
+                    "GNM Nursing Diploma": "gnm_nursing",
+                    "DMLT Diploma": "dmlt",
+                    "OT Technician": "ot_technician",
+                    "General Nursing Assistant": "general_nursing",
+                    "anm_nursing": "anm_nursing",
+                    "gnm_nursing": "gnm_nursing",
+                    "dmlt": "dmlt",
+                    "ot_technician": "ot_technician",
+                    "general_nursing": "general_nursing"
+                };
+
+                const courseKey = courseKeyMap[courseName] || courseName.toLowerCase().replace(/\s+/g, '_');
+                console.log("Looking for course key:", courseKey, "in course data");
+
+                if (courseData[courseKey]) {
+                    const years = courseData[courseKey].duration.includes("year")
+                        ? parseInt(courseData[courseKey].duration.split(" ")[0])
+                        : 1;
+                    totalAmount = courseData[courseKey].fees * years;
+                    console.log("Calculated total from course data:", totalAmount, "for course:", courseKey, "years:", years);
+                } else {
+                    console.warn("Course data not found for:", courseName, "key:", courseKey);
+                    console.log("Available course keys:", Object.keys(courseData));
+                    totalAmount = 0;
+                }
+            }
         } else {
             // Normal course payment - use form data
             console.log("Using form data for receipt");
@@ -2285,29 +2349,40 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
         const paymentType = paymentTypeEl?.value || "full";
 
         // ✅ FIX: Calculate total paid amount including current installment
-        // Get receipt number to identify the student
-        const studentReceiptNo = document.getElementById('ID')?.value || admissionData?.receipt || '';
+        // Get receipt number to identify the student - check both admission form and analytics formats
+        const studentReceiptNo = document.getElementById('ID')?.value || admissionData?.receipt || admissionData?.receiptNumber || '';
 
         // Calculate total paid amount by summing all completed installments
-        let totalPaidAmount = parseFloat(Amount); // Start with current installment amount
+        let totalPaidAmount = 0; // Start with 0, then add ALL paid installments including current
 
-        // Check localStorage for previously paid installments
+        // Check localStorage for all paid installments (including current)
         if (studentReceiptNo) {
-            for (let i = 1; i <= 36; i++) { // Check installments 1-36
-                const paymentKey = `payment_${studentReceiptNo}_${i}`;
-                const storedPayment = localStorage.getItem(paymentKey);
-                if (storedPayment) {
-                    try {
-                        const paymentData = JSON.parse(storedPayment);
-                        if (i !== parseInt(number)) { // Don't double-count current installment
-                            totalPaidAmount += parseFloat(paymentData.installmentAmount || 0);
-                        }
-                    } catch (e) {
-                        console.warn(`Error parsing payment data for ${paymentKey}:`, e);
-                    }
+        console.log(`Checking localStorage for receipt: ${studentReceiptNo}`);
+
+        // Debug: Show all localStorage keys related to payments
+        const allKeys = Object.keys(localStorage);
+        const paymentKeys = allKeys.filter(key => key.startsWith('payment_'));
+        console.log('All payment keys in localStorage:', paymentKeys);
+
+        for (let i = 1; i <= 36; i++) { // Check installments 1-36
+            const paymentKey = `payment_${studentReceiptNo}_${i}`;
+            const storedPayment = localStorage.getItem(paymentKey);
+            if (storedPayment) {
+                try {
+                    const paymentData = JSON.parse(storedPayment);
+                    totalPaidAmount += parseFloat(paymentData.installmentAmount || 0);
+                    console.log(`Found payment for installment ${i}: ₹${paymentData.installmentAmount}, running total: ₹${totalPaidAmount}`);
+                } catch (e) {
+                    console.warn(`Error parsing payment data for ${paymentKey}:`, e);
                 }
+            } else {
+                console.log(`No payment found for installment ${i}`);
             }
         }
+        console.log(`Final total paid amount calculated: ₹${totalPaidAmount}`);
+    } else {
+        console.warn('No receipt number found for balance calculation!');
+    }
 
         console.log("Total paid amount calculated:", totalPaidAmount);
         let balanceAmount = Math.max(0, totalAmount - totalPaidAmount); // Ensure balance doesn't go negative
@@ -2334,7 +2409,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
             fullName: studentName,
             proposeToPay: courseName,
             totalAmount: formatCurrency(totalAmount),
-            paid: formatCurrency(paidAmount),
+            paid: formatCurrency(totalPaidAmount),
             balance: formatCurrency(balanceAmount),
             examFees: "-", // Hardcoded as per the provided HTML
             paymentMethod: paymentMethod, // Add payment method

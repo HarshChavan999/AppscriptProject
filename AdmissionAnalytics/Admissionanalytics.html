@@ -135,7 +135,7 @@ function renderAdmissionAnalyticsTable(dataArray) {
       <td class='px-4 py-2'>${d.guardianRelation}</td>
       <td class='px-4 py-2'>${d.agreement}</td>
       <td class='px-4 py-2'>
-        <button onclick="openCoursePaymentFromAnalytics('${d.receipt}', '${firstName}', '${middleName}', '${lastName}', '${d.course}', '${d.tenure}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+        <button onclick="openCoursePaymentFromAnalytics('${d.receipt}', '${firstName}', '${middleName}', '${lastName}', '${d.course}', '${d.tenure}', '${d.totalFees}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
           Course Payment
         </button>
       </td>
@@ -145,7 +145,7 @@ function renderAdmissionAnalyticsTable(dataArray) {
   document.getElementById("aaTableContainer").innerHTML = h;
 }
 
-function openCoursePaymentFromAnalytics(receiptNumber, firstName, middleName, lastName, course, tenure) {
+function openCoursePaymentFromAnalytics(receiptNumber, firstName, middleName, lastName, course, tenure, totalFees) {
   // Set sessionStorage data for course payment
   const admissionData = {
     receiptNumber: receiptNumber,
@@ -154,6 +154,7 @@ function openCoursePaymentFromAnalytics(receiptNumber, firstName, middleName, la
     lastName: lastName,
     courseName: course,
     tenure: parseInt(tenure) || 12,
+    totalFees: parseFloat(totalFees) || 0,
     paymentType: tenure > 1 ? 'emi' : 'full' // Assume EMI if tenure > 1
   };
 

@@ -1590,6 +1590,16 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     }
   }
 
+  // Function to store payment locally for persistence
+  function storePaymentLocally(receiptNo, installmentNumber, paymentData) {
+    const key = `payment_${receiptNo}_${installmentNumber}`;
+    localStorage.setItem(key, JSON.stringify({
+      ...paymentData,
+      storedAt: new Date().toISOString()
+    }));
+    console.log(`Stored payment locally: ${key}`);
+  }
+
   // Function to save installment payment
   function saveInstallmentPayment(installmentNumber, amount, checkbox, statusId, receiptBtnId) {
     const formData = {
@@ -1610,6 +1620,19 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
     google.script.run
       .withSuccessHandler((result) => {
         if (result.success) {
+          // Store payment locally for balance calculation (CRITICAL FIX)
+          storePaymentLocally(formData.receiptNo, formData.installmentNumber, {
+            receiptNo: formData.receiptNo,
+            studentName: formData.studentName,
+            enrollmentId: formData.enrollmentId,
+            courseName: formData.courseName,
+            installmentNumber: formData.installmentNumber,
+            installmentAmount: formData.installmentAmount,
+            paymentMethod: formData.paymentMethod,
+            paymentDate: formData.paymentDate,
+            loggedInUser: formData.loggedInUser
+          });
+
           // Update feeStructure: add to course fee and reduce course_fee_due
           const enrollmentId = document.getElementById("enrollmentId").value;
           const totalCourseFee = document.getElementById("totalFees").value;
