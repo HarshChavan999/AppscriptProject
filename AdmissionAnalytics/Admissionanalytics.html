@@ -155,7 +155,7 @@ function openCoursePaymentFromAnalytics(receiptNumber, firstName, middleName, la
     courseName: course,
     tenure: parseInt(tenure) || 12,
     totalFees: parseFloat(totalFees) || 0,
-    paymentType: tenure > 1 ? 'emi' : 'full' // Assume EMI if tenure > 1
+    paymentType: 'partial' // Always assume partial payment for admission analytics
   };
 
   sessionStorage.setItem('admissionDataForPayment', JSON.stringify(admissionData));
