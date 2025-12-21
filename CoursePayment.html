@@ -544,39 +544,53 @@
         dueDate: startDate.toISOString().split('T')[0],
         status: "Full Paid"
       });
-    } else if (paymentType === "partial") {
-      // Partial payment: initial payment + EMIs
-      const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
-      const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
-      const remainingAmount = totalFee - initialPayment;
-      const emiAmount = Math.ceil(remainingAmount / (tenure - 1)); // Divide by number of EMIs (tenure - 1)
+  } else if (paymentType === "partial") {
+    // Partial payment - initial payment + installments
+    const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
+    const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
+    const remainingAmount = Math.max(0, totalFee - initialPayment);
 
-      let installmentCounter = 1;
+    // Calculate exact installments - distribute remaining amount properly
+    const exactInstallmentAmount = Math.floor(remainingAmount / tenure);
+    const remainder = remainingAmount % tenure; // Extra amount to distribute
 
-      // Initial payment
-      if (initialPayment > 0) {
-        schedule.push({
-          installmentNumber: installmentCounter++,
-          amount: initialPayment,
-          dueDate: startDate.toISOString().split('T')[0],
-          status: "Pending",
-          type: "Initial Payement"
-        });
+    let installmentCounter = 1;
+
+    // Initial payment
+    if (initialPayment > 0) {
+      schedule.push({
+        installmentNumber: installmentCounter++,
+        amount: initialPayment,
+        dueDate: startDate.toISOString().split('T')[0],
+        status: "Pending",
+        type: "Initial Payement"
+      });
+    }
+
+    // Subsequent installments - Installment 2, 3, 4, etc.
+    for (let i = 1; i <= tenure; i++) {
+      const dueDate = new Date(startDate);
+      dueDate.setMonth(startDate.getMonth() + i);
+
+      // For the last installment, adjust to make total add up exactly
+      let amount;
+      if (i === tenure) {
+        // Last installment gets the remaining amount to ensure exact total
+        const totalSoFar = initialPayment + (exactInstallmentAmount * (tenure - 1)) + remainder;
+        amount = totalFee - totalSoFar;
+      } else {
+        // Regular installments - base amount plus 1 extra for first 'remainder' installments
+        amount = exactInstallmentAmount + (i <= remainder ? 1 : 0);
       }
 
-      // EMI installments - start from month 1 (next month)
-      for (let i = 1; i <= tenure - 1; i++) { // Create tenure - 1 EMIs
-        const dueDate = new Date(startDate);
-        dueDate.setMonth(startDate.getMonth() + i); // Month 1, 2, 3, etc.
-
-        schedule.push({
-          installmentNumber: installmentCounter++,
-          amount: emiAmount,
-          dueDate: dueDate.toISOString().split('T')[0],
-          status: "Pending",
-          type: "EMI"
-        });
-      }
+      schedule.push({
+        installmentNumber: installmentCounter++,
+        amount: amount,
+        dueDate: dueDate.toISOString().split('T')[0],
+        status: "Pending",
+        type: "EMI"
+      });
+    }
     } else if (paymentType === "emi") {
       // EMI payment: down payment + EMIs
       const downPayment = parseFloat(document.getElementById("emiDownPaymentInput").value) || 0;

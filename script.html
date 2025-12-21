@@ -1354,7 +1354,7 @@ function finalizePaymentSelection(type) {
   }, 500);
 }
 
-// Generate installment schedule for all payment types - UPDATED with shared functionality
+  // Generate installment schedule for all payment types - UPDATED with shared functionality
 function generatePaymentInstallmentSchedule(paymentType) {
   const table = document.getElementById("installmentTable");
   table.innerHTML = "";
@@ -1367,31 +1367,43 @@ function generatePaymentInstallmentSchedule(paymentType) {
     const fullAmount = totalFees - discountAmount;
 
     // Use shared function
-    addInstallmentRowShared(table, 0, "Today", fullAmount, "Full Payment (with discount)", fullAmount);
+    addInstallmentRowShared(table, 1, "Today", fullAmount, "Full Payment (with discount)", fullAmount);
   } else if (paymentType === "partial") {
     // Partial payment - initial payment + installments
     const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
     const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
     const remainingAmount = Math.max(0, totalFees - initialPayment);
-    const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
 
-    // Initial payment
+    // Calculate exact installments - distribute remaining amount properly
+    const exactInstallmentAmount = Math.floor(remainingAmount / tenure);
+    const remainder = remainingAmount % tenure; // Extra amount to distribute
+
+    let installmentCounter = 1;
+
+    // Initial payment - now shows as Installment 1
     if (initialPayment > 0) {
-      addInstallmentRowShared(table, 0, "Today", initialPayment, "Initial Payment", initialPayment);
+      addInstallmentRowShared(table, installmentCounter++, "Today", initialPayment, "Installment 1", initialPayment);
     }
 
-    // Installments
+    // Subsequent installments - Installment 2, 3, 4, etc.
     const today = new Date();
-    let remaining = totalFees - initialPayment;
 
     for (let i = 1; i <= tenure; i++) {
       const dueDate = new Date();
       dueDate.setMonth(today.getMonth() + i);
 
-      const amount = i === tenure ? remaining : emiAmount;
-      remaining -= amount;
+      // For the last installment, adjust to make total add up exactly
+      let amount;
+      if (i === tenure) {
+        // Last installment gets the remaining amount to ensure exact total
+        const totalSoFar = initialPayment + (exactInstallmentAmount * (tenure - 1)) + remainder;
+        amount = totalFees - totalSoFar;
+      } else {
+        // Regular installments - base amount plus 1 extra for first 'remainder' installments
+        amount = exactInstallmentAmount + (i <= remainder ? 1 : 0);
+      }
 
-      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "EMI Installment", amount);
+      addInstallmentRowShared(table, installmentCounter++, formatDate(dueDate), amount, `Installment ${installmentCounter - 1}`, amount);
     }
   } else if (paymentType === "emi") {
     // EMI payment - down payment + installments
@@ -1400,14 +1412,15 @@ function generatePaymentInstallmentSchedule(paymentType) {
     const remainingAmount = totalFees - downPayment;
     const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
 
-    // Down payment
+    // Down payment - show as Installment 1
     if (downPayment > 0) {
-      addInstallmentRowShared(table, 0, "Today", downPayment, "Down Payment", downPayment);
+      addInstallmentRowShared(table, 1, "Today", downPayment, "Installment 1", downPayment);
     }
 
-    // Installments
+    // Installments - start from Installment 2 (if down payment exists) or Installment 1 (if no down payment)
     const today = new Date();
     let remaining = totalFees - downPayment;
+    const startNumber = downPayment > 0 ? 2 : 1;
 
     for (let i = 1; i <= tenure; i++) {
       const dueDate = new Date();
@@ -1416,7 +1429,7 @@ function generatePaymentInstallmentSchedule(paymentType) {
       const amount = i === tenure ? remaining : emiAmount;
       remaining -= amount;
 
-      addInstallmentRowShared(table, i, formatDate(dueDate), amount, "EMI Installment", amount);
+      addInstallmentRowShared(table, startNumber + i - 1, formatDate(dueDate), amount, `Installment ${startNumber + i - 1}`, amount);
     }
   }
 
@@ -1832,12 +1845,74 @@ function openCoursePayment() {
 
     // Populate with admission data - handle both admission form and admission analytics data formats
     copyAdmission();
-    // Load saved payment details if available
-    if (savedPaymentDetails) {
-      loadSavedPaymentDetails(savedPaymentDetails);
-    }
-    // Load existing payments for this student
-    loadInstallmentPaymentsForStudent();
+
+    // 🔧 FIX: For Admission Analytics flow, prioritize saved payment details over defaults
+    setTimeout(() => {
+      // First, ensure course is selected and fees are calculated
+      if (admissionData.courseName) {
+        const courseSelect = document.getElementById("coursePaySelect");
+        if (courseSelect) {
+          // Find and select the course
+          for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].value === admissionData.courseName ||
+                courseSelect.options[i].text.toLowerCase().includes(admissionData.courseName.toLowerCase())) {
+              courseSelect.selectedIndex = i;
+              // Trigger course details update
+              updateCoursePayDetails();
+              break;
+            }
+          }
+        }
+      }
+
+      // Now handle payment details
+      setTimeout(() => {
+        // For Admission Analytics, always regenerate the installment schedule
+        // Don't rely on potentially incorrect saved data
+        console.log("Admission Analytics flow - regenerating installment schedule");
+
+        // Default to partial payment for admission analytics (most common scenario)
+        selectedPaymentType = 'partial';
+
+        // Set default partial payment values based on admission data
+        setTimeout(() => {
+          console.log("Setting up partial payment for Admission Analytics");
+
+          // Set tenure from admission data (default to 3 for most courses)
+          const tenure = admissionData.tenure || 3;
+          console.log("Setting tenure to:", tenure);
+
+          const partialTenureSelect = document.getElementById("partialTenure");
+          if (partialTenureSelect) {
+            partialTenureSelect.value = tenure.toString();
+            console.log("Set partial tenure to:", tenure);
+          }
+
+          // Set initial payment to 20% (common for partial payments)
+          const totalFees = getTotalFees();
+          console.log("Total fees:", totalFees);
+
+          const initialPayment = Math.floor(totalFees * 0.2); // Use floor to ensure proper division
+          console.log("Calculated initial payment:", initialPayment);
+
+          const partialInitialInput = document.getElementById("partialInitialInput");
+          if (partialInitialInput) {
+            partialInitialInput.value = initialPayment.toString();
+            console.log("Set partial initial input to:", initialPayment);
+          }
+
+          // Force select partial payment type
+          selectedPaymentType = 'partial';
+          console.log("Set selectedPaymentType to partial");
+
+          // Directly generate the installment schedule with partial payment logic
+          setTimeout(() => {
+            console.log("Directly generating partial payment installment schedule");
+            generatePaymentInstallmentSchedule("partial");
+          }, 100);
+        }, 300);
+      }, 300); // Wait for course selection and fee calculation
+    }, 500);
   } else {
     // Normal access - show both payment options and installment schedule
     document.getElementById("paymentOptionsSection").classList.remove("hidden");
@@ -2561,7 +2636,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                     }
 
                    .footer {
-    margin-top: 15px;
+    margin-top: 8px; /* Reduced from 15px to bring elements up */
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -2594,12 +2669,12 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
 }
 
 /* Add this new rule at the end */
-.receipt-content {
-    display: flex;
-    flex-direction: column;
-    height: calc(100% - 130px);
-    justify-content: space-between; /* ADD THIS LINE - spreads content evenly */
-}
+                    .receipt-content {
+                        display: flex;
+                        flex-direction: column;
+                        height: calc(100% - 100px); /* Reduced from 130px to bring footer closer */
+                        justify-content: space-between;
+                    }
                     /* Adjust for printing to ensure two receipts fit nicely */
                     @media print {
                         .page-container {
