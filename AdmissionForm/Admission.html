@@ -94,6 +94,28 @@
             </label>
             <input type="text" id="totalCourseFees" name="totalCourseFees" placeholder="Total Fees" class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" />
           </div>
+          <div>
+            <label for="admissionFee" class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-money-bill-wave text-blue-900 mr-2"></i>Admission Fee
+            </label>
+            <input type="text" id="admissionFee" name="admissionFee" placeholder="Admission Fee" class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" />
+          </div>
+        </div>
+
+        <h2 class="text-xl font-semibold text-gray-800">Payment Information</h2>
+        <div class="space-y-3">
+          <div>
+            <label for="payment_mode" class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-credit-card text-blue-900 mr-2"></i>Payment Mode
+            </label>
+            <select id="payment_mode" name="payment_mode" class="form-select w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select Payment Mode</option>
+              <option value="Cash">Cash</option>
+              <option value="Bank">Bank</option>
+              <option value="UPI">UPI</option>
+              <option value="Cheque">Bank Check</option>
+            </select>
+          </div>
         </div>
 
         <h2 class="text-xl font-semibold text-gray-800">Guardian Information</h2>

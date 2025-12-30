@@ -5184,6 +5184,13 @@ html2pdf()
       document.getElementById('middle_name').value = nameParts.slice(1, -1).join(' ') || '';
       document.getElementById('last_name').value = nameParts[nameParts.length - 1] || '';
 
+      // Set branch from inquiry data if available
+      if (data.branch) {
+        // Store branch in sessionStorage for course data lookup
+        sessionStorage.setItem('branch', data.branch);
+        console.log('Set branch from inquiry data:', data.branch);
+      }
+
       // Prefill course from inquiry more robustly
       if (data.interestedCourse) {
         const courseSelect = document.getElementById('courseSelect');
@@ -5231,6 +5238,12 @@ html2pdf()
             // Trigger change event to update course details
             const event = new Event('change', { bubbles: true });
             courseSelect.dispatchEvent(event);
+            // Also call populateAdmissionFees to ensure fees are populated
+            setTimeout(() => {
+              if (typeof populateAdmissionFees === 'function') {
+                populateAdmissionFees();
+              }
+            }, 100);
           } else {
             console.warn('No matching course found for:', data.interestedCourse);
           }
@@ -5241,6 +5254,14 @@ html2pdf()
     } else {
       console.log('No inquiry data found in sessionStorage');
     }
+
+    // Always populate fees after form is loaded, even if no inquiry data
+    // Add a longer delay to ensure course selection is complete
+    setTimeout(() => {
+      if (typeof populateAdmissionFees === 'function') {
+        populateAdmissionFees();
+      }
+    }, 500);
   }
 
   //Handle admission form submission
