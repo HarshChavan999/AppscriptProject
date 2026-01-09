@@ -1643,10 +1643,11 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Shelar Training Institute Receipt</title>
                 <style>
-                    @page {
-                        size: A4;
-                        margin: 0.5in;
-                    }
+                   @page {
+    size: A4;
+    margin: 0.5in;
+}
+
 
                     body {
                         font-family: Arial, sans-serif;
@@ -1667,7 +1668,10 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
 
                     .receipt {
                         width: 100%;
-                        height: 45%; /* Approximately half the page height for two receipts */
+                         min-height: 135mm;
+    max-height: 135mm;
+        overflow: hidden;
+
                         border: 3px solid #000;
                         border-radius: 15px;
                         padding: 15px;
@@ -1774,16 +1778,13 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                     .amount-fields .field-label {
                         min-width: 80px; /* Adjust label width for amount fields */
                     }
-
-                   .footer {
-    margin-top: 8px; /* Reduced from 15px to bring elements up */
+.footer {
+    margin-top: auto;   /* 🔥 MAGIC LINE */
+    padding-top: 10px;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    flex-wrap: wrap; /* ADD THIS LINE */
-    gap: 10px; /* ADD THIS LINE */
 }
-
 .note {
     font-size: 14px; /* REDUCE from 16px to 14px */
     font-weight: bold;
@@ -1810,17 +1811,17 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
 
 /* Add this new rule at the end */
                     .receipt-content {
-                        display: flex;
-                        flex-direction: column;
-                        height: calc(100% - 100px); /* Reduced from 130px to bring footer closer */
-                        justify-content: space-between;
-                    }
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
                     /* Adjust for printing to ensure two receipts fit nicely */
-                    @media print {
-                        .page-container {
-                            height: 297mm; /* Full A4 height */
-                            padding: 0.5in; /* Match @page margin */
-                        }
+                  @media print {
+    .page-container {
+        height: 297mm;
+        padding: 10mm;
+    }
+}
                         .receipt {
                             margin-bottom: 5mm; /* Slightly less margin for print */
                         }
