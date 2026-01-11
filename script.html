@@ -1126,19 +1126,10 @@ function updatePaymentOptions(totalFees) {
   // Full Payment
   updateFullPaymentDiscount();
 
-  // Partial Payment - Update with default values but let user edit (minimum 20%)
-  const partialInitialInput = document.getElementById("partialInitialInput");
-  if (partialInitialInput && partialInitialInput.value === "") {
-    // Default to 50% or 20% minimum
-    partialInitialInput.value = Math.max(Math.ceil(totalFees * 0.5), Math.ceil(totalFees * 0.2));
-  }
+  // Partial Payment - Allow flexible user input, no forced defaults
   updatePartialPayment();
 
   // EMI Payment
-  const emiDownPaymentInput = document.getElementById("emiDownPaymentInput");
-  if (emiDownPaymentInput && emiDownPaymentInput.value === "") {
-    emiDownPaymentInput.value = Math.ceil(totalFees * 0.1);
-  }
   updateEMIPayment();
 }
 
@@ -1148,12 +1139,8 @@ function updatePartialPayment() {
   let initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
   const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
 
-  // Ensure minimum initial payment is above 20%
-  const minInitialPayment = Math.ceil(totalFees * 0.2) + 1;
-  if (initialPayment <= Math.floor(totalFees * 0.2)) {
-    initialPayment = Math.max(initialPayment, minInitialPayment);
-    document.getElementById("partialInitialInput").value = initialPayment.toFixed(2);
-  }
+  // Allow flexible initial payment amounts - no forced minimum
+  // Users can enter any amount they want
 
   // Calculate remaining amount and EMI
   const remainingAmount = Math.max(0, totalFees - initialPayment);
@@ -1199,12 +1186,12 @@ function updateEMIPayment() {
 
   const emiTotalAmountEl = document.getElementById("emiTotalAmount");
   if (emiTotalAmountEl) {
-    emiTotalAmountEl.textContent = formatCurrency(remainingAmount);
+    emiTotalAmountEl.textContent = formatCurrency(emiAmount * tenure); // Total of all EMI installments
   }
 
   const emiTotalEl = document.getElementById("emiTotal");
   if (emiTotalEl) {
-    emiTotalEl.textContent = formatCurrency(totalFees + actualDownPayment); // Total payable includes down payment
+    emiTotalEl.textContent = formatCurrency(actualDownPayment + (emiAmount * tenure)); // Down payment + total EMI amount
   }
 
   // Update installment schedule if EMI payment is selected
@@ -1314,14 +1301,14 @@ function finalizePaymentSelection(type) {
     // Hide full and emi cards
     document.getElementById("fullPaymentCard").style.display = 'none';
     document.getElementById("emiPaymentCard").style.display = 'none';
-    // Make initial payment read-only
-    document.getElementById("partialInitialInput").readOnly = true;
+    // Keep initial payment editable
+    document.getElementById("partialInitialInput").readOnly = false;
   } else if (type === 'emi') {
     // Hide full and partial cards
     document.getElementById("fullPaymentCard").style.display = 'none';
     document.getElementById("partialPaymentCard").style.display = 'none';
-    // Make down payment and total course fees read-only
-    document.getElementById("emiDownPaymentInput").readOnly = true;
+    // Keep down payment editable
+    document.getElementById("emiDownPaymentInput").readOnly = false;
     document.getElementById("totalFees").style.pointerEvents = 'none';
     document.getElementById("totalFees").style.userSelect = 'none';
   } else if (type === 'full') {
@@ -1888,18 +1875,9 @@ function openCoursePayment() {
             console.log("Set partial tenure to:", tenure);
           }
 
-          // Set initial payment to 20% (common for partial payments)
-          const totalFees = getTotalFees();
-          console.log("Total fees:", totalFees);
-
-          const initialPayment = Math.floor(totalFees * 0.2); // Use floor to ensure proper division
-          console.log("Calculated initial payment:", initialPayment);
-
-          const partialInitialInput = document.getElementById("partialInitialInput");
-          if (partialInitialInput) {
-            partialInitialInput.value = initialPayment.toString();
-            console.log("Set partial initial input to:", initialPayment);
-          }
+          // Don't force initial payment - let user enter any amount they want
+          // Users can enter flexible initial payment amounts without being forced to 20%
+          console.log("Allowing flexible initial payment amounts for partial payments");
 
           // Force select partial payment type
           selectedPaymentType = 'partial';
@@ -3475,11 +3453,14 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("appSection").classList.remove("hidden");
 
-        // Show Inquiry Form by default after login
-        openInquiryForm();
-        populateInquiryTakenBy();
-        // openexamfees();
-        examfeeTakenBy();
+      // Show Inquiry Form by default after login
+      openInquiryForm();
+      populateInquiryTakenBy();
+      // openexamfees();
+      // examfeeTakenBy(); // Commented out to prevent exam receipt from showing on login
+
+      // Ensure exam fees form is hidden
+      document.getElementById("feeReceiptForm").classList.add("hidden");
 
         // For regular users, hide only the Fees Structure button
         if (resp.role !== "admin") {
@@ -5043,11 +5024,15 @@ html2pdf()
   });
 
   
-  function openInquiryForm() {
+function openInquiryForm() {
         const dateInput23 = document.getElementById('date3334');
         dateInput23.valueAsDate = new Date();
         dateInput23.setAttribute('readonly', true);
     console.log("Inquiry Form button clicked - resetting all forms");
+
+    // Explicitly hide exam fees form to prevent it from showing
+    document.getElementById("feeReceiptForm").classList.add("hidden");
+
     hideAllSections();
     document.getElementById("ifId").classList.remove("hidden"); // Assuming ifId is the inquiry form itself
 
@@ -5100,6 +5085,9 @@ html2pdf()
     } else {
         inquiryTakenByInput.value = ""; // Or some default value like "Anonymous"
     }
+
+    // Do NOT call copyadmissionreceipt() here as it tries to set values in exam fees form elements
+    // copyadmissionreceipt(); // Commented out to prevent exam fees form from being affected
 
 }
 
