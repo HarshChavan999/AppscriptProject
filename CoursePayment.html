@@ -179,17 +179,17 @@
       <span>Course Fees:</span>
       <span id="fullCourseFees">-</span>
     </div>
-    <div class="flex items-center justify-between py-1">
-      <label for="fullDiscountRupees" class="font-semibold">Discount (₹):</label>
-      <input
-        type="text"
-        id="fullDiscountRupees"
-        class="form-input text-right w-20"
-        placeholder="0"
-        oninput="validateIntegerOnly(this)"
-        onchange="updateFullPaymentDiscount()"
-      />
-    </div>
+            <div class="flex items-center justify-between py-1">
+              <label for="fullDiscountRupees" class="font-semibold">Discount (₹):</label>
+              <input
+                type="text"
+                id="fullDiscountRupees"
+                class="form-input text-right w-20"
+                placeholder="0"
+                oninput="validateIntegerOnly(this)"
+                onchange="updateFullPaymentDiscount()"
+              />
+            </div>
     <div class="flex justify-between py-1">
       <span>Discount (%):</span>
       <span id="fullDiscountPercent">-</span>
@@ -292,7 +292,7 @@
                 id="emiDownPaymentInput"
                 class="form-input text-right w-24"
                 placeholder="0"
-                oninput="validateIntegerOnly(this)"
+                oninput="validateCurrencyInput(this)"
                 onchange="updateEMIPayment()"
               />
             </div>
@@ -302,6 +302,7 @@
                 id="emiTenure"
                 class="form-select"
                 onchange="updateEMIPayment()"
+                oninput="updateEMIPayment()"
                 style="width: 80px;"
               >
                 <option value="1">1</option>
@@ -378,7 +379,19 @@
         </p>
       </div>
     </div>
-
+ <!-- Payment method -->
+    <h2 class="text-xl font-semibold text-gray-800">Payment method</h2>
+    <label class="text-l font-semibold text-gray-600" for="pay-select"
+      >Select payment:</label
+    >
+    <select id="pay-select" class="form-select">
+      <option value="">Select a method</option>
+      <option value="Bank">Bank</option>
+      <option value="UPI">UPI</option>
+      <option value="Cash">Cash</option>
+      <option value="cheque">Bank Check</option>
+    </select>
+    
     <!-- Installment Schedule (synchronized with Admission Structure) -->
     <div id="installmentScheduleSection" class="space-y-4 hidden">
       <h2 class="text-xl font-semibold text-gray-800">Installment Schedule</h2>
@@ -405,18 +418,6 @@
 
 
 
-    <!-- Payment method -->
-    <h2 class="text-xl font-semibold text-gray-800">Payment method</h2>
-    <label class="text-l font-semibold text-gray-600" for="pay-select"
-      >Select payment:</label
-    >
-    <select id="pay-select" class="form-select">
-      <option value="">Select a method</option>
-      <option value="Bank">Bank</option>
-      <option value="UPI">UPI</option>
-      <option value="Cash">Cash</option>
-      <option value="cheque">Bank Check</option>
-    </select>
 
     <!-- Submit Button -->
     
@@ -431,7 +432,7 @@
     </div> -->
  <div class="flex justify-end space-x-4">
    <button onclick="goBackToAdmission()"
-     class="bg-gray-600 hover:bg-gray-700 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
+    class="bg-gray-600 hover:bg-gray-700 text-white font-medium tracking-wide py-2 px-4 rounded-md shadow-md transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
      <i class="fas fa-arrow-left mr-2"></i>Back
    </button>
    <button onclick="clearCoursePaymentForm()" style="display:none"
@@ -439,7 +440,7 @@
      <i class="fas fa-undo mr-2"></i>Reset
    </button>
    <button onclick="proceedToAdmissionReceipt()"
-     class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
+    class="bg-gray-600 hover:bg-gray-700 text-white font-medium tracking-wide py-2 px-4 rounded-md shadow-md transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2"
        >Proceed to Admission Receipt</button>
  </div>
 <style>
@@ -498,6 +499,31 @@
 
     // Filter out non-digit characters immediately
     let filteredValue = currentValue.replace(/[^\d]/g, '');
+
+    // Only update if the value actually changed
+    if (currentValue !== filteredValue) {
+      inputElement.value = filteredValue;
+    }
+  }
+
+  // Currency validation function - allows decimal points for money inputs
+  function validateCurrencyInput(inputElement) {
+    // Get current value after the input event
+    let currentValue = inputElement.value;
+
+    // Allow digits and decimal point
+    let filteredValue = currentValue.replace(/[^\d.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = filteredValue.split('.');
+    if (parts.length > 2) {
+      filteredValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Limit decimal places to 2
+    if (parts.length === 2 && parts[1].length > 2) {
+      filteredValue = parts[0] + '.' + parts[1].substring(0, 2);
+    }
 
     // Only update if the value actually changed
     if (currentValue !== filteredValue) {
@@ -727,6 +753,10 @@
     // Lock the dropdowns in payment cards
     document.getElementById("partialTenure").disabled = true;
     document.getElementById("emiTenure").disabled = true;
+
+    // Ensure input fields remain editable
+    document.getElementById("partialInitialInput").readOnly = false;
+    document.getElementById("emiDownPaymentInput").readOnly = false;
 
     // Lock the confirmation checkbox - disable it so it can't be unchecked
     checkbox.disabled = true;
