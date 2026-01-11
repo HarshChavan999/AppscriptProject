@@ -1,127 +1,149 @@
 
 
-<div class="bg-white rounded-xl shadow-lg border border-gray-200 mt-6 ml-64 hidden" id="feeReceiptForm">
-  <div class="bg-white text-gray-900 p-6 border-b border-gray-200">
-    <div class="flex flex-col items-center">
-      <p class="text-3xl font-bold text-gray-700"><i class="fas fa-file-alt mr-1"></i>EXAM RECEIPT</p>
-    </div>
-  </div>
-
-  <form id="examReceiptForm" class="inquiry-form-container" onsubmit="FeeReceiptFormHandle(event)">
-    <div class="p-6 space-y-4 max-w-4xl mx-auto">
-
-      <h2 class="text-xl font-semibold text-gray-800">Invoice Details</h2>
-      <div class="grid grid-cols-1 gap-6">
-          <!-- First Row: Enrollment ID (Left), Date (Middle), Receipt Number (Right) -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- Enrollment ID Field (Left) -->
-              <div>
-                  <label for="enrollmentIdInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <i class="fas fa-id-card text-blue-900 mr-2"></i>Enrollment ID <span class="text-red-500 ml-1">*</span>
-                  </label>
-                  <input type="text" id="enrollmentIdInput" name="enrollmentId"
-                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                         placeholder="Enter enrollment ID">
-              </div>
-
-              <!-- Date Field (Middle) -->
-              <div>
-                  <label for="receiptDate" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <i class="fas fa-calendar-alt text-blue-900 mr-2"></i>Date <span class="text-red-500 ml-1">*</span>
-                  </label>
-                  <div class="relative">
-                      <div id="receiptDateDisplay"
-                           class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed flex items-center">
-                          Loading...
-                      </div>
-                      <input type="hidden" id="receiptDate" name="receiptDate" value="">
-                      <i class="fas fa-calendar-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                  </div>
-              </div>
-
-              <!-- Receipt Number Field (Right) -->
-              <div>
-                  <label for="ExamReceiptNumber" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <i class="fas fa-hashtag text-blue-900 mr-2"></i>Receipt Number <span class="text-red-500 ml-1">*</span>
-                  </label>
-                  <input type="text" id="ExamReceiptNumber" name="receiptNumber"
-                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                         readonly>
-              </div>
-          </div>
-
-          <!-- Second Row: Student Name and Course Name -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Student Name Field -->
-              <div>
-                  <label for="studentNameInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <i class="fas fa-user-graduate text-blue-900 mr-2"></i>Student Name <span class="text-red-500 ml-1">*</span>
-                  </label>
-                  <input type="text" id="studentNameInput" name="studentName"
-                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                         required placeholder="Enter student name">
-              </div>
-
-              <!-- Course Name Field -->
-              <div>
-                  <label for="courseNameInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <i class="fas fa-book text-blue-900 mr-2"></i>Course Name <span class="text-red-500 ml-1">*</span>
-                  </label>
-                  <input type="text" id="courseNameInput" name="courseName"
-                         class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                         required placeholder="Enter course name">
-              </div>
-          </div>
+<div class="hidden" id="feeReceiptForm" style="position: fixed; top: 0; left: 256px; width: calc(100vw - 256px); height: 100vh; background: #ffffff; z-index: 50;">
+  <div class="flex items-center justify-center w-full h-full p-4" style="background: #ffffff;">
+    <div class="w-full max-w-2xl">
+      <!-- Progress indicator -->
+      <div class="mb-8">
+        <div class="flex items-center justify-center space-x-2 mb-4">
+          <div class="w-3 h-3 bg-white rounded-full opacity-50"></div>
+          <div class="w-8 h-3 bg-white rounded-full"></div>
+          <div class="w-3 h-3 bg-white rounded-full opacity-50"></div>
+        </div>
+        <h1 class="text-2xl font-light text-gray-800 text-center mb-2">Exam Fee Receipt</h1>
       </div>
 
-      <h2 class="text-xl font-semibold text-gray-800">Payment Information</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Total Amount Field -->
-          <div>
-              <label for="totalAmount" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <i class="fas fa-rupee-sign text-blue-900 mr-2"></i>Total Amount (₹) <span class="text-red-500 ml-1">*</span>
-              </label>
-              <input type="number" id="totalAmount" name="totalAmount" value="500" readonly
-                     class="form-input w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed">
+      <form id="examReceiptForm" class="space-y-6" onsubmit="FeeReceiptFormHandle(event)">
+        <!-- Enrollment ID -->
+        <div class="form-field animate-slide-up" style="animation-delay: 0.1s;">
+          <label for="enrollmentIdInput" class="block text-sm font-medium text-gray-700 mb-2">
+            Enrollment ID <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input type="text" id="enrollmentIdInput" name="enrollmentId"
+                   class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none transition-all duration-300"
+                   placeholder="Enter your enrollment ID">
+            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+<!-- Date & Receipt Number (Auto-populated) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="form-field animate-slide-up" style="animation-delay: 0.6s;">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+            <div class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 cursor-not-allowed flex items-center">
+              <span id="receiptDateDisplay">Loading...</span>
+            </div>
+            <input type="hidden" id="receiptDate" name="receiptDate" value="">
           </div>
 
-          <!-- Payment Mode Field -->
-          <div>
-              <label for="paymentModeInput" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <i class="fas fa-credit-card text-blue-900 mr-2"></i>Payment Mode <span class="text-red-500 ml-1">*</span>
-              </label>
-              <select id="paymentModeInput" name="paymentMode"
-                      class="form-select w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                      required>
-                  <option value="" disabled selected>Select Payment Mode</option>
-                  <option value="Cash">💵 Cash</option>
-                  <option value="Cheque">📝 Cheque</option>
-                  <option value="Bank Transfer">🏦 Bank Transfer</option>
-                  <option value="UPI">📱 UPI</option>
-                  <option value="Credit/Debit Card">💳 Credit/Debit Card</option>
-              </select>
+          <div class="form-field animate-slide-up" style="animation-delay: 0.7s;">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Receipt Number</label>
+            <div class="relative">
+              <input type="text" id="ExamReceiptNumber" name="receiptNumber"
+                     class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 placeholder-gray-500 focus:outline-none transition-all duration-300 cursor-not-allowed"
+                     readonly>
+              <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+            </div>
           </div>
-      </div>
+        </div>
 
-      <div class="border-t border-gray-200 pt-4">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div class="mb-4 md:mb-0">
-            <label class="inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="agreeTerms" name="agreeTerms" required class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-              <span class="ml-2 text-sm text-gray-700">I acknowledge and agree to the payment details above</span>
+        <!-- Student Name & Course Name -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="form-field animate-slide-up" style="animation-delay: 0.2s;">
+            <label for="studentNameInput" class="block text-sm font-medium text-gray-700 mb-2">
+              Student Name <span class="text-red-500">*</span>
             </label>
-            <div id="agreeError" class="text-red-500 text-xs italic mt-1"></div>
+            <input type="text" id="studentNameInput" name="studentName"
+                   class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none transition-all duration-300"
+                   required placeholder="Enter student name">
           </div>
-          <div class="flex justify-end space-x-4">
-            <button type="button" onclick="generateAndSaveReceipt()" id="generateReceiptBtn" class="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium tracking-wide py-2.5 px-6 rounded-md shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center gap-2">
-              <i class="fas fa-print mr-2"></i>Generate Receipt
+
+          <div class="form-field animate-slide-up" style="animation-delay: 0.3s;">
+            <label for="courseNameInput" class="block text-sm font-medium text-gray-700 mb-2">
+              Course Name <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="courseNameInput" name="courseName"
+                   class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none transition-all duration-300"
+                   required placeholder="Enter course name">
+          </div>
+        </div>
+
+        <!-- Total Amount & Payment Mode -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="form-field animate-slide-up" style="animation-delay: 0.4s;">
+            <label for="totalAmount" class="block text-sm font-medium text-gray-700 mb-2">
+              Total Amount (₹) <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="number" id="totalAmount" name="totalAmount" value="500" readonly
+                     class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 placeholder-gray-500 focus:outline-none transition-all duration-300 cursor-not-allowed">
+              <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field animate-slide-up" style="animation-delay: 0.5s;">
+            <label for="paymentModeInput" class="block text-sm font-medium text-gray-700 mb-2">
+              Payment Mode <span class="text-red-500">*</span>
+            </label>
+            <select id="paymentModeInput" name="paymentMode"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none transition-all duration-300 appearance-none"
+                    required>
+              <option value="" disabled selected class="text-gray-900">Select Payment Mode</option>
+              <option value="Cash" class="text-gray-900"> Cash</option>
+              <option value="Cheque" class="text-gray-900"> Cheque</option>
+              <option value="Bank Transfer" class="text-gray-900"> Bank Transfer</option>
+              <option value="UPI" class="text-gray-900"> UPI</option>
+              <option value="Credit/Debit Card" class="text-gray-900"> Credit/Debit Card</option>
+            </select>
+          </div>
+        </div>
+
+        
+
+        <!-- Terms & Submit -->
+        <div class="form-field animate-slide-up pt-6" style="animation-delay: 0.8s;">
+          <div class="flex flex-col space-y-4">
+            <label class="flex items-start space-x-3 cursor-pointer group">
+              <input type="checkbox" id="agreeTerms" name="agreeTerms" required
+                     class="mt-1 w-4 h-4 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-offset-0 transition-all duration-300">
+              <span class="text-sm text-gray-700 leading-relaxed">
+                I acknowledge and agree to the payment details above. Fees once paid are non-refundable.
+              </span>
+            </label>
+            <div id="agreeError" class="text-red-500 text-xs opacity-0 transition-opacity duration-300"></div>
+          </div>
+
+          <div class="flex justify-center pt-6">
+            <button type="button" onclick="generateAndSaveReceipt()" id="generateReceiptBtn"
+                    class="group relative px-8 py-4 bg-gray-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-gray-400 overflow-hidden">
+              <span class="relative z-10 flex items-center justify-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Generate Receipt
+              </span>
+              <div class="absolute inset-0 bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>
+
+
 
 <script>
   // Calculate balance amount automatically
@@ -687,11 +709,16 @@ function generateAndSaveReceipt() {
 
   // Check if terms are agreed
   if (!document.getElementById('agreeTerms').checked) {
-    document.getElementById('agreeError').classList.remove('hidden');
+    const agreeError = document.getElementById('agreeError');
+    agreeError.textContent = "Please agree to the terms and conditions.";
+    agreeError.classList.add('opacity-100');
+    agreeError.classList.remove('opacity-0');
     showNotification("Please agree to the terms and conditions.", "error");
     return;
   } else {
-    document.getElementById('agreeError').classList.add('hidden');
+    const agreeError = document.getElementById('agreeError');
+    agreeError.classList.add('opacity-0');
+    agreeError.classList.remove('opacity-100');
   }
 
   // Get current date in a format that Google Apps Script can handle
@@ -711,8 +738,17 @@ function generateAndSaveReceipt() {
 
   // Show loading state
   const btn = document.getElementById('generateReceiptBtn');
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+  const originalHTML = btn.innerHTML;
+  btn.classList.add('loading');
+  btn.innerHTML = `
+    <span class="relative z-10 flex items-center justify-center gap-3">
+      <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Saving...
+    </span>
+    <div class="absolute inset-0 bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+  `;
   btn.disabled = true;
 
   google.script.run
@@ -734,32 +770,49 @@ function generateAndSaveReceipt() {
         // Reset form but keep the date
         form.reset();
 
-        // Reload only receipt number for next entry (without resetting date)
-        loadexamfeeOnly();
-
-        // Now generate the receipt with stored values
-        setTimeout(() => {
+        // Generate the receipt immediately with stored values
+        try {
           generateexamReceipt(currentFormData);
-        }, 1000); // Small delay to ensure save is complete
+
+          // Reset button state after receipt generation starts
+          setTimeout(() => {
+            resetGenerateButton(btn, originalHTML);
+          }, 500);
+
+          // Reload receipt number after a longer delay to avoid conflicts
+          setTimeout(() => {
+            loadexamfeeOnly();
+          }, 2000);
+
+        } catch (receiptError) {
+          console.error("Error generating receipt:", receiptError);
+          // Reset button state immediately on error
+          resetGenerateButton(btn, originalHTML);
+          showNotification("Error generating receipt. Please try again.", "error");
+        }
 
       } else {
         // Error notification
         showNotification(result.message || "Failed to save receipt. Please try again.", "error");
-        // Reset button
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        // Reset button state
+        resetGenerateButton(btn, originalHTML);
       }
     })
     .withFailureHandler(function(error) {
-      // Reset button
-      btn.innerHTML = originalText;
-      btn.disabled = false;
+      // Reset button state
+      resetGenerateButton(btn, originalHTML);
 
       // Error notification
       showNotification("Error saving receipt: " + error.message, "error");
       console.error("Save receipt error:", error);
     })
     .saveReceiptData(data);
+}
+
+function resetGenerateButton(btn, originalHTML) {
+  btn.classList.remove('loading');
+  btn.innerHTML = originalHTML;
+  btn.disabled = false;
 }
 
 function loadexamfee(){
@@ -771,11 +824,21 @@ function loadexamfee(){
     return;
   }
 
-  // Disable submit button while loading
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
-  }
+  // Store original button HTML
+  const originalBtnHTML = submitBtn.innerHTML;
+
+  // Disable submit button while loading and show loading state
+  submitBtn.classList.add('loading');
+  submitBtn.innerHTML = `
+    <span class="relative z-10 flex items-center justify-center gap-3">
+      <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Loading...
+    </span>
+    <div class="absolute inset-0 bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+  `;
+  submitBtn.disabled = true;
 
   // 1. Reset the input field's state each time the form is opened.
   receiptInput.readOnly = false;
@@ -793,11 +856,8 @@ function loadexamfee(){
         `Populated receipt number: ${newReceiptNumber}. Field will lock in 5 seconds if not edited.`
       );
 
-      // Enable submit button now that receipt number is loaded
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-print mr-2"></i>Generate Receipt';
-      }
+      // Reset button to original state
+      resetGenerateButton(submitBtn, originalBtnHTML);
 
       // 5. Set a 5-second timer. If it completes, the field becomes read-only.
       receiptLockTimer = setTimeout(() => {
@@ -821,11 +881,8 @@ function loadexamfee(){
       console.error("Error fetching receipt number: " + error.message);
       receiptInput.value = "Error fetching number";
 
-      // Re-enable submit button even on error, so user can try again
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Receipt';
-      }
+      // Reset button to original state even on error
+      resetGenerateButton(submitBtn, originalBtnHTML);
     })
     .getNextReceiptNumberEF();
 }
@@ -839,11 +896,21 @@ function loadexamfeeOnly(){
     return;
   }
 
-  // Disable submit button while loading
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
-  }
+  // Store original button HTML
+  const originalBtnHTML = submitBtn.innerHTML;
+
+  // Disable submit button while loading and show loading state
+  submitBtn.classList.add('loading');
+  submitBtn.innerHTML = `
+    <span class="relative z-10 flex items-center justify-center gap-3">
+      <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Loading...
+    </span>
+    <div class="absolute inset-0 bg-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+  `;
+  submitBtn.disabled = true;
 
   // Clear any lingering timers
   clearTimeout(receiptLockTimer);
@@ -859,11 +926,8 @@ function loadexamfeeOnly(){
       receiptInput.value = newReceiptNumber;
       console.log(`Loaded next receipt number: ${newReceiptNumber}`);
 
-      // Enable submit button
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-print mr-2"></i>Generate Receipt';
-      }
+      // Reset button to original state
+      resetGenerateButton(submitBtn, originalBtnHTML);
 
       // Set a 5-second timer to lock the field
       receiptLockTimer = setTimeout(() => {
@@ -875,11 +939,8 @@ function loadexamfeeOnly(){
       console.error("Error fetching receipt number: " + error.message);
       receiptInput.value = "Error fetching number";
 
-      // Re-enable submit button even on error
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-print mr-2"></i>Generate Receipt';
-      }
+      // Reset button to original state even on error
+      resetGenerateButton(submitBtn, originalBtnHTML);
     })
     .getNextReceiptNumberEF();
 }
