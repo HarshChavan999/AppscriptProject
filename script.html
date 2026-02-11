@@ -615,7 +615,7 @@ function addInstallmentRowShared(table, number, date, amount, type, installmentA
           ? "bg-blue-100 text-blue-800"
           : "bg-blue-50 text-blue-800"
       }">
-        ${number === 0 ? "Due Now" : "Pending"}
+        ${number === 0 ? "Due Now" : ""}
       </span>
     </td>
     <td class="px-4 py-2 whitespace-nowrap text-center">
@@ -639,7 +639,7 @@ function handleInstallmentPaymentShared(checkbox, statusId, receiptBtnId) {
     const receiptButton = document.getElementById(receiptBtnId);
 
     if (statusSpan) {
-      statusSpan.textContent = "Pending";
+      statusSpan.textContent = "";
       statusSpan.className = "px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-800";
     }
 
@@ -2602,9 +2602,9 @@ style="width: 100%; max-width: 160px; height: auto; padding: 5px;" />
       // Ensure exam fees form is hidden
       document.getElementById("feeReceiptForm").classList.add("hidden");
 
-        // For regular users, hide only the Fees Structure button
+        // For regular users, hide the Fees Structure analytics button
         if (resp.role !== "admin") {
-          const feesStructureBtn = document.getElementById("dueFeeStructureBtn");
+          const feesStructureBtn = document.getElementById("feeStructureBtn");
           if (feesStructureBtn) {
             feesStructureBtn.style.display = "none";
           }
