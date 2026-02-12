@@ -155,6 +155,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 300);
       }
     });
+
+    // 🔥 CRITICAL FIX: Clear old localStorage data when receipt number changes significantly
+    let previousReceiptNo = '';
+    receiptNoInput.addEventListener('focus', function() {
+      previousReceiptNo = this.value.trim();
+    });
+
+    receiptNoInput.addEventListener('blur', function() {
+      const currentReceiptNo = this.value.trim();
+      // If receipt number changed and previous was not empty, clear old payment data
+      if (previousReceiptNo && currentReceiptNo !== previousReceiptNo) {
+        console.log(`Receipt number changed from ${previousReceiptNo} to ${currentReceiptNo}, clearing old payment data`);
+        clearOldPaymentData(previousReceiptNo);
+      }
+    });
+  }
+
+  // 🔥 CRITICAL FIX: Function to clear old payment data from localStorage
+  function clearOldPaymentData(receiptNo) {
+    if (!receiptNo) return;
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(`payment_${receiptNo}_`)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Cleared old payment data: ${key}`);
+    });
   }
 });
   // Update course details when selection changes
@@ -278,17 +309,35 @@ function updatePartialPayment() {
   const totalFees = getTotalFees();
   let initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
   const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
-
+  
+  // Get discount amount
+  const discountRupees = parseFloat(document.getElementById("partialDiscountRupees").value) || 0;
+  
+  // Ensure discount doesn't exceed total fees
+  const actualDiscount = Math.min(discountRupees, totalFees);
+  
+  // Calculate discounted total
+  const discountedTotal = totalFees - actualDiscount;
+  
+  // Calculate discount percentage
+  const discountPercent = totalFees > 0 ? ((actualDiscount / totalFees) * 100).toFixed(2) : 0;
+  
   // Allow flexible initial payment amounts - no forced minimum
   // Users can enter any amount they want
 
-  // Calculate remaining amount and EMI
-  const remainingAmount = Math.max(0, totalFees - initialPayment);
+  // Calculate remaining amount and EMI based on discounted total
+  const remainingAmount = Math.max(0, discountedTotal - initialPayment);
   const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
+  
+  // Calculate total payable (initial + remaining EMI payments)
+  const totalPayable = initialPayment + (emiAmount * tenure);
 
   // Update UI
+  document.getElementById("partialDiscountRupees").value = actualDiscount > 0 ? actualDiscount : "";
+  document.getElementById("partialDiscountPercent").textContent = actualDiscount > 0 ? discountPercent + "%" : "-";
   document.getElementById("partialRemaining").textContent = formatCurrency(remainingAmount);
   document.getElementById("partialEMI").textContent = formatCurrency(emiAmount);
+  document.getElementById("partialTotal").textContent = formatCurrency(totalPayable);
 
   // Update installment schedule if partial payment is selected
   if (selectedPaymentType === "partial") {
@@ -309,14 +358,35 @@ function updateEMIPayment() {
 
   const downPayment = parseFloat(downPaymentInput.value) || 0;
   const tenure = parseInt(tenureSelect.value) || 6;
+  
+  // Get discount amount
+  const discountRupees = parseFloat(document.getElementById("emiDiscountRupees").value) || 0;
+  
+  // Ensure discount doesn't exceed total fees
+  const actualDiscount = Math.min(discountRupees, totalFees);
+  
+  // Calculate discounted total
+  const discountedTotal = totalFees - actualDiscount;
 
-  // Ensure down payment doesn't exceed total fees
-  const actualDownPayment = Math.min(downPayment, totalFees);
-  const remainingAmount = totalFees - actualDownPayment;
+  // Ensure down payment doesn't exceed discounted total
+  const actualDownPayment = Math.min(downPayment, discountedTotal);
+  const remainingAmount = discountedTotal - actualDownPayment;
   const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
+  
+  // Calculate discount percentage
+  const discountPercent = totalFees > 0 ? ((actualDiscount / totalFees) * 100).toFixed(2) : 0;
+  
+  // Calculate total payable (down payment + all EMIs)
+  const totalPayable = actualDownPayment + (emiAmount * tenure);
 
   // Update input value to reflect capped down payment
   downPaymentInput.value = actualDownPayment.toFixed(2);
+
+  // Update discount display
+  const emiDiscountPercentEl = document.getElementById("emiDiscountPercent");
+  if (emiDiscountPercentEl) {
+    emiDiscountPercentEl.textContent = actualDiscount > 0 ? discountPercent + "%" : "-";
+  }
 
   // Update display elements (only update elements that exist)
   const emiAmountEl = document.getElementById("emiAmount");
@@ -331,7 +401,7 @@ function updateEMIPayment() {
 
   const emiTotalEl = document.getElementById("emiTotal");
   if (emiTotalEl) {
-    emiTotalEl.textContent = formatCurrency(actualDownPayment + (emiAmount * tenure)); // Down payment + total EMI amount
+    emiTotalEl.textContent = formatCurrency(totalPayable); // Total payable with discount applied
   }
 
   // Update installment schedule if EMI payment is selected
@@ -499,7 +569,16 @@ function generatePaymentInstallmentSchedule(paymentType) {
     // Partial payment - initial payment + installments
     const initialPayment = parseFloat(document.getElementById("partialInitialInput").value) || 0;
     const tenure = parseInt(document.getElementById("partialTenure").value) || 6;
-    const remainingAmount = Math.max(0, totalFees - initialPayment);
+    
+    // Get discount amount
+    const discountRupees = parseFloat(document.getElementById("partialDiscountRupees").value) || 0;
+    const actualDiscount = Math.min(discountRupees, totalFees);
+    
+    // Calculate discounted total
+    const discountedTotal = totalFees - actualDiscount;
+    
+    // Calculate remaining amount after initial payment (based on discounted total)
+    const remainingAmount = Math.max(0, discountedTotal - initialPayment);
 
     // Calculate exact installments - distribute remaining amount properly
     const exactInstallmentAmount = Math.floor(remainingAmount / tenure);
@@ -524,7 +603,7 @@ function generatePaymentInstallmentSchedule(paymentType) {
       if (i === tenure) {
         // Last installment gets the remaining amount to ensure exact total
         const totalSoFar = initialPayment + (exactInstallmentAmount * (tenure - 1)) + remainder;
-        amount = totalFees - totalSoFar;
+        amount = discountedTotal - totalSoFar;
       } else {
         // Regular installments - base amount plus 1 extra for first 'remainder' installments
         amount = exactInstallmentAmount + (i <= remainder ? 1 : 0);
@@ -536,7 +615,16 @@ function generatePaymentInstallmentSchedule(paymentType) {
     // EMI payment - down payment + installments
     const downPayment = parseFloat(document.getElementById("emiDownPaymentInput").value) || 0;
     const tenure = parseInt(document.getElementById("emiTenure").value) || 6;
-    const remainingAmount = totalFees - downPayment;
+    
+    // Get discount amount
+    const discountRupees = parseFloat(document.getElementById("emiDiscountRupees").value) || 0;
+    const actualDiscount = Math.min(discountRupees, totalFees);
+    
+    // Calculate discounted total
+    const discountedTotal = totalFees - actualDiscount;
+    
+    // Calculate remaining amount after down payment (based on discounted total)
+    const remainingAmount = discountedTotal - downPayment;
     const emiAmount = remainingAmount > 0 ? Math.ceil(remainingAmount / tenure) : 0;
 
     // Down payment - show as Installment 1
@@ -546,7 +634,7 @@ function generatePaymentInstallmentSchedule(paymentType) {
 
     // Installments - start from Installment 2 (if down payment exists) or Installment 1 (if no down payment)
     const today = new Date();
-    let remaining = totalFees - downPayment;
+    let remaining = discountedTotal - downPayment;
     const startNumber = downPayment > 0 ? 2 : 1;
 
     for (let i = 1; i <= tenure; i++) {
@@ -1541,6 +1629,20 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
         const paymentTypeEl = document.querySelector('input[name="Coursepayment_type"]:checked');
         const paymentType = paymentTypeEl?.value || "full";
 
+        // ✅ FIX: Get discount amount based on payment type
+        let discountAmount = 0;
+        if (paymentType === "partial") {
+            discountAmount = parseFloat(document.getElementById("partialDiscountRupees")?.value) || 0;
+        } else if (paymentType === "emi") {
+            discountAmount = parseFloat(document.getElementById("emiDiscountRupees")?.value) || 0;
+        } else if (paymentType === "full") {
+            discountAmount = parseFloat(document.getElementById("fullDiscountRupees")?.value) || 0;
+        }
+        
+        // Calculate discounted total
+        const discountedTotal = totalAmount - discountAmount;
+        console.log("Original Total:", totalAmount, "Discount:", discountAmount, "Discounted Total:", discountedTotal);
+
         // ✅ FIX: Calculate total paid amount including current installment
         // Get receipt number to identify the student - check both admission form and analytics formats
         const studentReceiptNo = document.getElementById('ID')?.value || admissionData?.receipt || admissionData?.receiptNumber || '';
@@ -1577,8 +1679,20 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
         console.warn('No receipt number found for balance calculation!');
     }
 
+        // 🔥 CRITICAL FIX: Ensure current installment is included in paid amount
+        // Check if current installment is already in the paid amount from localStorage
+        const currentInstallmentKey = `payment_${studentReceiptNo}_${installmentno}`;
+        const currentInstallmentStored = localStorage.getItem(currentInstallmentKey);
+
+        if (!currentInstallmentStored && Amount > 0) {
+            // Current installment not in localStorage yet, add it to paid amount
+            console.log(`Current installment ${installmentno} (₹${Amount}) not in localStorage, adding to paid amount`);
+            totalPaidAmount += Amount;
+        }
+
         console.log("Total paid amount calculated:", totalPaidAmount);
-        let balanceAmount = Math.max(0, totalAmount - totalPaidAmount); // Ensure balance doesn't go negative
+        // ✅ FIX: Use discounted total for balance calculation
+        let balanceAmount = Math.max(0, discountedTotal - totalPaidAmount); // Ensure balance doesn't go negative
 
         // ✅ FIX: Get the logged-in user name from sessionStorage or hidden field
         const loggedInUser = sessionStorage.getItem("loggedInUser") ||
@@ -1764,7 +1878,7 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
     align-items: flex-end;
 }
 .note {
-    font-size: 14px; /* REDUCE from 16px to 14px */
+    font-size: 18px; /* REDUCE from 16px to 14px */
     font-weight: bold;
     max-width: 55%; /* REDUCE from 60% to 55% */
     word-break: break-word; /* ADD THIS LINE */
@@ -1814,14 +1928,13 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                            <div class="logo">
                         <img src="${logoBase64}">
                     </div> 
-                            <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
-                            <div class="receipt-label">RECEIPT</div>
+                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
+                            <div class="receipt-label">STI RECEIPT</div>
                         </div>
 
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                                 <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
                             <div class="receipt-no">
@@ -1878,9 +1991,10 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                                     <div class="field-value">${receiptData.paymentMethod}</div>
                                 </div>
 
+                                
                                 <div class="field-row">
                                     <div class="field-label">Received by :</div>
-                                    <div class="field-value">${receiptData.receivedBy}</div>
+                                    <div class="field-value" style="display: flex; align-items: center; border-bottom: none;"><span style="border-bottom: 1px solid #000; flex-grow: 1; padding: 2px 5px; min-height: 20px;">${receiptData.receivedBy}</span><span style="margin-left: 30px; color: #000; white-space: nowrap;">Branch: ${receiptData.branch}</span></div>
                                 </div>
                             </div>
 
@@ -1901,13 +2015,12 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                         <img src="${logoBase64}">
                     </div> 
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
-                            <div class="receipt-label">RECEIPT</div>
+                            <div class="receipt-label" style="font-size: 12px; padding: 5px 10px;">STUDENT RECEIPT</div>
                         </div>
 
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                                 <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
                             <div class="receipt-no">
@@ -1982,9 +2095,9 @@ const logoBase64 = "https://i.postimg.cc/15z0wxhX/cropped-circle-image-(1).png";
                                     <div class="field-value">${receiptData.paymentMethod}</div>
                                 </div>
 
-                                <div class="field-row">
+                                 <div class="field-row">
                                     <div class="field-label">Received by :</div>
-                                    <div class="field-value">${receiptData.receivedBy}</div>
+                                    <div class="field-value" style="display: flex; align-items: center; border-bottom: none;"><span style="border-bottom: 1px solid #000; flex-grow: 1; padding: 2px 5px; min-height: 20px;">${receiptData.receivedBy}</span><span style="margin-left: 30px; color: #000; white-space: nowrap;">Branch: ${receiptData.branch}</span></div>
                                 </div>
                             </div>
 

@@ -31,7 +31,7 @@
       display: none;
     }
     #receiptFormSection .receipt-container {
-      border: none;
+      border: 2px solid #0066cc;
       box-shadow: none;
     }
     /* Compact print styles */
@@ -85,8 +85,10 @@
     .undertaking-container {
       page-break-before: always;
       margin-top: 10px;
-      display: block !important;
+      display: flex !important;
+      flex-direction: column;
       font-size: 9pt;
+      border: 2px solid #0066cc;
     }
     .undertaking-container .receipt-header {
       display: flex;
@@ -125,31 +127,37 @@
     .undertaking-container ul {
       margin-top: 10px;
       padding-left: 15px;
-      font-size: 8pt;
+      font-size: 11pt;
     }
     .undertaking-container ul li {
       margin-bottom: 5px;
-      line-height: 1.3;
+      line-height: 1.5;
     }
     .undertaking-container .declaration {
-      margin-top: 15px;
-      line-height: 1.4;
-      font-size: 8pt;
+      margin-top: auto;
+      line-height: 1.5;
+      font-size: 11pt;
+      padding: 20px 0;
     }
-    .undertaking-container .signatures {
-      margin-top: 20px;
+    .undertaking-container .signature-section {
       display: flex;
       justify-content: space-between;
+      margin-top: 15px;
+      page-break-inside: avoid;
     }
-    .undertaking-container .signatures div {
+    .undertaking-container .signature-box {
       text-align: center;
       width: 23%;
-      font-size: 8pt;
     }
-    .undertaking-container .signatures div hr {
-      margin-top: 20px;
-      border: none;
-      border-top: 1px solid black;
+    .undertaking-container .signature-line {
+      border-bottom: 1px solid #000;
+      height: 30px;
+      margin-bottom: 3px;
+    }
+    .undertaking-container .signature-box p {
+      font-size: 8pt;
+      font-weight: 600;
+      margin: 0;
     }
   }
 
@@ -692,22 +700,22 @@
           मी श्री / श्रीमती ________________ , ____________________ आई/वडील/पती/बहीण/भाऊ , मला सर्व अटी मंजूर आहेत.
         </div>
 
-        <div class="signatures">
-          <div>
-            Parent Signature
-            <hr>
+        <div class="signature-section">
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Parent Signature</p>
           </div>
-          <div>
-            Student Signature
-            <hr>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Student Signature</p>
           </div>
-          <div>
-            Manager Signature
-            <hr>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Manager Signature</p>
           </div>
-          <div>
-            Director Signature
-            <hr>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Director Signature</p>
           </div>
         </div>
       </div>
