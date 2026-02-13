@@ -538,8 +538,8 @@
     enrollmentId: document.getElementById("enrollmentId")?.value || "", // Hidden field - will be empty
     coursePaySelect: document.getElementById("coursePaySelect").value,
     courseDuration: document.getElementById("courseDuration")?.textContent || "",
-    coursePayFees: document.getElementById("coursePayFees").innerText,
-    totalFees: document.getElementById("totalFees").innerText,
+    coursePayFees: document.getElementById("coursePayFees").textContent,
+    totalFees: document.getElementById("totalFees").textContent,
     paySelect: document.getElementById("pay-select").value
   };
 
@@ -2178,6 +2178,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
         // Convert course name to course value (e.g., "ANM Nursing Diploma" -> "anm_nursing")
         const courseValueMap = {
           "ANM Nursing Diploma": "anm_nursing",
+          "Electrician Diploma Course": "electrician",
           "GNM Nursing Diploma": "gnm_nursing",
           "DMLT Diploma": "dmlt",
           "OT Technician": "ot_technician",
@@ -2247,6 +2248,7 @@ function continueWithReceiptGeneration(courseDuration, paymentType, totalFee, se
         const courseValueMap = {
           "ANM Nursing Diploma": "anm_nursing",
           "GNM Nursing Diploma": "gnm_nursing",
+          "Electrician Diploma Course": "electrician",
           "DMLT Diploma": "dmlt",
           "OT Technician": "ot_technician",
           "General Nursing Assistant": "general_nursing"

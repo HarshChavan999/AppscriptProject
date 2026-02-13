@@ -3631,7 +3631,9 @@ function getCourseDataByLocation(branch) {
       gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
       dmlt: { duration: "1 year", fees: 30000, admission_fee: 3000, exam_fee: 6000 },
       ot_technician: { duration: "1 year", fees: 30000, admission_fee: 3000, exam_fee: 6000},
-      general_nursing: { duration: "1 year", fees: 30000, admission_fee: 5000, exam_fee: 500 }
+      electrician: { duration: "1 year", fees: 24000, admission_fee: 2000, exam_fee: 6000 },
+      ac_refrigerator: { duration: "1 year", fees: 24000, admission_fee: 2000, exam_fee: 6000 },
+      basic_parlour: { duration: "2 month", fees: 5000, admission_fee: 1000, exam_fee: 1000 }
     };
   } else if (branch === "nalasapora") {
     return {
