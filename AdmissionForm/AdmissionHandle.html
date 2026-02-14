@@ -290,7 +290,7 @@ function loadReceipt(enrollmentID, studentName, course) {
                     }
 
                     .note {
-                        font-size: 16px;
+                        font-size: 18px;
                         font-weight: bold;
                         max-width: 60%;
                     }
@@ -331,13 +331,12 @@ function loadReceipt(enrollmentID, studentName, course) {
                         <img src="${logoBase64}">
                     </div> 
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
-                            <div class="receipt-label">RECEIPT</div>
+                            <div class="receipt-label">STI RECEIPT</div>
                         </div>
 
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                               <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                                 <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
 
@@ -367,11 +366,9 @@ function loadReceipt(enrollmentID, studentName, course) {
                                     <div class="field-value">${receiptData.balance}</div>
                                 </div>
 
-
-
                                 <div class="field-row">
                                     <div class="field-label">Received by :</div>
-                                    <div class="field-value">${receiptData.receivedBy}</div>
+                                    <div class="field-value" style="display: flex; align-items: center; border-bottom: none;"><span style="border-bottom: 1px solid #000; flex-grow: 1; padding: 2px 5px; min-height: 20px;">${receiptData.receivedBy}</span><span style="margin-left: 30px; color: #000; white-space: nowrap;">Branch: ${receiptData.branch}</span></div>
                                 </div>
 
                                 <div class="field-row">
@@ -402,13 +399,12 @@ function loadReceipt(enrollmentID, studentName, course) {
                     </div> 
 
                             <div class="institute-name">SHELAR TRAINING INSTITUTE</div>
-                            <div class="receipt-label">RECEIPT</div>
+                            <div class="receipt-label" style="font-size: 12px; padding: 5px 10px;">STUDENT RECEIPT</div>
                         </div>
 
                         <div class="receipt-content">
                             <div class="receipt-info">
                                 <div class="receipt-no">Receipt No. ${receiptData.receiptNo}</div>
-                                 <div class="branch" style="font-weight: bold;">Branch: ${receiptData.branch}</div>
                                 <div class="date" style="font-weight: bold;">Date: ${receiptData.date}</div>
                             </div>
 
@@ -422,7 +418,6 @@ function loadReceipt(enrollmentID, studentName, course) {
                                     <div class="field-label">Propose to Pay :</div>
                                     <div class="field-value">${receiptData.proposeToPay}</div>
                                 </div>
-
 
                                 <div class="field-row">
                                     <div class="field-label">Total Amount :</div>
@@ -439,11 +434,9 @@ function loadReceipt(enrollmentID, studentName, course) {
                                     <div class="field-value">${receiptData.balance}</div>
                                 </div>
 
-
-
                                 <div class="field-row">
                                     <div class="field-label">Received by :</div>
-                                    <div class="field-value">${receiptData.receivedBy}</div>
+                                    <div class="field-value" style="display: flex; align-items: center; border-bottom: none;"><span style="border-bottom: 1px solid #000; flex-grow: 1; padding: 2px 5px; min-height: 20px;">${receiptData.receivedBy}</span><span style="margin-left: 30px; color: #000; white-space: nowrap;">Branch: ${receiptData.branch}</span></div>
                                 </div>
 
                                 <div class="field-row">

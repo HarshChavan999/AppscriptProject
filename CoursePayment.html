@@ -234,6 +234,21 @@
               />
             </div>
             <div class="flex items-center justify-between py-1">
+              <label for="partialDiscountRupees" class="font-semibold">Discount (₹):</label>
+              <input
+                type="text"
+                id="partialDiscountRupees"
+                class="form-input text-right w-20"
+                placeholder="0"
+                oninput="validateIntegerOnly(this)"
+                onchange="updatePartialPayment()"
+              />
+            </div>
+            <div class="flex justify-between py-1">
+              <span>Discount (%):</span>
+              <span id="partialDiscountPercent">-</span>
+            </div>
+            <div class="flex items-center justify-between py-1">
               <label class="font-semibold">Total Installments:</label>
               <select
                 id="partialTenure"
@@ -262,6 +277,10 @@
             >
               <span class="font-bold">EMI Amount:</span>
               <span id="partialEMI" class="font-bold text-blue-600">-</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="font-bold">Total Payable:</span>
+              <span id="partialTotal" class="font-bold text-blue-600">-</span>
             </div>
           </div>
         </div>
@@ -295,6 +314,21 @@
                 oninput="validateCurrencyInput(this)"
                 onchange="updateEMIPayment()"
               />
+            </div>
+            <div class="flex items-center justify-between py-1">
+              <label for="emiDiscountRupees" class="font-semibold">Discount (₹):</label>
+              <input
+                type="text"
+                id="emiDiscountRupees"
+                class="form-input text-right w-20"
+                placeholder="0"
+                oninput="validateIntegerOnly(this)"
+                onchange="updateEMIPayment()"
+              />
+            </div>
+            <div class="flex justify-between py-1">
+              <span>Discount (%):</span>
+              <span id="emiDiscountPercent">-</span>
             </div>
             <div class="flex items-center justify-between py-1">
               <label class="font-semibold">EMI Tenure (months):</label>
