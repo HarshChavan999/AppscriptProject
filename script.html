@@ -44,11 +44,11 @@ function getCourseDataByLocation(branch) {
     const courseData = {
       anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 3000, exam_fee: 6000},
       gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
-      dmlt: { duration: "1 year", fees: 30000, admission_fee: 3000, exam_fee: 6000 },
+      dmlt: { duration: "6 Month", fees: 30000, admission_fee: 3000, exam_fee: 6000 },
       ot_technician: { duration: "1 year", fees: 30000, admission_fee: 3000, exam_fee: 6000},
       electrician: { duration: "1 year", fees: 24000, admission_fee: 2000, exam_fee: 6000 },
       ac_refrigerator: { duration: "1 year", fees: 24000, admission_fee: 2000, exam_fee: 6000 },
-      basic_parlour: { duration: "2 year", fees: 5000, admission_fee: 1000, exam_fee: 1000 }
+      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, exam_fee: 1000 }
     };
 
     // Auto-calculate totals
@@ -78,17 +78,22 @@ function getCourseDataByLocation(branch) {
     const courseData = {
       anm_nursing: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
       gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
-      dmlt: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
+      dmlt: { duration: "6 Month", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
       ot_technician: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
       electrician: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
       ac_refrigerator: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
-      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, monthly_fee: 2500, exam_fee: 1000 }
+      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, monthly_fee: 2500, exam_fee: 1000, isMonthlyBased: true }
     };
 
     // Auto-calculate totals
     Object.keys(courseData).forEach(course => {
-      const years = parseInt(courseData[course].duration.split(" ")[0]);
-      courseData[course].total = courseData[course].fees * years;
+      // For monthly-based courses, fees is the main amount (don't multiply by duration)
+      if (courseData[course].isMonthlyBased) {
+        courseData[course].total = courseData[course].fees;
+      } else {
+        const years = parseInt(courseData[course].duration.split(" ")[0]);
+        courseData[course].total = courseData[course].fees * years;
+      }
     });
 
     return courseData;
@@ -219,15 +224,32 @@ function updateCoursePayDetails() {
       );
 
       // Calculate total fees based on duration
-      const years = course.duration.includes("year")
-        ? parseInt(course.duration.split(" ")[0])
-        : 1;
-      const totalFees = years * course.fees;
+      // For monthly-based courses (isMonthlyBased: true), fees is the main amount - don't multiply
+      let totalFees;
+      let years;
+      
+      if (course.isMonthlyBased) {
+        // Monthly-based course: use fees directly as total (don't multiply by duration)
+        totalFees = course.fees;
+        // For installment dropdowns, use the months from duration
+        const durationParts = course.duration.split(" ");
+        years = parseInt(durationParts[0]); // This gives months for monthly courses
+      } else {
+        // Regular course: multiply fees by years
+        years = course.duration.includes("year")
+          ? parseInt(course.duration.split(" ")[0])
+          : 1;
+        totalFees = years * course.fees;
+      }
+      
       document.getElementById("totalFees").textContent =
         formatCurrency(totalFees);
 
       // Update installment dropdowns based on course duration
-      updateInstallmentDropdowns(years);
+      // For monthly-based courses, years variable already contains the months
+      // For regular courses, years is the number of years (need to convert to months)
+      const months = course.isMonthlyBased ? years : years * 12;
+      updateInstallmentDropdowns(months);
 
       console.log("Updated course duration to:", course.duration);
       console.log("Updated total fees to:", formatCurrency(totalFees));

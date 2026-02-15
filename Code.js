@@ -6,14 +6,18 @@ var ss = SpreadsheetApp.getActiveSpreadsheet();
 //Heloooo// i am yoooo// i am hitanshu // yooo again //Heloooo// i am yoooo ///sdjkbfjusf
 
 
-function doGet(e) {
+function doGet() {
   try {
-    return HtmlService.createTemplateFromFile("index").evaluate();
-  } catch (error) {
-    // Return error message for debugging
-    return HtmlService
-      .createHtmlOutput("Script error: " + error.toString())
-      .setTitle("Error");
+    const html = HtmlService.createTemplateFromFile("index")
+      .evaluate()
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+
+    return html;
+  } catch (err) {
+    return HtmlService.createHtmlOutput(
+      `<pre>${err.stack}</pre>`
+    ).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 }
 
@@ -3629,11 +3633,11 @@ function getCourseDataByLocation(branch) {
     return {
       anm_nursing: { duration: "1 year", fees: 60000, admission_fee: 3000, exam_fee: 6000},
       gnm_nursing: { duration: "3 years", fees: 100000, admission_fee: 5000, exam_fee: 500 },
-      dmlt: { duration: "1 year", fees: 30000, admission_fee: 3000, exam_fee: 6000 },
+      dmlt: { duration: "6 Month", fees: 30000, admission_fee: 3000, exam_fee: 6000 },
       ot_technician: { duration: "1 year", fees: 30000, admission_fee: 3000, exam_fee: 6000},
       electrician: { duration: "1 year", fees: 24000, admission_fee: 2000, exam_fee: 6000 },
       ac_refrigerator: { duration: "1 year", fees: 24000, admission_fee: 2000, exam_fee: 6000 },
-      basic_parlour: { duration: "2 year", fees: 5000, admission_fee: 1000, exam_fee: 1000 }
+      basic_parlour: { duration: "2 Month", fees: 5000, admission_fee: 1000, exam_fee: 1000 }
     };
   } else if (branch === "nalasapora") {
     return {
@@ -3647,7 +3651,7 @@ function getCourseDataByLocation(branch) {
     return {
       anm_nursing: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
       gnm_nursing: { duration: "3 years", fees: 95000, admission_fee: 5000, exam_fee: 500 },
-      dmlt: { duration: "1 year", fees: 55000, admission_fee: 5000, exam_fee: 500 },
+      dmlt: { duration: "6 Month", fees: 58000, admission_fee: 5000, exam_fee: 500 },
       ot_technician: { duration: "1 Year", fees: 36000, admission_fee: 3000, monthly_fee: 3000, exam_fee: 6000 },
       electrician: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
       ac_refrigerator: { duration: "1 Year", fees: 24000, admission_fee: 2000, monthly_fee: 4000, exam_fee: 6000 },
